@@ -49,8 +49,16 @@ const npcs = new NPCManager(scene);
 const missions = new Missions(scene, ui, npcs, player);
 
 ui.onStart(() => {
-  renderer.domElement.requestPointerLock();
+  try {
+    const p = renderer.domElement.requestPointerLock();
+    if (p && p.catch) p.catch(() => {});
+  } catch (err) {
+    // Pointer lock unsupported; keyboard still works.
+  }
 });
+
+// Debug/testing handle.
+window.__game = { player, missions, npcs, ui };
 
 // Interaction: E talks/picks up, or advances open dialogue.
 let currentInteractable = null;
@@ -86,7 +94,8 @@ renderer.setAnimationLoop(() => {
     let best = Infinity;
     for (const it of missions.interactables) {
       if (!it.available()) continue;
-      const d = it.getPos().distanceTo(player.position);
+      const ip = it.getPos();
+      const d = Math.hypot(ip.x - player.position.x, ip.z - player.position.z);
       if (d < it.radius && d < best) {
         best = d;
         currentInteractable = it;

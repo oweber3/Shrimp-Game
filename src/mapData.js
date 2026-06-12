@@ -113,6 +113,10 @@ export function buildWorld(scene) {
   flat(150, 10, M.asphalt, -75, 70, 0.04);
   // East access to machinery building and east lot.
   flat(10, 90, M.asphalt, 110, 0, 0.04);
+  // Concrete truck aprons at the loading docks.
+  flat(120, 20, M.asphalt, 75, -33, 0.035);
+  flat(92, 18, M.asphalt, -101, -37, 0.035);
+  flat(32, 44, M.asphalt, -154, -68, 0.035);
 
   // Road center lines.
   for (let z = 130; z > -105; z -= 14) flat(0.5, 6, M.roadLine, 0, z, 0.06);
