@@ -1,0 +1,229 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #1a2228;
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+#app canvas {
+  display: block;
+}
+
+#hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  color: #eef3f5;
+  user-select: none;
+}
+
+.panel {
+  background: rgba(16, 26, 32, 0.82);
+  border: 1px solid rgba(255, 158, 94, 0.45);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+#objective {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  max-width: 380px;
+}
+
+#objective h2 {
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #ff9e5e;
+  margin-bottom: 4px;
+}
+
+#objective p {
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+#compass {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  min-width: 170px;
+}
+
+#compass .dir {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+#compass .target {
+  font-size: 12px;
+  color: #ffd9a8;
+  margin-top: 2px;
+}
+
+#compass .arrow {
+  font-size: 22px;
+  line-height: 1;
+  display: inline-block;
+  margin-top: 4px;
+  color: #ff9e5e;
+}
+
+#prompt {
+  position: absolute;
+  bottom: 130px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 15px;
+  display: none;
+}
+
+#prompt .key {
+  display: inline-block;
+  background: #ff9e5e;
+  color: #25160c;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 1px 8px;
+  margin-right: 6px;
+}
+
+#dialogue {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(620px, 86vw);
+  display: none;
+}
+
+#dialogue .speaker {
+  color: #ff9e5e;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+#dialogue .text {
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+#dialogue .hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #9fb4bd;
+}
+
+#help {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #c4d2d8;
+}
+
+#help .key {
+  color: #ffd9a8;
+  font-weight: 600;
+}
+
+#completion {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  padding: 26px 40px;
+  display: none;
+}
+
+#completion h1 {
+  color: #ff9e5e;
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+#completion p {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+#toast {
+  position: absolute;
+  top: 110px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 15px;
+  color: #ffd9a8;
+  display: none;
+}
+
+#start-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 18, 23, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: #eef3f5;
+  text-align: center;
+  cursor: pointer;
+  z-index: 10;
+}
+
+#start-overlay h1 {
+  font-size: 38px;
+  color: #ff9e5e;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+#start-overlay h3 {
+  font-size: 16px;
+  font-weight: 400;
+  color: #c4d2d8;
+  margin-bottom: 24px;
+}
+
+#start-overlay .controls {
+  font-size: 14px;
+  line-height: 2;
+  color: #c4d2d8;
+  margin-bottom: 28px;
+}
+
+#start-overlay .controls .key {
+  color: #ffd9a8;
+  font-weight: 600;
+}
+
+#start-overlay .click {
+  font-size: 17px;
+  font-weight: 700;
+  color: #ff9e5e;
+  border: 2px solid #ff9e5e;
+  border-radius: 8px;
+  padding: 10px 26px;
+}
