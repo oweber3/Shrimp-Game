@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [claude/charming-davinci-6c164u]
+    branches: [main, claude/dreamy-cray-pnblhf]
   workflow_dispatch:
 
 permissions:
@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm ci --omit=optional
+      - run: npm ci
         env:
           PUPPETEER_SKIP_DOWNLOAD: 'true'
       - run: npm run build
