@@ -65,11 +65,11 @@ const a2 = await pos();
 const jogged = Math.hypot(a2.x - b2.x, a2.z - b2.z);
 check('jog is faster than walk', jogged > moved, `jogged ${jogged.toFixed(1)}m`);
 
-// Collision: teleport inside the plant building; should be ejected.
-await teleport(70, -75);
+// Collision: teleport inside the Intralox plant building; should be ejected.
+await teleport(-100, -27);
 await sleep(300);
 const inPlant = await pos();
-const insidePlant = inPlant.x > 5.2 && inPlant.x < 134.8 && inPlant.z > -104.8 && inPlant.z < -45.2;
+const insidePlant = inPlant.x > -137 && inPlant.x < -63 && inPlant.z > -106.5 && inPlant.z < 52.5;
 check('building collision ejects player', !insidePlant, `at ${inPlant.x.toFixed(1)},${inPlant.z.toFixed(1)}`);
 
 // Boundary clamp: teleport far outside; should be clamped inside bounds.
@@ -82,7 +82,7 @@ check('world boundary clamp', clamped.x <= 180 && clamped.z <= 145, `at ${clampe
 await page.keyboard.press('KeyR');
 await sleep(200);
 const reset = await pos();
-check('R resets to spawn', Math.hypot(reset.x - 0, reset.z - 118) < 2, `at ${reset.x.toFixed(1)},${reset.z.toFixed(1)}`);
+check('R resets to spawn', Math.hypot(reset.x - 0, reset.z - 50) < 2, `at ${reset.x.toFixed(1)},${reset.z.toFixed(1)}`);
 
 // Helper: interact and click through a dialogue until it closes.
 async function interactAndFinishDialogue() {
@@ -99,11 +99,11 @@ async function interactAndFinishDialogue() {
 // --- Mission 1: Missing Wrench ---
 check('initial state is M1_TALK', (await state()) === 'M1_TALK');
 
-await teleport(45, -30); // near Gus
+await teleport(-50, -3); // near Gus at the Intralox shipping dock
 await interactAndFinishDialogue();
 check('talking to Gus starts wrench hunt', (await state()) === 'M1_FIND', await state());
 
-await teleport(-146, -62); // near wrench at west dock
+await teleport(-146, 88.5); // near wrench at the warehouse west dock
 await sleep(350);
 const promptShown = await page.$eval('#prompt', (el) => el.style.display === 'block');
 check('interaction prompt appears at wrench', promptShown);
@@ -111,22 +111,22 @@ await page.keyboard.press('KeyE');
 await sleep(200);
 check('wrench picked up', (await state()) === 'M1_RETURN', await state());
 
-await teleport(45, -30); // back to Gus
+await teleport(-50, -3); // back to Gus
 await interactAndFinishDialogue();
 check('mission 1 complete, mission 2 unlocked', (await state()) === 'M2_TALK', await state());
 
 // --- Mission 2: Conveyor Part Delivery ---
-await teleport(116, -29); // near Sal
+await teleport(81, -11); // near Sal at LM receiving
 await interactAndFinishDialogue();
 check('talking to Sal starts delivery', (await state()) === 'M2_PICKUP', await state());
 
-await teleport(112, -32.5); // near parts box
+await teleport(78, -18); // near parts box
 await sleep(350);
 await page.keyboard.press('KeyE');
 await sleep(200);
 check('parts box picked up', (await state()) === 'M2_DELIVER', await state());
 
-await teleport(-100, -47); // near Dot
+await teleport(-100, 68); // near Dot at the warehouse front
 await interactAndFinishDialogue();
 check('mission 2 complete', (await state()) === 'DONE', await state());
 
@@ -134,7 +134,7 @@ const completionShown = await page.$eval('#completion', (el) => el.style.display
 check('completion message shown', completionShown);
 
 // Flavor NPC interaction.
-await teleport(-23, -43); // near Lou at break area
+await teleport(82, 24.5); // near Lou at break area
 await interactAndFinishDialogue();
 check('flavor NPC dialogue works', true);
 

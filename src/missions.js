@@ -77,7 +77,7 @@ export class Missions {
           this.ui.showDialogue(gus.def.name, [
             'There it is. The prodigal 10 mm returns.',
             'Line three will sing the good hum tonight. Mission one complete.',
-            'Next up: Sal at RECEIVING on the east end has a parts box that needs legs. Yours, specifically.'
+            'Next up: Sal at RECEIVING on the east side of Laitram Machinery has a parts box that needs legs. Yours, specifically.'
           ], () => {
             this.player.dropCarry();
             this.wrench.visible = false;
@@ -169,7 +169,7 @@ export class Missions {
             );
           });
         } else if (this.state === 'M2_PICKUP') {
-          this.ui.showDialogue(dot.def.name, ['Sal has the box at RECEIVING, east end of the plant. I will be right here.']);
+          this.ui.showDialogue(dot.def.name, ['Sal has the box at RECEIVING, east side of Laitram Machinery. I will be right here.']);
         } else {
           this.flavor(dot.def.name, [
             'Inventory says we have nine thousand belt modules. Inventory is an optimist.',
@@ -207,7 +207,7 @@ export class Missions {
       M1_TALK: 'Mission 1: Missing Wrench - Talk to Gus, the maintenance shrimp, at the Intralox SHIPPING dock.',
       M1_FIND: 'Mission 1 (1/3): Find the missing 10 mm wrench near the warehouse WEST DOCK.',
       M1_RETURN: 'Mission 1 (2/3): Return the wrench to Gus at the SHIPPING dock.',
-      M2_TALK: 'Mission 2: Conveyor Part Delivery - Talk to Sal at the RECEIVING dock, east end of the plant.',
+      M2_TALK: 'Mission 2: Conveyor Part Delivery - Talk to Sal at the RECEIVING dock, east side of Laitram Machinery.',
       M2_PICKUP: 'Mission 2 (1/3): Pick up the conveyor parts box at the RECEIVING dock.',
       M2_DELIVER: 'Mission 2 (2/3): Deliver the parts box to Dot at the WAREHOUSE.',
       DONE: 'Shift complete. Explore Laitram Town freely. Press R if you get stuck.'
