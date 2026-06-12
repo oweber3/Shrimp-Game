@@ -468,6 +468,72 @@ export function buildWorld(scene) {
   streetSign('STOREY ST', 150, -47, -Math.PI / 4);
   streetSign('PLANTATION ST', 16, 117, Math.PI / 4);
 
+  // ---- Image signs ----
+  // Each sign is a dark-framed billboard on two posts that loads a PNG texture.
+  // The face plane is resized to the image's natural aspect ratio after load.
+  {
+    const imgLoader = new THREE.TextureLoader();
+
+    const addImageSign = (imgPath, x, z, rotY) => {
+      const H = 6;              // sign height (world units)
+      const signY = H / 2 + 2; // billboard centre height above ground
+
+      // Posts are offset perpendicular to the sign face direction.
+      // When face points ±X (rotY ≈ ±PI/2), width runs along Z → offset in Z.
+      // When face points ±Z (rotY ≈ 0 or PI),  width runs along X → offset in X.
+      const faceAlongZ = Math.abs(Math.cos(rotY)) < 0.01;
+      const postH = signY + H / 2 + 0.5;
+      const off = 2.5;
+      if (faceAlongZ) {
+        box(0.3, postH, 0.3, M.signPost, x, postH / 2, z - off);
+        box(0.3, postH, 0.3, M.signPost, x, postH / 2, z + off);
+        colliders.push(makeCollider(x, z, 0.7, off * 2 + 0.7));
+      } else {
+        box(0.3, postH, 0.3, M.signPost, x - off, postH / 2, z);
+        box(0.3, postH, 0.3, M.signPost, x + off, postH / 2, z);
+        colliders.push(makeCollider(x, z, off * 2 + 0.7, 0.7));
+      }
+
+      // Dark frame — thin slab slightly behind the image face.
+      const frameMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(5.4, H + 0.4, 0.14),
+        mat(0x1a1a1a)
+      );
+      frameMesh.position.set(x, signY, z);
+      frameMesh.rotation.y = rotY;
+      world.add(frameMesh);
+
+      // Image face (placeholder grey until texture loads).
+      const faceMat = new THREE.MeshBasicMaterial({ color: 0xcccccc });
+      const faceMesh = new THREE.Mesh(new THREE.PlaneGeometry(5, H), faceMat);
+      faceMesh.position.set(x, signY, z);
+      faceMesh.rotation.y = rotY;
+      faceMesh.renderOrder = 1;
+      world.add(faceMesh);
+
+      imgLoader.load(imgPath, (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        const aspect = tex.image.width / tex.image.height;
+        const W = H * aspect;
+        faceMesh.geometry.dispose();
+        faceMesh.geometry = new THREE.PlaneGeometry(W, H);
+        frameMesh.geometry.dispose();
+        frameMesh.geometry = new THREE.BoxGeometry(W + 0.4, H + 0.4, 0.14);
+        faceMat.map = tex;
+        faceMat.color.set(0xffffff);
+        faceMat.needsUpdate = true;
+      });
+    };
+
+    // Sign 1 – east of the entrance drive, near the guard shack.
+    // Faces west so the player sees it while walking the main campus drive.
+    addImageSign(import.meta.env.BASE_URL + 'sign-image-1.png', 28, 108, -Math.PI / 2);
+
+    // Sign 2 – south-east of the break pavilion / LM front lot.
+    // Faces west toward the main campus interior.
+    addImageSign(import.meta.env.BASE_URL + 'sign-image-2.png', 95, 42, -Math.PI / 2);
+  }
+
   return { colliders, bounds: WORLD_BOUNDS };
 }
 
