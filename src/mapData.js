@@ -504,25 +504,34 @@ export function buildWorld(scene) {
       world.add(frameMesh);
 
       // Image face (placeholder grey until texture loads).
-      const faceMat = new THREE.MeshBasicMaterial({ color: 0xcccccc });
+      const faceMat = new THREE.MeshBasicMaterial({
+        color: 0xcccccc,
+        side: THREE.DoubleSide
+      });
       const faceMesh = new THREE.Mesh(new THREE.PlaneGeometry(5, H), faceMat);
       faceMesh.position.set(x, signY, z);
       faceMesh.rotation.y = rotY;
+      faceMesh.translateZ(0.09);
       faceMesh.renderOrder = 1;
       world.add(faceMesh);
 
-      imgLoader.load(imgPath, (tex) => {
-        tex.colorSpace = THREE.SRGBColorSpace;
-        const aspect = tex.image.width / tex.image.height;
-        const W = H * aspect;
-        faceMesh.geometry.dispose();
-        faceMesh.geometry = new THREE.PlaneGeometry(W, H);
-        frameMesh.geometry.dispose();
-        frameMesh.geometry = new THREE.BoxGeometry(W + 0.4, H + 0.4, 0.14);
-        faceMat.map = tex;
-        faceMat.color.set(0xffffff);
-        faceMat.needsUpdate = true;
-      });
+      imgLoader.load(
+        imgPath,
+        (tex) => {
+          tex.colorSpace = THREE.SRGBColorSpace;
+          const aspect = tex.image.width / tex.image.height;
+          const W = H * aspect;
+          faceMesh.geometry.dispose();
+          faceMesh.geometry = new THREE.PlaneGeometry(W, H);
+          frameMesh.geometry.dispose();
+          frameMesh.geometry = new THREE.BoxGeometry(W + 0.4, H + 0.4, 0.14);
+          faceMat.map = tex;
+          faceMat.color.set(0xffffff);
+          faceMat.needsUpdate = true;
+        },
+        undefined,
+        () => { console.error('[ImageSign] Failed to load:', imgPath); }
+      );
     };
 
     // Sign 1 – east of the entrance drive, near the guard shack.
