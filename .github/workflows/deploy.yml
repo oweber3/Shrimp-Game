@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm ci --omit=optional
+      - run: npm ci
         env:
           PUPPETEER_SKIP_DOWNLOAD: 'true'
       - run: npm run build
