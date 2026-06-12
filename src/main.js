@@ -23,7 +23,7 @@ scene.background = new THREE.Color(0xaed8e6);
 scene.fog = new THREE.Fog(0xaed8e6, 160, 420);
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 700);
-camera.position.set(0, 6, 130);
+camera.position.set(0, 6, 62);
 
 // Humid Louisiana afternoon light.
 scene.add(new THREE.AmbientLight(0xcfe5ec, 0.55));

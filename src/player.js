@@ -23,7 +23,8 @@ export class Player {
     this.mesh = createShrimpWorker({
       shellColor: 0xf2825a,
       vestColor: 0xf2c12e,
-      hatColor: 0xffffff
+      hatColor: 0xffffff,
+      accessory: 'toolbelt'
     });
     this.mesh.position.copy(this.position);
     scene.add(this.mesh);
