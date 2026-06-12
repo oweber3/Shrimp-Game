@@ -4,6 +4,7 @@ import { Player } from './player.js';
 import { NPCManager } from './npc.js';
 import { Missions } from './missions.js';
 import { UI } from './ui.js';
+import { Minimap } from './minimap.js';
 
 // Shrimp Shift: Laitram Town
 // Low-poly third-person walking game set on an industrial campus
@@ -44,6 +45,7 @@ scene.add(sun);
 // World, player, NPCs, missions, UI.
 const { colliders, bounds } = buildWorld(scene);
 const ui = new UI();
+const minimap = new Minimap();
 const player = new Player(scene, camera, POI.spawn);
 const npcs = new NPCManager(scene);
 const missions = new Missions(scene, ui, npcs, player);
@@ -83,10 +85,29 @@ renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), 0.05);
   const time = clock.elapsedTime;
 
-  player.movementLocked = ui.isDialogueOpen();
+  player.movementLocked = ui.isDialogueOpen() || minimap.isExpanded();
   player.update(dt, colliders, bounds);
   npcs.update(dt, time, player.position);
   missions.update(time);
+
+  // Update minimap markers and NPC positions each frame.
+  const mState = missions.state;
+  minimap.setMarkers([
+    {
+      wx: POI.wrench.x, wz: POI.wrench.z,
+      color: '#ffc04d', label: 'Wrench',
+      visible: mState === 'M1_FIND' || mState === 'M1_RETURN',
+    },
+    {
+      wx: POI.partsBox.x, wz: POI.partsBox.z,
+      color: '#6fd3ff', label: 'Parts Box',
+      visible: mState === 'M2_PICKUP' || mState === 'M2_DELIVER',
+    },
+  ]);
+  minimap.setNPCPositions(
+    npcs.npcs.map((n) => ({ wx: n.group.position.x, wz: n.group.position.z }))
+  );
+  minimap.update(player.position, player.yaw);
 
   // Find the nearest available interactable in range.
   currentInteractable = null;
