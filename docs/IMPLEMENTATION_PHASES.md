@@ -53,7 +53,11 @@ npm run build && npm run preview
 
 ## Phase 2: Outdoor Map Realism
 
-**Status**: Pending
+**Status**: Done — added `src/map/landscaping.js` (tree variety, grass patches, canal banks +
+animated water via UV drift) and `src/map/vehicles.js` (extracted builders); parking head
+stripes + wheel stops, warehouse bollards, office window mullions, Intralox clerestory glass,
+warehouse/pharmacy rooftop units, warmer afternoon lighting. Building footprints intentionally
+unchanged to preserve NPC and mission coordinates; minimap therefore needed no updates.
 **Goal**: Make the exterior campus more accurate and visually rich.
 
 ### What Changes

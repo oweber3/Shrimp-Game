@@ -3,6 +3,7 @@ import { makeCollider } from '../collision.js';
 import { createMaterials, createBuilders } from '../utils/geometry.js';
 import { addBuildings } from './buildings.js';
 import { addProps } from './props.js';
+import { addLandscaping } from './landscaping.js';
 
 // Low-poly approximation of the Laitram campus in Harahan/Elmwood, Louisiana,
 // laid out to match the aerial view: the long white Intralox plant runs
@@ -31,13 +32,20 @@ export function buildWorld(scene) {
 
   const M = createMaterials();
   const { box, flat } = createBuilders(world, colliders);
-  const ctx = { world, colliders, M, box, flat };
+  // updaters: per-frame callbacks (dt, time) for animated map elements
+  // (currently just the canal water drift).
+  const updaters = [];
+  const ctx = { world, colliders, M, box, flat, updaters };
 
   addTerrain(ctx);
   addBuildings(ctx);
   addProps(ctx);
+  addLandscaping(ctx);
 
-  return { colliders, bounds: WORLD_BOUNDS };
+  const update = (dt, time) => {
+    for (const u of updaters) u(dt, time);
+  };
+  return { colliders, bounds: WORLD_BOUNDS, update };
 }
 
 function addTerrain({ colliders, M, box, flat }) {
@@ -76,11 +84,6 @@ function addTerrain({ colliders, M, box, flat }) {
   flat(56, 3, M.sidewalk, 40, 58, 0.05); // LM front lot walk
   flat(4, 6, M.sidewalk, 35, 22.5, 0.05); // LM office entry walk
   flat(60, 3, M.sidewalk, -100, 70.5, 0.05); // warehouse front walk
-
-  // ---- Drainage canal along the east fence (Louisiana essential) ----
-  flat(10, 270, M.water, 172, 0, 0.03);
-  flat(3, 270, M.grass, 166, 0, 0.05);
-  colliders.push(makeCollider(172, 0, 12, 280)); // do not swim in the canal
 
   // ---- Perimeter fence ----
   const fenceRun = (x, z, sx, sz) => {

@@ -26,12 +26,12 @@ scene.fog = new THREE.Fog(0xaed8e6, 160, 420);
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 700);
 camera.position.set(0, 6, 62);
 
-// Humid Louisiana afternoon light.
-scene.add(new THREE.AmbientLight(0xcfe5ec, 0.55));
-const hemi = new THREE.HemisphereLight(0xbfe3f0, 0x5a7a4a, 0.35);
+// Humid Louisiana afternoon light: warm low-ish sun, soft sky bounce.
+scene.add(new THREE.AmbientLight(0xcfe5ec, 0.5));
+const hemi = new THREE.HemisphereLight(0xbfe3f0, 0x5a7a4a, 0.4);
 scene.add(hemi);
-const sun = new THREE.DirectionalLight(0xfff0d4, 1.25);
-sun.position.set(90, 120, 60);
+const sun = new THREE.DirectionalLight(0xffe7c2, 1.35);
+sun.position.set(70, 100, 80);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
 sun.shadow.camera.left = -200;
@@ -43,7 +43,7 @@ sun.shadow.bias = -0.0005;
 scene.add(sun);
 
 // World, player, NPCs, missions, UI.
-const { colliders, bounds } = buildWorld(scene);
+const { colliders, bounds, update: updateWorld } = buildWorld(scene);
 const ui = new UI();
 const minimap = new Minimap();
 const player = new Player(scene, camera, POI.spawn);
@@ -89,6 +89,7 @@ renderer.setAnimationLoop(() => {
   player.update(dt, colliders, bounds);
   npcs.update(dt, time, player.position);
   missions.update(time);
+  updateWorld(dt, time); // animated map elements (canal water drift)
 
   // Update minimap markers and NPC positions each frame.
   const mState = missions.state;
