@@ -12,17 +12,26 @@ shrimp doing real workplace things, in a real-ish place, with light comedy and w
 
 The map is loosely based on the actual Laitram LLC / Intralox campus on Plantation Road, Harahan, Louisiana.
 
-Key landmarks modeled in-game:
-- **Intralox Plant** — large manufacturing building on the west side
-- **Laitram Machinery** — center building with loading docks and a receiving bay
-- **Laitram Office** — smaller office building on the east side
-- **Lapeyre Stair** — northeast building
-- **Distribution Warehouse** — southwest warehouse with roll-up doors
+Key landmarks modeled in-game (addresses follow the real campus map):
+- **Intralox Plant (220 Plantation)** — large manufacturing building on the west side, shipping dock
+- **5307 Toler** — Intralox building in the north strip, west of Plantation Road
+- **301 complex** — 301 FO / 301A Assembly / 301B Shipping / 301C ILOX VNA, north strip row
+- **Laitram Machinery (220 Laitram Ln)** — center building with receiving bay and walkable interior
+- **201 Laitram Ln** — office building on the east side
+- **Lapeyre Stair (5117 Toler)** — northeast building, east end of the north strip
+- **5211 Storey** — production building in the south block
+- **5123 River Rd** — small building, southeast block
+- **Distribution Warehouse (5000 River Road)** — southwest warehouse with roll-up doors
+- **200 Plantation** — small building, far southwest corner
 - **Guard shack** — campus entrance gate
 - **Break pavilion** — outdoor break area with benches and vending
 - **Drainage canal** — east side, impassable
 
-Roads: Plantation St (south), Laitram Lane (center E-W), Storey St (east), main campus drive (N-S).
+Roads (per the real map): Toler Street (north E-W), Plantation Road (N-S through campus),
+Storey Street (center E-W), Laitram Lane (east N-S), River Road (south), Plantation Drive (west edge).
+
+Note: Hammond West / East Expansion / ASRS on the reference map are the separate Hammond, LA
+site (20157 Intralox Drive) and are intentionally not part of this campus.
 
 Future: The Laitram Machinery building will have a walkable interior with an office floor, cubicles, a
 breakroom, and hallways.

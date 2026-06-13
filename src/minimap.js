@@ -9,24 +9,33 @@ const WH = WORLD.maxZ - WORLD.minZ; // 285
 
 // Road rectangles [centerX, centerZ, sizeX, sizeZ].
 const ROADS = [
-  [0,      35,   10, 180], // Main campus drive
-  [62.5,  -55,  205,  12], // Laitram Lane
-  [-7.5,  125,  345,  12], // Plantation St
-  [158,   37.5,  10, 185], // Storey St
-  [-160,    9,    9, 232], // West street
+  [0,      35,   10, 180], // Plantation Road
+  [0,     -97,   10,  78], // Plantation Road north extension
+  [62.5,  -55,  205,  12], // Toler Street
+  [2,      66,  320,  10], // Storey Street
+  [-7.5,  125,  345,  12], // River Road
+  [158,   37.5,  10, 185], // Laitram Lane
+  [-160,    9,    9, 232], // Plantation Drive
   [-32,    -2,   48,  40], // Intralox shipping apron
   [94,    -14,   36,  44], // LM east truck court
 ];
 
 // Buildings [centerX, centerZ, sizeX, sizeZ, fill].
 const BUILDINGS = [
-  { cx: -100, cz:  -27, sx: 75,  sz: 160, color: '#4a5f72' }, // Intralox Plant
-  { cx:   40, cz:  -15, sx: 60,  sz:  50, color: '#4a5f72' }, // Laitram Machinery
+  { cx: -100, cz:  -27, sx: 75,  sz: 160, color: '#4a5f72' }, // Intralox / 220 Plantation
+  { cx:  -95, cz: -105, sx: 70,  sz:  40, color: '#4a5f72' }, // 5307 Toler
+  { cx:   18, cz: -100, sx: 12,  sz:  28, color: '#4a5f72' }, // 301 FO
+  { cx:   36, cz: -100, sx: 20,  sz:  32, color: '#4a5f72' }, // 301A Assembly
+  { cx:   52, cz: -100, sx:  8,  sz:  28, color: '#4a5f72' }, // 301B Shipping
+  { cx:   62, cz: -100, sx:  8,  sz:  28, color: '#4a5f72' }, // 301C ILOX VNA
+  { cx:   40, cz:  -15, sx: 60,  sz:  50, color: '#4a5f72' }, // Laitram Machinery / 220 Laitram Ln
   { cx:   35, cz: 14.5, sx: 40,  sz:   9, color: '#3d5465' }, // LM office annex
-  { cx:  130, cz:  -20, sx: 36,  sz:  36, color: '#4a5f72' }, // Laitram Office
-  { cx:  105, cz: -100, sx: 70,  sz:  45, color: '#4a5f72' }, // Lapeyre Stair
-  { cx: -100, cz:   95, sx: 80,  sz:  44, color: '#4a5f72' }, // Distribution Warehouse
-  { cx: -171, cz:   40, sx: 14,  sz:  18, color: '#3d5465' }, // Laitram Pharmacy
+  { cx:  130, cz:  -20, sx: 36,  sz:  36, color: '#4a5f72' }, // 201 Laitram Ln
+  { cx:  105, cz: -100, sx: 70,  sz:  45, color: '#4a5f72' }, // Lapeyre Stair / 5117 Toler
+  { cx:   60, cz:   92, sx: 50,  sz:  28, color: '#4a5f72' }, // 5211 Storey
+  { cx:  120, cz:   95, sx: 16,  sz:  18, color: '#3d5465' }, // 5123 River Rd
+  { cx: -100, cz:   95, sx: 80,  sz:  44, color: '#4a5f72' }, // Distribution / 5000 River Road
+  { cx: -171, cz:   40, sx: 14,  sz:  18, color: '#3d5465' }, // 200 Plantation
   { cx:    8, cz:  112, sx:  5,  sz:   5, color: '#3d5465' }, // Guard Shack
 ];
 
@@ -44,15 +53,17 @@ const ROOMS = [
 
 // Zone text labels drawn only in the expanded view.
 const ZONES = [
-  { wx: -100, wz:  -27, text: 'INTRALOX' },
+  { wx: -100, wz:  -27, text: 'INTRALOX\n220 PLANTATION' },
+  { wx:  -95, wz: -105, text: '5307\nTOLER' },
+  { wx:   40, wz: -100, text: '301\nASSEMBLY' },
   { wx:   40, wz:  -15, text: 'LAITRAM\nMACHINERY' },
-  { wx:  130, wz:  -20, text: 'LAITRAM\nOFFICE' },
+  { wx:  130, wz:  -20, text: '201\nLAITRAM LN' },
   { wx:  105, wz: -100, text: 'LAPEYRE\nSTAIR' },
-  { wx: -100, wz:   95, text: 'DISTRIBUTION\nWAREHOUSE' },
-  { wx: -171, wz:   40, text: 'PHARMACY' },
+  { wx:   60, wz:   92, text: '5211\nSTOREY' },
+  { wx: -100, wz:   95, text: '5000 RIVER RD\nDISTRIBUTION' },
+  { wx: -171, wz:   40, text: '200\nPLANTATION' },
   { wx:    8, wz:  112, text: 'GUARD\nSHACK' },
   { wx:   85, wz:   30, text: 'BREAK\nAREA' },
-  { wx:    2, wz:   62, text: 'MAIN\nGATE' },
 ];
 
 export class Minimap {
