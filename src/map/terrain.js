@@ -24,7 +24,9 @@ export const POI = {
   // Warehouse west dock, by the pallet backlog.
   wrench: new THREE.Vector3(-146, 0, 90),
   // Receiving pad on the east side of Laitram Machinery.
-  partsBox: new THREE.Vector3(78, 0, -20)
+  partsBox: new THREE.Vector3(78, 0, -20),
+  // Breakroom counter inside Laitram Machinery (Mission 3).
+  coffeePot: new THREE.Vector3(68.35, 0, 3.45)
 };
 
 export function buildWorld(scene) {

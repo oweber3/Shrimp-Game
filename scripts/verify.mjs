@@ -128,7 +128,22 @@ check('parts box picked up', (await state()) === 'M2_DELIVER', await state());
 
 await teleport(-100, 68); // near Dot at the warehouse front
 await interactAndFinishDialogue();
-check('mission 2 complete', (await state()) === 'DONE', await state());
+check('mission 2 complete, coffee run unlocked', (await state()) === 'M3_TALK', await state());
+
+// --- Mission 3: Coffee Run (indoors) ---
+await teleport(61, -14.1); // Marge's office, in front of the desk
+await interactAndFinishDialogue();
+check('talking to Marge starts coffee run', (await state()) === 'M3_FETCH', await state());
+
+await teleport(67, 3.2); // breakroom counter
+await sleep(350);
+await page.keyboard.press('KeyE');
+await sleep(200);
+check('coffee pot picked up', (await state()) === 'M3_RETURN', await state());
+
+await teleport(61, -14.1); // back to Marge
+await interactAndFinishDialogue();
+check('mission 3 complete', (await state()) === 'DONE', await state());
 
 const completionShown = await page.$eval('#completion', (el) => el.style.display === 'block');
 check('completion message shown', completionShown);

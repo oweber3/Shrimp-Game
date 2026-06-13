@@ -205,9 +205,8 @@ export function addInterior(scene, colliders) {
   box(1.3, 0.06, 6.2, M.appliance, 68.5, 1.0, 5);
   box(0.65, 0.42, 0.5, M.dark, 68.5, 1.25, 6.5); // microwave
   box(0.3, 0.55, 0.35, M.dark, 68.5, 1.3, 3.8); // coffee machine
-  const pot2 = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.15, 0.22, 8), M.glass);
-  pot2.position.set(68.4, 1.14, 3.45);
-  g.add(pot2);
+  // (The fresh pot itself is a Mission 3 item built in missions.js so it
+  // can be carried — see POI.coffeePot.)
   // Fridge and vending machine.
   box(1.1, 1.95, 1.05, M.appliance, 68.5, 0.98, -0.5, { collide: true });
   box(0.06, 0.7, 0.08, M.dark, 67.92, 1.2, -0.9); // fridge handle

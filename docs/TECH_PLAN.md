@@ -48,6 +48,9 @@ src/
   characters/
     shrimpWorker.js — Group-hierarchy shrimp builder (parts API, carryAnchor)
     accessories.js  — hard hat, toolbelt, clipboard builders
+    npcBehaviors.js — behavior state machine (idle/patrol/sit/talk/react)
+  dialogue/
+    dialogueData.js — all NPC flavor + mission dialogue strings
   npc.js           — NPC definitions and manager (re-exports createShrimpWorker)
   missions.js      — state machine, dialogue, items
   collision.js     — 2D circle-AABB collision resolver
