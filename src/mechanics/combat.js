@@ -50,6 +50,7 @@ export class PunchSystem {
     const pp = this.player.position;
     const facing = this.player.mesh.rotation.y;
     for (const npc of this.npcs.npcs) {
+      if (npc.special) continue; // Shrimply Gigantic is too big to flinch; keep him on his patrol
       const np = npc.group.position;
       const dx = np.x - pp.x;
       const dz = np.z - pp.z;

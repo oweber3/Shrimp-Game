@@ -1,5 +1,6 @@
 import { createShrimpWorker } from './characters/shrimpWorker.js';
 import { initBehavior, updateNPC } from './characters/npcBehaviors.js';
+import { createShrimplyGigantic, initGiant, updateGiant, SHRIMPLY } from './characters/giantShrimp.js';
 
 // NPC definitions and the per-frame NPC manager. The shrimp builder lives
 // in src/characters/shrimpWorker.js, per-frame behavior in
@@ -129,6 +130,32 @@ export class NPCManager {
       initBehavior(npc);
       this.npcs.push(npc);
     });
+
+    // Special oversized roaming NPC. Built and driven by its own module, but
+    // pushed into this.npcs so the existing dialogue (the missions flavor
+    // loop) and the minimap pick him up for free.
+    this.addShrimplyGigantic(scene);
+  }
+
+  // Shrimply Gigantic: one large, angry, detail-rich shrimp that patrols the
+  // open east truck court. See src/characters/giantShrimp.js for his builder,
+  // patrol path and behavior. He is flagged `special` so update() routes him
+  // to his own state machine instead of the standard NPC behavior.
+  addShrimplyGigantic(scene) {
+    const group = createShrimplyGigantic();
+    group.position.set(SHRIMPLY.start[0], 0, SHRIMPLY.start[1]);
+    group.rotation.y = SHRIMPLY.rotY;
+    scene.add(group);
+    const npc = {
+      def: { id: SHRIMPLY.id, name: SHRIMPLY.name, title: SHRIMPLY.title, path: SHRIMPLY.path },
+      group,
+      parts: group.userData.parts,
+      special: true,
+      bobPhase: 0.6,
+      pathIndex: 0
+    };
+    initGiant(npc);
+    this.npcs.push(npc);
   }
 
   get(id) {
@@ -137,7 +164,8 @@ export class NPCManager {
 
   update(dt, time, playerPos) {
     for (const npc of this.npcs) {
-      updateNPC(npc, dt, time, playerPos);
+      if (npc.special) updateGiant(npc, dt, time, playerPos);
+      else updateNPC(npc, dt, time, playerPos);
     }
   }
 }
