@@ -37,7 +37,12 @@
 src/
   main.js          — scene init, game loop, interaction check
   player.js        — third-person camera, controls, movement
-  mapData.js       — world geometry (to be split in Phase 1)
+  map/
+    terrain.js     — ground, roads, bounds, POI, buildWorld() orchestrator
+    buildings.js   — building geometry and signage
+    props.js       — vehicles, trees, pallets, parking lots
+  utils/
+    geometry.js    — shared box()/flat() builders, materials, textTexture()
   npc.js           — shrimp character builder, NPC manager
   missions.js      — state machine, dialogue, items
   collision.js     — 2D circle-AABB collision resolver
@@ -118,9 +123,10 @@ Camera lerps toward target position at `dt * 12` for smooth follow.
 | Target frame rate | 60 fps on mid-range laptop w/ integrated GPU | Meets on modern hardware |
 | Shadow map resolution | 2048×2048 (may reduce to 1024 if needed) | 2048 |
 
-### Known Performance Issue
-`public/sign-image-2.png` is ~3 MB. This should be compressed to WebP or replaced with a
-canvas-drawn equivalent in Phase 1. All future image assets must be under 200 KB each.
+### Known Performance Issue (resolved in Phase 1)
+`public/sign-image-2.png` (~3 MB) and `sign-image-1.png` (~1 MB) were downscaled to 768px and
+converted to WebP (`sign-image-2.webp` 109 KB, `sign-image-1.webp` 32 KB).
+All future image assets must be under 200 KB each.
 
 ### Geometry Optimization Strategies
 - Use `THREE.StaticDrawUsage` on geometry that never changes

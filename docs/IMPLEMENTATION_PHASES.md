@@ -6,7 +6,8 @@ Detailed breakdown of each development phase. Update the Status column as work p
 
 ## Phase 1: Stabilize and Organize
 
-**Status**: Pending
+**Status**: Done — `mapData.js` split into `src/map/{terrain,buildings,props}.js` + `src/utils/geometry.js`;
+sign images converted to WebP (990 KB → 32 KB and 3 MB → 109 KB); all `verify.mjs` checks pass.
 **Goal**: Clean up the codebase so future phases are easy to build on. No gameplay changes.
 
 ### What Changes

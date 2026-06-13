@@ -12,7 +12,7 @@ without breaking browser performance or requiring a full rewrite.
 
 | # | Phase | Goal | Complexity | Status |
 |---|-------|------|------------|--------|
-| 1 | Stabilize & Organize | Split large files into sub-modules, fix known perf issue (3 MB PNG) | S | Pending |
+| 1 | Stabilize & Organize | Split large files into sub-modules, fix known perf issue (3 MB PNG) | S | Done |
 | 2 | Outdoor Map Realism | More accurate campus layout, better landscaping, improved building detail | M | Pending |
 | 3 | Shrimp Model Improvements | More organic characters, Group-based hierarchy for future animation | M | Pending |
 | 4 | Indoor Building Interior | Walkable interior with offices, cubicles, breakroom, zone transitions | L | Pending |
@@ -39,7 +39,10 @@ without breaking browser performance or requiring a full rewrite.
 |------|------|
 | `src/main.js` | Scene init, game loop, interaction |
 | `src/player.js` | Third-person controls, camera |
-| `src/mapData.js` | All world geometry and colliders |
+| `src/map/terrain.js` | Ground, roads, bounds, POI, `buildWorld()` orchestrator |
+| `src/map/buildings.js` | Building geometry and signage |
+| `src/map/props.js` | Vehicles, trees, pallets, parking lots |
+| `src/utils/geometry.js` | Shared `box()`/`flat()` builders and material palette |
 | `src/npc.js` | Shrimp character builder, NPC manager |
 | `src/missions.js` | Mission state machine, dialogue, items |
 | `src/collision.js` | 2D circle-AABB collision resolver |
