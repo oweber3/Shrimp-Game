@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { buildWorld, POI } from './mapData.js';
+import { buildWorld, POI } from './map/terrain.js';
 import { Player } from './player.js';
 import { NPCManager } from './npc.js';
 import { Missions } from './missions.js';

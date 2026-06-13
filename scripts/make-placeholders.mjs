@@ -1,5 +1,9 @@
 // Generates placeholder PNG files for sign-image-1.png and sign-image-2.png
 // Run once to create the assets. Replace the output files with your real images.
+//
+// NOTE: the game now loads sign-image-1.webp / sign-image-2.webp (see
+// src/map/buildings.js). Convert real images to WebP under 150 KB, e.g.:
+//   ffmpeg -i input.png -vf "scale=-1:768" -c:v libwebp -quality 82 public/sign-image-1.webp
 import { deflateSync } from 'zlib';
 import { writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';

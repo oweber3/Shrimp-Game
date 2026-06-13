@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { POI } from './mapData.js';
+import { POI } from './map/terrain.js';
 
 // Mission state machine plus all interactable objects and NPC dialogue.
 // Mission 1: Missing Wrench. Mission 2: Conveyor Part Delivery.
