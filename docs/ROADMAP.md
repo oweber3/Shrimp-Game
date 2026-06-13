@@ -19,6 +19,7 @@ without breaking browser performance or requiring a full rewrite.
 | 5 | NPC & Workplace Interactions | More NPCs, sitting behaviors, intern dialogue | M | Done |
 | 6 | GTA-Like Mechanics | Basic melee punch + driveable golf cart | M | Done |
 | 7 | Polish & Deploy | Loading screen, audio, mission log, minimap indoor floors, performance audit | M | Done |
+| 8 | Campus Accuracy | Match the real campus map: road names, north strip (5307 Toler + 301 row), south block (5211 Storey), real addresses | S | Done |
 
 ---
 

@@ -1,6 +1,6 @@
 // Headless screenshot helper for visual checks. Not part of CI.
-// Usage: node scripts/snap.mjs <x> <z> <yaw> <pitch> <outfile>
-// Example: node scripts/snap.mjs 28 -8 3.14 0.35 scripts/office.png
+// Usage: node scripts/snap.mjs <x> <z> <yaw> <pitch> <outfile> [--map]
+// --map opens the expanded campus map (M) before the screenshot.
 import puppeteer from 'puppeteer';
 import { preview } from 'vite';
 
@@ -24,6 +24,10 @@ await page.evaluate(([px, pz, pyaw, ppitch]) => {
   p.pitch = ppitch;
 }, [x, z, yaw, pitch]);
 await new Promise((r) => setTimeout(r, 1400));
+if (process.argv.includes('--map')) {
+  await page.keyboard.press('KeyM');
+  await new Promise((r) => setTimeout(r, 400));
+}
 await page.screenshot({ path: outfile });
 console.log('Saved', outfile);
 await browser.close();

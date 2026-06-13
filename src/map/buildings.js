@@ -26,6 +26,40 @@ export function addBuildings(ctx) {
     box(0.4, 5, 6, M.dockDoor, -62.2, 3.2, dz, { castShadow: false });
   }
 
+  // ---- North strip: 5307 Toler and the 301 complex (north of Toler St) ----
+  // Matches the real campus map: 5307 Toler west of Plantation Road, the
+  // 301 production row east of it, with 5117 Toler (Lapeyre Stair) at the
+  // east end of the strip.
+  box(70, 15, 40, M.whiteWall, -95, 7.5, -105, { collide: true }); // 5307 Toler
+  box(71, 1.3, 41, M.roof, -95, 15.65, -105, { castShadow: false });
+  box(70.3, 2, 40.3, M.blueTrim, -95, 12.6, -105, { castShadow: false });
+  for (const rx of [-115, -95, -75]) {
+    box(7, 2.6, 5, M.roof, rx, 17.3, -105);
+  }
+  const n301 = [
+    { x: 18, sx: 12, sz: 28, h: 10 }, // 301 FO
+    { x: 36, sx: 20, sz: 32, h: 13 }, // 301A Assembly
+    { x: 52, sx: 8, sz: 28, h: 10 }, // 301B Shipping
+    { x: 62, sx: 8, sz: 28, h: 10 } // 301C ILOX VNA
+  ];
+  for (const b of n301) {
+    box(b.sx, b.h, b.sz, M.whiteWall, b.x, b.h / 2, -100, { collide: true });
+    box(b.sx + 1, 1.1, b.sz + 1, M.roof, b.x, b.h + 0.55, -100, { castShadow: false });
+    box(b.sx + 0.3, 1.6, b.sz + 0.3, M.blueTrim, b.x, b.h - 1.6, -100, { castShadow: false });
+  }
+  box(6, 2.4, 5, M.roof, 36, 14.4, -104); // 301A rooftop unit
+  // 301B shipping roll-up door facing Toler St.
+  box(5, 4.5, 0.4, M.dockDoor, 52, 2.5, -85.7, { castShadow: false });
+
+  // ---- South block: 5211 Storey and 5123 River Rd (south of Storey St) ----
+  box(50, 11, 28, M.whiteWall, 60, 5.5, 92, { collide: true }); // 5211 Storey
+  box(51, 1.2, 29, M.roof, 60, 11.6, 92, { castShadow: false });
+  box(50.3, 1.8, 28.3, M.blueTrim, 60, 9.2, 92, { castShadow: false });
+  box(8, 6, 0.4, M.dockDoor, 48, 3.2, 78.2, { castShadow: false });
+  box(8, 6, 0.4, M.dockDoor, 72, 3.2, 78.2, { castShadow: false });
+  box(16, 8, 18, M.officeWall, 120, 4, 95, { collide: true }); // 5123 River Rd
+  box(17, 0.9, 19, M.roof, 120, 8.45, 95, { castShadow: false });
+
   // ---- Laitram Machinery complex (center, most detail) ----
   // The shell mesh has no blanket collider: the interior (src/map/interior.js)
   // is walkable. Perimeter colliders below have a gap on the south face
@@ -200,7 +234,7 @@ function addSigns({ world, colliders, M, box, loadingManager }, { lm, hqB, wh })
     world.add(face2);
   };
   monument(-10, 116, 'LAITRAM');
-  monument(14, 62, 'LAITRAM MACHINERY');
+  monument(18, 76, 'LAITRAM MACHINERY'); // SE corner of Plantation Rd / Storey St
 
   // ---- Wall signs ----
   const wallSign = (text, x, y, z, rotY, w = 24, h = 3, bg = '#1f5fa8') => {
@@ -213,25 +247,42 @@ function addSigns({ world, colliders, M, box, loadingManager }, { lm, hqB, wh })
     world.add(s);
   };
   wallSign('INTRALOX', -62.2, 12, -40, Math.PI / 2, 30, 4);
+  wallSign('220 PLANTATION', -62.15, 9.4, -40, Math.PI / 2, 13, 1.3);
   wallSign('SHIPPING', -62.15, 7.2, -4, Math.PI / 2, 12, 1.6, '#b8651f');
   wallSign('LAITRAM MACHINERY', lm.x, 12.4, -40.45, Math.PI, 26, 2.6);
   wallSign('LAITRAM MACHINERY, INC', 35, 6.9, 19.5, 0, 20, 1.8);
   wallSign('RECEIVING', 70.3, 7.2, -20, Math.PI / 2, 12, 1.6, '#b8651f');
+  wallSign('220 LAITRAM LN', 70.3, 5.4, -20, Math.PI / 2, 9, 1.1);
   wallSign('SAFETY FIRST: 412 DAYS SINCE A SHELL INCIDENT', 70.3, 9.6, -20, Math.PI / 2, 22, 1.4, '#2e7d32');
-  wallSign('LAITRAM', 111.8, 7, hqB.z, -Math.PI / 2, 14, 2.4);
+  wallSign('201 LAITRAM LN', 111.8, 7, hqB.z, -Math.PI / 2, 14, 2.4);
   wallSign('LAPEYRE STAIR', 105, 8.5, -77.0, 0, 22, 2.2);
+  wallSign('5117 TOLER', 105, 6.4, -77.0, 0, 10, 1.2);
   wallSign('LAITRAM DISTRIBUTION', wh.x, 9, 72.6, Math.PI, 26, 2.4);
+  wallSign('5000 RIVER ROAD', wh.x, 6.9, 72.6, Math.PI, 15, 1.4);
   wallSign('WEST DOCK', -140.3, 7, 90, -Math.PI / 2, 12, 1.8, '#b8651f');
-  wallSign('LAITRAM PHARMACY', -163.9, 3, 40, Math.PI / 2, 12, 1.4, '#a83a3a');
+  wallSign('200 PLANTATION', -163.9, 3, 40, Math.PI / 2, 12, 1.4);
+  // North strip (faces Toler St).
+  wallSign('INTRALOX', -95, 10.2, -84.7, 0, 26, 3.2);
+  wallSign('5307 TOLER', -95, 7.4, -84.7, 0, 13, 1.5);
+  wallSign('301 FO', 18, 6.6, -85.8, 0, 7, 1.3);
+  wallSign('301A ASSEMBLY', 36, 8.6, -83.8, 0, 15, 1.8);
+  wallSign('301B SHIPPING', 52, 6.6, -85.8, 0, 8, 1.2, '#b8651f');
+  wallSign('301C ILOX VNA', 62, 6.6, -85.8, 0, 8, 1.2);
+  // South block.
+  wallSign('5211 STOREY', 60, 7, 77.7, Math.PI, 16, 2);
+  wallSign('5123 RIVER RD', 120, 6, 85.8, Math.PI, 11, 1.3);
 
   // ---- Street signs ----
   const streetSign = (text, x, z, rotY) => {
     box(0.25, 3.4, 0.25, M.signPost, x, 1.7, z);
     wallSign(text, x, 3.2, z, rotY, 4.5, 0.8, '#2e7d32');
   };
-  streetSign('LAITRAM LN', -10, -47, Math.PI / 4);
-  streetSign('STOREY ST', 150, -47, -Math.PI / 4);
-  streetSign('PLANTATION ST', 16, 117, Math.PI / 4);
+  streetSign('TOLER ST', -10, -47, Math.PI / 4);
+  streetSign('LAITRAM LN', 150, -47, -Math.PI / 4);
+  streetSign('RIVER ROAD', 16, 117, Math.PI / 4);
+  streetSign('STOREY ST', -12, 59, Math.PI / 4);
+  streetSign('STOREY ST', 148, 59, -Math.PI / 4);
+  streetSign('PLANTATION RD', 8, 74, Math.PI / 4);
 
   // ---- Image signs ----
   // Each sign is a dark-framed billboard on two posts that loads a WebP texture.

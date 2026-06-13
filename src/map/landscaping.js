@@ -77,9 +77,9 @@ export function addLandscaping(ctx) {
     colliders.push(makeCollider(x, z, 1, 1));
   };
 
-  // Oaks along the main drive and streets.
-  oak(-12, 70, 1.1);
-  oak(12, 70, 1);
+  // Oaks along the main drive and streets (clear of the Storey St roadbed).
+  oak(-12, 78, 1.1);
+  oak(12, 78, 1);
   oak(-12, 95, 1.2);
   oak(12, 95, 1.1);
   oak(-40, 112, 1.2);

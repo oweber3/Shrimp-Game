@@ -64,6 +64,8 @@ export function addProps(ctx) {
   addTruck(world, colliders, 84, -25, Math.PI / 2);
   // At the warehouse west dock.
   addTruck(world, colliders, -160, 70, 0, 0xc23b3b);
+  // Backed up to the 301B shipping door on Toler St.
+  addTruck(world, colliders, 52, -79.5, 0, 0x3b6a9a);
   addForklift(world, colliders, 94, -2);
 
   // ---- Parking lots (paving, stripes, wheel stops, parked cars) ----

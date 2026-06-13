@@ -63,16 +63,20 @@ function addTerrain({ colliders, M, box, flat }) {
   // ---- Ground ----
   flat(380, 305, M.grass, 0, 0, 0);
 
-  // ---- Roads ----
-  // Plantation St along the south edge.
+  // ---- Roads (named per the real campus map) ----
+  // River Road along the south edge.
   flat(345, 12, M.asphalt, -7.5, 125, 0.04);
-  // Laitram Lane: east-west, north of the Laitram Machinery building.
+  // Toler Street: east-west along the north side of the main block.
   flat(205, 12, M.asphalt, 62.5, -55, 0.04);
-  // Main campus drive: north-south between Intralox and Laitram Machinery.
+  // Plantation Road: north-south through the middle of campus.
   flat(10, 180, M.asphalt, 0, 35, 0.04);
-  // Storey St along the east side.
+  // Plantation Road north extension, up through the 301/5307 district.
+  flat(10, 78, M.asphalt, 0, -97, 0.04);
+  // Storey Street: east-west through the middle of the south block.
+  flat(320, 10, M.asphalt, 2, 66, 0.04);
+  // Laitram Lane along the east side.
   flat(10, 185, M.asphalt, 158, 37.5, 0.04);
-  // West street alongside Intralox, down to the pharmacy corner.
+  // Plantation Drive along the west edge, down to the 200 Plantation corner.
   flat(9, 232, M.asphalt, -160, 9, 0.04);
 
   // Truck aprons and drive lanes (concrete-toned asphalt pads).
@@ -84,7 +88,9 @@ function addTerrain({ colliders, M, box, flat }) {
 
   // Road center lines.
   for (let z = 118; z > -48; z -= 14) flat(0.5, 6, M.roadLine, 0, z, 0.06);
+  for (let z = -64; z > -134; z -= 14) flat(0.5, 6, M.roadLine, 0, z, 0.06);
   for (let x = -30; x < 160; x += 14) flat(6, 0.5, M.roadLine, x, -55, 0.06);
+  for (let x = -150; x < 160; x += 14) flat(6, 0.5, M.roadLine, x, 66, 0.06);
   for (let x = -172; x < 160; x += 14) flat(6, 0.5, M.roadLine, x, 125, 0.06);
   for (let z = -46; z < 122; z += 14) flat(0.5, 6, M.roadLine, 158, z, 0.06);
 
