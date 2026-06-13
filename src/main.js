@@ -11,6 +11,10 @@ import { PunchSystem } from './mechanics/combat.js';
 import { LoadingScreen } from './ui/loadingScreen.js';
 import { MissionLog } from './ui/missionLog.js';
 import { AudioManager } from './audio/audioManager.js';
+import { Atmosphere } from './world/sky.js';
+import { createPostFX } from './world/postfx.js';
+import { addStreetlights } from './world/streetlights.js';
+import { Collectibles } from './mechanics/collectibles.js';
 
 // Shrimp Shift: Laitram Town
 // Low-poly third-person walking game set on an industrial campus
@@ -23,6 +27,11 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+// ACES filmic tone mapping + sRGB output: the single biggest visual upgrade
+// for PBR materials. Exposure is tuned against the atmospheric-scattering sky.
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.5;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 app.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -41,7 +50,7 @@ scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffe7c2, 1.35);
 sun.position.set(70, 100, 80);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.set(1024, 1024);
 sun.shadow.camera.left = -200;
 sun.shadow.camera.right = 200;
 sun.shadow.camera.top = 200;
@@ -53,6 +62,10 @@ scene.add(sun);
 // World, player, NPCs, missions, UI.
 const loading = new LoadingScreen();
 const { colliders, bounds, update: updateWorld } = buildWorld(scene, loading.manager);
+// Atmosphere drives the day/night cycle, sky, clouds and the campus lighting
+// rig; streetlamps glow at dusk via the bloom pass.
+const atmosphere = new Atmosphere(scene, renderer, { sun, ambient, hemi });
+const streetlights = addStreetlights(scene, colliders);
 const ui = new UI();
 const minimap = new Minimap();
 const missionLog = new MissionLog();
@@ -60,9 +73,11 @@ const audio = new AudioManager();
 const player = new Player(scene, camera, POI.spawn);
 const npcs = new NPCManager(scene);
 const missions = new Missions(scene, ui, npcs, player, missionLog);
-const zones = new ZoneSystem(camera, scene, { ambient, hemi, sun });
+const zones = new ZoneSystem(camera, scene, { ambient, hemi, sun }, atmosphere);
 const cart = new GolfCart(scene, colliders);
 const punch = new PunchSystem(player, npcs);
+const collectibles = new Collectibles(scene, audio, ui);
+const postfx = createPostFX(renderer, scene, camera);
 
 // Procedural audio hooks (all gated behind the start-overlay click).
 player.onStep = () => audio.footstep(player.isJogging());
@@ -79,7 +94,10 @@ ui.onStart(() => {
 });
 
 // Debug/testing handle.
-window.__game = { player, missions, npcs, ui, zones, cart, punch, audio, minimap, missionLog, renderer };
+window.__game = {
+  player, missions, npcs, ui, zones, cart, punch, audio, minimap, missionLog,
+  renderer, atmosphere, postfx, streetlights, collectibles
+};
 
 // Interaction: E talks/picks up/advances dialogue, or mounts/dismounts the
 // cart. F throws a punch (on foot only).
@@ -95,12 +113,10 @@ window.addEventListener('keydown', (e) => {
   } else if (cart.mounted) {
     const spot = cart.dismount();
     player.position.copy(spot);
-    player.mesh.visible = true;
   } else if (currentInteractable) {
     currentInteractable.action();
   } else if (cart.canMount(player.position)) {
     cart.mount();
-    player.mesh.visible = false;
   }
 });
 
@@ -108,30 +124,69 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  postfx.resize(window.innerWidth, window.innerHeight);
 });
 
 const clock = new THREE.Clock();
 
+// Fixed-timestep movement: the simulation is sub-stepped at a constant rate
+// so travel distance stays correct no matter how slow the renderer is. The
+// physics is cheap; only rendering is heavy, so decoupling them keeps the
+// game playable on low-end / software-GL devices (and keeps the headless
+// movement tests accurate).
+const FIXED_DT = 1 / 60;
+// Capacity (16/60 ≈ 0.27s) exceeds the frame-delta cap below (0.25s), so the
+// accumulator never sheds backlog — the sim tracks real time at any frame
+// rate, only slowing to a graceful slow-mo if a frame somehow exceeds 0.25s.
+const MAX_SUBSTEPS = 16;
+let physicsAcc = 0;
+
 renderer.setAnimationLoop(() => {
-  const dt = Math.min(clock.getDelta(), 0.05);
+  const frameDelta = Math.min(clock.getDelta(), 0.25);
   const time = clock.elapsedTime;
 
   player.movementLocked = ui.isDialogueOpen() || minimap.isExpanded() || cart.mounted;
-  player.update(dt, colliders, bounds);
-  punch.update(dt); // after player.update so the swing overrides arm pose
-  cart.update(dt, player.keys, colliders, bounds);
-  if (cart.mounted) {
-    // The player rides along invisibly so camera, minimap, compass and
-    // zone detection all keep working off player.position.
-    player.position.copy(cart.group.position);
-    player.mesh.position.set(player.position.x, 0, player.position.z);
-    player.mesh.rotation.y = cart.state.yaw;
+
+  physicsAcc += frameDelta;
+  let steps = 0;
+  while (physicsAcc >= FIXED_DT && steps < MAX_SUBSTEPS) {
+    player.update(FIXED_DT, colliders, bounds);
+    punch.update(FIXED_DT); // after player.update so the swing overrides arm pose
+    cart.update(FIXED_DT, player.keys, colliders, bounds);
+    if (cart.mounted) player.position.copy(cart.group.position);
+    physicsAcc -= FIXED_DT;
+    steps++;
   }
-  npcs.update(dt, time, player.position);
+  if (steps === MAX_SUBSTEPS) physicsAcc = 0; // shed backlog instead of spiralling
+
+  if (cart.mounted) {
+    // The shrimp stays visible, seated on the bench with legs forward and
+    // claws on the wheel; pose follows the final cart state this frame.
+    const cartYaw = cart.state.yaw;
+    player.mesh.position.set(
+      player.position.x - Math.sin(cartYaw) * 0.55,
+      0.34,
+      player.position.z - Math.cos(cartYaw) * 0.55
+    );
+    player.mesh.rotation.y = cartYaw;
+    player.parts.legL.rotation.x = -1.35;
+    player.parts.legR.rotation.x = -1.35;
+    player.parts.armL.rotation.x = -0.9;
+    player.parts.armR.rotation.x = -0.9;
+  }
+
+  npcs.update(frameDelta, time, player.position);
   missions.update(time);
-  updateWorld(dt, time); // animated map elements (canal water drift)
-  zones.update(dt, player.position); // indoor/outdoor transitions
+  collectibles.update(frameDelta, player.position);
+  updateWorld(frameDelta, time); // animated map elements (canal water drift)
+  // Atmosphere first (sets the outdoor lighting baseline for this frame),
+  // then zones overrides it toward the indoor profile when inside.
+  atmosphere.update(frameDelta);
+  streetlights.update(atmosphere.nightFactor);
+  postfx.setNight(atmosphere.nightFactor);
+  zones.update(frameDelta, player.position); // indoor/outdoor transitions
   audio.setIndoorBlend(zones.blend); // indoor hum fades with the lights
+  ui.setClock(atmosphere.timeLabel);
 
   // Update minimap markers and NPC positions each frame.
   const mState = missions.state;
@@ -192,5 +247,5 @@ renderer.setAnimationLoop(() => {
     target ? target.label : 'Free roam'
   );
 
-  renderer.render(scene, camera);
+  postfx.render();
 });

@@ -28,6 +28,18 @@ body {
   pointer-events: none;
   color: #eef3f5;
   user-select: none;
+  z-index: 6;
+}
+
+/* Cinematic vignette: darkens the frame corners, sits above the canvas but
+   below all HUD panels. Pure CSS, zero GPU cost in the render loop. */
+#app::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  background: radial-gradient(ellipse at 50% 46%, transparent 50%, rgba(8, 12, 18, 0.36) 100%);
 }
 
 .panel {
@@ -84,6 +96,14 @@ body {
   display: inline-block;
   margin-top: 4px;
   color: #ff9e5e;
+}
+
+#compass .clock {
+  font-size: 12px;
+  color: #ffd9a8;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
 }
 
 #prompt {
@@ -267,6 +287,31 @@ body {
   background: rgba(255, 158, 94, 0.15);
 }
 
+/* ── Golden Shrimp collectible counter (under the minimap) ─────────── */
+#collectibles-hud {
+  position: absolute;
+  top: 218px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffd24d;
+  padding: 6px 12px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+#collectibles-hud .cg-icon {
+  font-size: 16px;
+  filter: drop-shadow(0 0 3px rgba(255, 210, 77, 0.6));
+}
+
+#collectibles-hud.pulse {
+  transform: scale(1.18);
+  box-shadow: 0 0 16px rgba(255, 210, 77, 0.65);
+}
+
 /* Phone-sized adjustments */
 @media (max-width: 480px) {
   #minimap {
@@ -274,6 +319,11 @@ body {
     top: 10px;
     right: 10px;
     padding: 6px 8px 5px;
+  }
+
+  #collectibles-hud {
+    top: 184px;
+    right: 10px;
   }
 }
 

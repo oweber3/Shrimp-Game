@@ -5,7 +5,7 @@ import * as THREE from 'three';
 // relative to head center), toolbelt/clipboard to the torso group.
 
 function mat(color) {
-  return new THREE.MeshLambertMaterial({ color });
+  return new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.1 });
 }
 
 const SILVER = 0xc9d4d9;

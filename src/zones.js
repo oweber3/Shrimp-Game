@@ -38,12 +38,19 @@ const INDOOR_LIGHTING = {
 };
 
 export class ZoneSystem {
-  constructor(camera, scene, lights) {
+  constructor(camera, scene, lights, atmosphere) {
     this.camera = camera;
     this.scene = scene;
     this.lights = lights; // { ambient, hemi, sun }
+    // The atmosphere recomputes outdoor lighting every frame for the
+    // day/night cycle; we blend from its live values toward the indoor
+    // profile. Falls back to a fixed daytime profile if absent.
+    this.atmosphere = atmosphere || { outdoor: OUTDOOR_LIGHTING, skyTexture: null };
     this.zone = 'outdoor';
     this.blend = 0; // 0 = outdoor lighting, 1 = indoor lighting
+    // Neutral surround for the indoor dollhouse view. Outdoors the
+    // background is the atmosphere's baked sky cube.
+    this._indoorBg = INDOOR_LIGHTING.background.clone();
     camera.layers.enable(EXTERIOR_LAYER);
   }
 
@@ -74,9 +81,11 @@ export class ZoneSystem {
         if (this.isIndoor) {
           this.camera.layers.disable(EXTERIOR_LAYER);
           this.camera.layers.enable(INTERIOR_LAYER);
+          this.scene.background = this._indoorBg;
         } else {
           this.camera.layers.enable(EXTERIOR_LAYER);
           this.camera.layers.disable(INTERIOR_LAYER);
+          this.scene.background = this.atmosphere.skyTexture || this._indoorBg;
         }
       }
     }
@@ -85,13 +94,14 @@ export class ZoneSystem {
     const target = this.isIndoor ? 1 : 0;
     this.blend += (target - this.blend) * Math.min(1, dt * 5);
     const b = this.blend;
-    const o = OUTDOOR_LIGHTING;
+    const o = this.atmosphere.outdoor; // live outdoor lighting (day/night)
     const i = INDOOR_LIGHTING;
     const { ambient, hemi, sun } = this.lights;
     ambient.color.lerpColors(o.ambientColor, i.ambientColor, b);
     ambient.intensity = o.ambientIntensity + (i.ambientIntensity - o.ambientIntensity) * b;
     hemi.intensity = o.hemiIntensity + (i.hemiIntensity - o.hemiIntensity) * b;
     sun.intensity = o.sunIntensity + (i.sunIntensity - o.sunIntensity) * b;
-    this.scene.background.lerpColors(o.background, i.background, b);
+    // Background is switched hard at the indoor/outdoor boundary above
+    // (the sky cube can't be color-lerped), so nothing to do per frame here.
   }
 }
