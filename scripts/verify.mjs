@@ -138,6 +138,37 @@ await teleport(82, 24.5); // near Lou at break area
 await interactAndFinishDialogue();
 check('flavor NPC dialogue works', true);
 
+// --- Interior zone transitions (Phase 4) ---
+const zone = () => page.evaluate(() => window.__game.zones.zone);
+
+await teleport(35, 24); // on the walk outside the LM office front door
+await sleep(300);
+check('outdoor zone before entering', (await zone()) === 'outdoor', await zone());
+
+await page.keyboard.down('KeyW'); // walk north through the doorway
+await sleep(1100);
+await page.keyboard.up('KeyW');
+check('walking through front door enters lobby', (await zone()) === 'lobby', await zone());
+
+await teleport(28, -8); // cubicle aisle
+await sleep(300);
+check('office floor zone detected', (await zone()) === 'office_floor', await zone());
+
+await teleport(60, -12); // manager office
+await sleep(300);
+check('manager office zone detected', (await zone()) === 'manager_office', await zone());
+
+await teleport(62, 4); // breakroom
+await sleep(300);
+check('breakroom zone detected', (await zone()) === 'breakroom', await zone());
+
+await teleport(35, 16); // back to the lobby
+await sleep(300);
+await page.keyboard.down('KeyS'); // walk south out the front door
+await sleep(1100);
+await page.keyboard.up('KeyS');
+check('walking out restores outdoor zone', (await zone()) === 'outdoor', await zone());
+
 // Objective text sanity.
 const objective = await page.$eval('#objective-text', (el) => el.textContent);
 check('objective shows free exploration', objective.includes('Explore'), objective);

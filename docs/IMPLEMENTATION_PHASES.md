@@ -154,7 +154,15 @@ src/characters/accessories.js    — toolbelt, clipboard, hard hat builders
 
 ## Phase 4: Indoor Building / Interior Section
 
-**Status**: Pending
+**Status**: Done — Laitram Machinery has a walkable interior (lobby, office floor with six
+cubicles, manager's office, breakroom; north half sealed off as the production floor).
+`src/zones.js` tracks `outdoor | lobby | office_floor | manager_office | breakroom` with
+0.5-unit hysteresis, swaps THREE.Layers culling at the indoor/outdoor boundary (exterior =
+layer 1, interior = layer 2, characters = layer 0), and eases lighting + scene background
+over ~0.5s. Interior PointLights are culled automatically by camera layers when outdoors.
+Ceilings are single-sided planes facing down so the chase camera can see in over the
+roofline. Interior colliders are registered statically (collider count is small enough
+that on-enter registration wasn't needed). verify.mjs gained 6 zone-transition checks.
 **Goal**: Add a walkable interior to the Laitram Machinery building.
 
 ### What Changes
