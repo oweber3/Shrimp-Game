@@ -6,6 +6,8 @@ import { Missions } from './missions.js';
 import { UI } from './ui.js';
 import { Minimap } from './minimap.js';
 import { ZoneSystem } from './zones.js';
+import { GolfCart } from './mechanics/vehicle.js';
+import { PunchSystem } from './mechanics/combat.js';
 
 // Shrimp Shift: Laitram Town
 // Low-poly third-person walking game set on an industrial campus
@@ -53,6 +55,8 @@ const player = new Player(scene, camera, POI.spawn);
 const npcs = new NPCManager(scene);
 const missions = new Missions(scene, ui, npcs, player);
 const zones = new ZoneSystem(camera, scene, { ambient, hemi, sun });
+const cart = new GolfCart(scene, colliders);
+const punch = new PunchSystem(player, npcs);
 
 ui.onStart(() => {
   try {
@@ -64,16 +68,28 @@ ui.onStart(() => {
 });
 
 // Debug/testing handle.
-window.__game = { player, missions, npcs, ui, zones };
+window.__game = { player, missions, npcs, ui, zones, cart, punch };
 
-// Interaction: E talks/picks up, or advances open dialogue.
+// Interaction: E talks/picks up/advances dialogue, or mounts/dismounts the
+// cart. F throws a punch (on foot only).
 let currentInteractable = null;
 window.addEventListener('keydown', (e) => {
+  if (e.code === 'KeyF') {
+    if (!ui.isDialogueOpen() && !cart.mounted) punch.tryPunch();
+    return;
+  }
   if (e.code !== 'KeyE') return;
   if (ui.isDialogueOpen()) {
     ui.advanceDialogue();
+  } else if (cart.mounted) {
+    const spot = cart.dismount();
+    player.position.copy(spot);
+    player.mesh.visible = true;
   } else if (currentInteractable) {
     currentInteractable.action();
+  } else if (cart.canMount(player.position)) {
+    cart.mount();
+    player.mesh.visible = false;
   }
 });
 
@@ -89,8 +105,17 @@ renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), 0.05);
   const time = clock.elapsedTime;
 
-  player.movementLocked = ui.isDialogueOpen() || minimap.isExpanded();
+  player.movementLocked = ui.isDialogueOpen() || minimap.isExpanded() || cart.mounted;
   player.update(dt, colliders, bounds);
+  punch.update(dt); // after player.update so the swing overrides arm pose
+  cart.update(dt, player.keys, colliders, bounds);
+  if (cart.mounted) {
+    // The player rides along invisibly so camera, minimap, compass and
+    // zone detection all keep working off player.position.
+    player.position.copy(cart.group.position);
+    player.mesh.position.set(player.position.x, 0, player.position.z);
+    player.mesh.rotation.y = cart.state.yaw;
+  }
   npcs.update(dt, time, player.position);
   missions.update(time);
   updateWorld(dt, time); // animated map elements (canal water drift)
@@ -120,9 +145,9 @@ renderer.setAnimationLoop(() => {
   );
   minimap.update(player.position, player.yaw);
 
-  // Find the nearest available interactable in range.
+  // Find the nearest available interactable in range (on foot only).
   currentInteractable = null;
-  if (!ui.isDialogueOpen()) {
+  if (!ui.isDialogueOpen() && !cart.mounted) {
     let best = Infinity;
     for (const it of missions.interactables) {
       if (!it.available()) continue;
@@ -136,6 +161,10 @@ renderer.setAnimationLoop(() => {
   }
   if (currentInteractable) {
     ui.showPrompt(currentInteractable.prompt());
+  } else if (cart.mounted) {
+    ui.showPrompt('Hop off the cart');
+  } else if (!ui.isDialogueOpen() && cart.canMount(player.position)) {
+    ui.showPrompt('Drive the cart');
   } else {
     ui.hidePrompt();
   }

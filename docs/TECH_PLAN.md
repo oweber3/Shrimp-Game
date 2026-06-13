@@ -51,6 +51,10 @@ src/
     npcBehaviors.js — behavior state machine (idle/patrol/sit/talk/react)
   dialogue/
     dialogueData.js — all NPC flavor + mission dialogue strings
+  mechanics/
+    combat.js        — punch swing, hit cone, cooldown
+    vehicle.js       — golf cart mesh, mount/dismount, movable collider
+    vehiclePhysics.js — Euler accelerate/steer/friction model
   npc.js           — NPC definitions and manager (re-exports createShrimpWorker)
   missions.js      — state machine, dialogue, items
   collision.js     — 2D circle-AABB collision resolver
