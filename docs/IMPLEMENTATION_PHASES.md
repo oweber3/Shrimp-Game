@@ -276,7 +276,14 @@ src/dialogue/dialogueData.js     — all dialogue strings extracted to a data fi
 
 ## Phase 6: GTA-Like Mechanics — Melee and Vehicle
 
-**Status**: Pending
+**Status**: Done — `src/mechanics/combat.js` (F-key punch: 0.3s claw swing on the shoulder
+pivot, hit check 1.9 units forward in a ±60° cone, NPCs enter the Phase 5 react state and
+stumble; 0.8s time-based cooldown). `src/mechanics/vehicle.js` + `vehiclePhysics.js`: golf
+cart parked on the Intralox apron; E mounts/dismounts, W/S/A/D drive with Euler integration
+(accel 16, max 12 u/s, friction 0.92/frame applied only while coasting — applying it under
+throttle caps speed at ~3 u/s), speed-proportional steering, collision via the existing AABB
+system at radius 1.2 with one mutable collider rectangle that follows the parked cart and
+moves out of the world while driving. verify.mjs gained 4 punch/cart checks (32 total).
 **Goal**: Basic punch action and driveable golf cart.
 
 ### What Changes

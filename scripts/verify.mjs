@@ -161,7 +161,7 @@ await sleep(300);
 check('outdoor zone before entering', (await zone()) === 'outdoor', await zone());
 
 await page.keyboard.down('KeyW'); // walk north through the doorway
-await sleep(1100);
+await sleep(1600);
 await page.keyboard.up('KeyW');
 check('walking through front door enters lobby', (await zone()) === 'lobby', await zone());
 
@@ -180,9 +180,55 @@ check('breakroom zone detected', (await zone()) === 'breakroom', await zone());
 await teleport(35, 16); // back to the lobby
 await sleep(300);
 await page.keyboard.down('KeyS'); // walk south out the front door
-await sleep(1100);
+await sleep(1600);
 await page.keyboard.up('KeyS');
 check('walking out restores outdoor zone', (await zone()) === 'outdoor', await zone());
+
+// --- Punch (Phase 6) ---
+// After walking south out of the lobby the player faces +z; Lou stands at
+// (82, 27), so approach from the north and swing.
+await teleport(82, 25.3);
+await sleep(400);
+const louBefore = await page.evaluate(() => {
+  const p = window.__game.npcs.get('lou').group.position;
+  return { x: p.x, z: p.z };
+});
+await page.keyboard.press('KeyF');
+await sleep(500);
+const louAfter = await page.evaluate(() => {
+  const p = window.__game.npcs.get('lou').group.position;
+  return { x: p.x, z: p.z };
+});
+const flinched = Math.hypot(louAfter.x - louBefore.x, louAfter.z - louBefore.z);
+check('punch makes NPC flinch back', flinched > 0.2, `moved ${flinched.toFixed(2)}m`);
+
+// --- Golf cart (Phase 6) ---
+await teleport(-29, 16); // beside the cart on the Intralox apron
+await sleep(350);
+await page.keyboard.press('KeyE');
+await sleep(200);
+check('E mounts the golf cart', await page.evaluate(() => window.__game.cart.mounted));
+
+const cartBefore = await page.evaluate(() => {
+  const p = window.__game.cart.group.position;
+  return { x: p.x, z: p.z };
+});
+await page.keyboard.down('KeyW');
+await sleep(900);
+await page.keyboard.up('KeyW');
+const cartAfter = await page.evaluate(() => {
+  const p = window.__game.cart.group.position;
+  return { x: p.x, z: p.z };
+});
+const drove = Math.hypot(cartAfter.x - cartBefore.x, cartAfter.z - cartBefore.z);
+check('cart drives forward', drove > 3, `drove ${drove.toFixed(1)}m`);
+
+await page.keyboard.press('KeyE');
+await sleep(200);
+const dismounted = await page.evaluate(
+  () => !window.__game.cart.mounted && window.__game.player.mesh.visible
+);
+check('E dismounts and player reappears', dismounted);
 
 // Objective text sanity.
 const objective = await page.$eval('#objective-text', (el) => el.textContent);
