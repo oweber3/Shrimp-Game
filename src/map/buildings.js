@@ -17,6 +17,9 @@ export function addBuildings(ctx) {
     box(8, 3, 6, M.roof, plant.x - 12, 18.9, rz);
     box(6, 2.4, 5, M.roof, plant.x + 14, 18.6, rz + 12);
   }
+  // Clerestory glass strips high on the long east and west faces.
+  box(0.3, 1.6, 140, M.glass, -62.5, 10.5, plant.z, { castShadow: false });
+  box(0.3, 1.6, 140, M.glass, -137.5, 10.5, plant.z, { castShadow: false });
   // Shipping dock on the east face, facing the main drive.
   box(6, 1.3, 30, M.dock, -59, 0.65, -5, { collide: true });
   for (const dz of [-16, -8, 0, 8]) {
@@ -41,6 +44,11 @@ export function addBuildings(ctx) {
   box(12, 0.6, 5, M.blueTrim, 35, 4.4, 21.5);
   box(0.5, 4.1, 0.5, M.concrete, 30, 2.05, 23.2);
   box(0.5, 4.1, 0.5, M.concrete, 40, 2.05, 23.2);
+  // Window mullions across the office front glass (skip the entry doors).
+  for (let mx = 18; mx <= 52; mx += 4) {
+    if (Math.abs(mx - 35) < 2) continue;
+    box(0.3, 4.5, 0.3, M.metal, mx, 4, 19.35, { castShadow: false });
+  }
 
   // Receiving dock on the east face, into the truck court.
   box(6, 1.3, 24, M.dock, 73, 0.65, -20, { collide: true });
@@ -105,6 +113,17 @@ export function addBuildings(ctx) {
   box(10, 0.6, 4, M.blueTrim, hqB.x, 3.4, 0);
   box(0.5, 3.4, 0.5, M.concrete, hqB.x - 4, 1.7, 1.6);
   box(0.5, 3.4, 0.5, M.concrete, hqB.x + 4, 1.7, 1.6);
+  // Window mullions on all four faces, spanning both glass bands.
+  for (let mx = 116; mx <= 144; mx += 4) {
+    box(0.3, 5.5, 0.7, M.metal, mx, 4.75, -38.3, { castShadow: false }); // north
+    if (Math.abs(mx - hqB.x) >= 6) {
+      box(0.3, 5.5, 0.7, M.metal, mx, 4.75, -1.7, { castShadow: false }); // south (skip entry)
+    }
+  }
+  for (let mz = -34; mz <= -6; mz += 4) {
+    box(0.7, 5.5, 0.3, M.metal, 111.7, 4.75, mz, { castShadow: false }); // west
+    box(0.7, 5.5, 0.3, M.metal, 148.3, 4.75, mz, { castShadow: false }); // east
+  }
 
   // ---- Lapeyre Stair (northeast, across Laitram Ln) ----
   box(70, 12, 45, M.whiteWall, 105, 6, -100, { collide: true });
@@ -128,10 +147,15 @@ export function addBuildings(ctx) {
   // Front roll-up doors facing north.
   box(8, 6, 0.4, M.dockDoor, -115, 3.2, 72.8, { castShadow: false });
   box(8, 6, 0.4, M.dockDoor, -85, 3.2, 72.8, { castShadow: false });
+  // Rooftop HVAC units.
+  box(5, 1.8, 4, M.hvac, -125, 15.1, 95);
+  box(5, 1.8, 4, M.hvac, -100, 15.1, 90);
+  box(5, 1.8, 4, M.hvac, -75, 15.1, 98);
 
   // ---- Laitram Pharmacy (far southwest corner) ----
   box(14, 5, 18, M.officeWall, -171, 2.5, 40, { collide: true });
   box(15, 0.7, 19, M.roof, -171, 5.35, 40, { castShadow: false });
+  box(2, 1, 1.5, M.hvac, -174, 6.2, 44); // rooftop AC
 
   // ---- Guard shack at the Plantation St gate ----
   box(5, 3.6, 5, M.officeWall, 8, 1.8, 112, { collide: true });
