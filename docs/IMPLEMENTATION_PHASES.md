@@ -102,7 +102,14 @@ src/map/vehicles.js      — vehicle builders extracted from mapData.js
 
 ## Phase 3: Shrimp Worker Model Improvements
 
-**Status**: Pending
+**Status**: Done — character builder extracted to `src/characters/shrimpWorker.js` with a
+Group hierarchy (root → torso → arms/head/tail, legs at hips) and a stable API:
+`root.userData.parts = { torso, head, armL, armR, legL, legR, tail, carryAnchor }`.
+Tail and antennae are smooth tapered tubes (custom BufferGeometry along Catmull-Rom curves).
+PPE/accessories in `src/characters/accessories.js`. NPCs got per-NPC bob frequency/phase,
+idle head glances, walk-cycle limb swing, and seeded hat/boot color variety; player swings
+limbs while moving and carries items via the carryAnchor world position. Carried mission
+items remain scene-level objects (missions.js reads their world position directly).
 **Goal**: More organic, readable shrimp characters. Better hierarchy for future animation.
 
 ### What Changes
