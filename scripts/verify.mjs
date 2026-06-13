@@ -34,6 +34,17 @@ await page.click('#start-overlay');
 const overlayHidden = await page.$eval('#start-overlay', (el) => el.style.display === 'none');
 check('start overlay dismisses', overlayHidden);
 
+// --- Polish (Phase 7) ---
+const loadingHidden = await page.$eval(
+  '#loading-screen',
+  (el) => el.style.opacity === '0' || el.style.display === 'none'
+);
+check('loading screen completed and hidden', loadingHidden);
+check('audio manager initialized', await page.evaluate(() => !!window.__game.audio));
+
+const tris = await page.evaluate(() => window.__game.renderer.info.render.triangles);
+check('triangle budget under 100k', tris > 0 && tris < 100000, `${tris} triangles`);
+
 const pos = () => page.evaluate(() => {
   const p = window.__game.player.position;
   return { x: p.x, z: p.z };
@@ -102,6 +113,16 @@ check('initial state is M1_TALK', (await state()) === 'M1_TALK');
 await teleport(-50, -3); // near Gus at the Intralox shipping dock
 await interactAndFinishDialogue();
 check('talking to Gus starts wrench hunt', (await state()) === 'M1_FIND', await state());
+
+// Mission log (Phase 7): Tab opens it with the objective history.
+await page.keyboard.press('Tab');
+await sleep(150);
+const logState = await page.$eval('#mission-log', (el) => ({
+  open: el.style.display !== 'none',
+  text: el.textContent
+}));
+check('Tab opens mission log with history', logState.open && logState.text.includes('Mission 1'));
+await page.keyboard.press('Tab'); // close it again
 
 await teleport(-146, 88.5); // near wrench at the warehouse west dock
 await sleep(350);
@@ -176,6 +197,10 @@ check('manager office zone detected', (await zone()) === 'manager_office', await
 await teleport(62, 4); // breakroom
 await sleep(300);
 check('breakroom zone detected', (await zone()) === 'breakroom', await zone());
+check(
+  'minimap switches to floor plan indoors',
+  await page.evaluate(() => window.__game.minimap.isIndoorMode())
+);
 
 await teleport(35, 16); // back to the lobby
 await sleep(300);

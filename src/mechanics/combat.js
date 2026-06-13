@@ -17,6 +17,7 @@ export class PunchSystem {
     this.cooldown = 0;
     this.t = -1; // active swing time, -1 = idle
     this.hitDone = false;
+    this.onSwing = null; // fired when a swing actually starts (audio hook)
   }
 
   tryPunch() {
@@ -24,6 +25,7 @@ export class PunchSystem {
     this.cooldown = COOLDOWN;
     this.t = 0;
     this.hitDone = false;
+    if (this.onSwing) this.onSwing();
   }
 
   // Runs after player.update so the swing overrides the walk arm-swing.

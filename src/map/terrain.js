@@ -29,7 +29,7 @@ export const POI = {
   coffeePot: new THREE.Vector3(68.35, 0, 3.45)
 };
 
-export function buildWorld(scene) {
+export function buildWorld(scene, loadingManager) {
   const colliders = [];
   const world = new THREE.Group();
   scene.add(world);
@@ -39,7 +39,7 @@ export function buildWorld(scene) {
   // updaters: per-frame callbacks (dt, time) for animated map elements
   // (currently just the canal water drift).
   const updaters = [];
-  const ctx = { world, colliders, M, box, flat, updaters };
+  const ctx = { world, colliders, M, box, flat, updaters, loadingManager };
 
   addTerrain(ctx);
   addBuildings(ctx);

@@ -30,6 +30,18 @@ const BUILDINGS = [
   { cx:    8, cz:  112, sx:  5,  sz:   5, color: '#3d5465' }, // Guard Shack
 ];
 
+// Indoor floor plan (Phase 7): shown instead of the campus overhead while
+// the player is inside Laitram Machinery. Region matches the campus map's
+// aspect ratio so the canvas size logic is shared.
+const INDOOR_REGION = { minX: 2, maxX: 78, minZ: -41, maxZ: 19.2 };
+const ROOMS = [
+  { x0: 10, x1: 70, z0: -40, z1: -20, label: 'PRODUCTION', dark: true },
+  { x0: 10.6, x1: 52, z0: -19.7, z1: 10, label: 'OFFICE' },
+  { x0: 52, x1: 69.4, z0: -19.7, z1: -8.1, label: 'MANAGER' },
+  { x0: 52, x1: 69.4, z0: -8.1, z1: 10, label: 'BREAK\nROOM' },
+  { x0: 15, x1: 55, z0: 10, z1: 19, label: 'LOBBY' }
+];
+
 // Zone text labels drawn only in the expanded view.
 const ZONES = [
   { wx: -100, wz:  -27, text: 'INTRALOX' },
@@ -48,6 +60,8 @@ export class Minimap {
     this._expanded = false;
     this._markers = [];
     this._npcs = [];
+    this._indoor = false;
+    this._vehicle = null;
 
     // ── Mini panel (top-right corner of the HUD) ───────────────────────
     this._panel = document.createElement('div');
@@ -58,6 +72,7 @@ export class Minimap {
     lbl.className = 'mm-label';
     lbl.textContent = 'CAMPUS MAP';
     this._panel.appendChild(lbl);
+    this._label = lbl;
 
     this._miniCanvas = document.createElement('canvas');
     this._miniCanvas.className = 'mm-canvas';
@@ -113,10 +128,10 @@ export class Minimap {
 
   // Convert world (wx, wz) → canvas pixel (x, y) in [0..cw] × [0..ch].
   // North (-Z) maps to top (y=0); South (+Z) maps to bottom (y=ch).
-  _w2c(wx, wz, cw, ch) {
+  _w2c(wx, wz, cw, ch, region = WORLD) {
     return {
-      x: ((wx - WORLD.minX) / WW) * cw,
-      y: ((wz - WORLD.minZ) / WH) * ch,
+      x: ((wx - region.minX) / (region.maxX - region.minX)) * cw,
+      y: ((wz - region.minZ) / (region.maxZ - region.minZ)) * ch,
     };
   }
 
@@ -146,6 +161,17 @@ export class Minimap {
       ctx.strokeStyle = 'rgba(190,215,235,0.28)';
       ctx.lineWidth = 0.6;
       ctx.strokeRect(a.x, a.y, bpt.x - a.x, bpt.y - a.y);
+    }
+
+    // Golf cart marker (small light square).
+    if (this._vehicle) {
+      const v = p(this._vehicle.wx, this._vehicle.wz);
+      const vr = Math.max(2.2, cw / 60);
+      ctx.fillStyle = '#e8e6df';
+      ctx.fillRect(v.x - vr / 2, v.y - vr / 2, vr, vr);
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(v.x - vr / 2, v.y - vr / 2, vr, vr);
     }
 
     // NPC dots (small orange markers for all shrimp workers)
@@ -217,12 +243,68 @@ export class Minimap {
     }
   }
 
+  // Indoor floor plan: room rectangles, mission markers and NPCs inside
+  // the building region, drawn instead of the campus overhead.
+  _drawIndoor(ctx, cw, ch, expanded) {
+    const R = INDOOR_REGION;
+    const p = (wx, wz) => this._w2c(wx, wz, cw, ch, R);
+
+    ctx.fillStyle = '#10171c';
+    ctx.fillRect(0, 0, cw, ch);
+
+    const fs = Math.max(8, Math.round(cw / 30));
+    for (const r of ROOMS) {
+      const a = p(r.x0, r.z0);
+      const b = p(r.x1, r.z1);
+      ctx.fillStyle = r.dark ? '#232c33' : '#3d5465';
+      ctx.fillRect(a.x, a.y, b.x - a.x, b.y - a.y);
+      ctx.strokeStyle = 'rgba(190,215,235,0.35)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(a.x, a.y, b.x - a.x, b.y - a.y);
+      ctx.font = `${fs}px 'Segoe UI',Arial,sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = r.dark ? '#5d6a73' : '#b8d8f0';
+      const lines = r.label.split('\n');
+      const cx = (a.x + b.x) / 2;
+      const cy = (a.y + b.y) / 2 - ((lines.length - 1) * fs * 1.2) / 2;
+      lines.forEach((line, i) => ctx.fillText(line, cx, cy + i * fs * 1.2));
+    }
+
+    // NPCs inside the region.
+    const nr = Math.max(2, cw / 60);
+    ctx.fillStyle = '#c96a30';
+    for (const n of this._npcs) {
+      if (n.wx < R.minX || n.wx > R.maxX || n.wz < R.minZ || n.wz > R.maxZ) continue;
+      const { x, y } = p(n.wx, n.wz);
+      ctx.beginPath();
+      ctx.arc(x, y, nr, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Mission markers inside the region.
+    const mr = Math.max(4, cw / 42);
+    for (const m of this._markers) {
+      if (!m.visible) continue;
+      if (m.wx < R.minX || m.wx > R.maxX || m.wz < R.minZ || m.wz > R.maxZ) continue;
+      const { x, y } = p(m.wx, m.wz);
+      ctx.beginPath();
+      ctx.arc(x, y, mr, 0, Math.PI * 2);
+      ctx.fillStyle = m.color;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.88)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+  }
+
   // Draw the player dot and direction arrow.
   // World forward direction: (sin(yaw), 0, cos(yaw)).
   // On canvas: +x = east, +y = south — so forward maps directly as
   //   fdx = sin(yaw), fdy = cos(yaw).
   _drawPlayer(ctx, cw, ch, pos, yaw, expanded) {
-    const { x, y } = this._w2c(pos.x, pos.z, cw, ch);
+    const region = this._indoor ? INDOOR_REGION : WORLD;
+    const { x, y } = this._w2c(pos.x, pos.z, cw, ch, region);
     const r = Math.max(4, cw / 30);
     const fdx = Math.sin(yaw);
     const fdy = Math.cos(yaw);
@@ -277,7 +359,8 @@ export class Minimap {
     const mCtx = this._miniCanvas.getContext('2d');
     mCtx.save();
     mCtx.scale(dpr, dpr);
-    this._drawBase(mCtx, MW, MH, false);
+    if (this._indoor) this._drawIndoor(mCtx, MW, MH, false);
+    else this._drawBase(mCtx, MW, MH, false);
     this._drawPlayer(mCtx, MW, MH, playerPos, playerYaw, false);
     mCtx.restore();
 
@@ -309,7 +392,8 @@ export class Minimap {
     const ctx = this._bigCanvas.getContext('2d');
     ctx.save();
     ctx.scale(dpr, dpr);
-    this._drawBase(ctx, bw, bh, true);
+    if (this._indoor) this._drawIndoor(ctx, bw, bh, true);
+    else this._drawBase(ctx, bw, bh, true);
     this._drawPlayer(ctx, bw, bh, playerPos, playerYaw, true);
     ctx.restore();
   }
@@ -319,6 +403,18 @@ export class Minimap {
 
   // positions: [{ wx, wz }]
   setNPCPositions(positions) { this._npcs = positions; }
+
+  // Golf cart position: { wx, wz } (campus map only).
+  setVehicle(v) { this._vehicle = v; }
+
+  // Switch between the campus overhead and the LM floor plan.
+  setIndoor(indoor) {
+    if (indoor === this._indoor) return;
+    this._indoor = indoor;
+    this._label.textContent = indoor ? 'LM FLOOR PLAN' : 'CAMPUS MAP';
+  }
+
+  isIndoorMode() { return this._indoor; }
 
   toggle() { this._expanded ? this.close() : this.open(); }
 
