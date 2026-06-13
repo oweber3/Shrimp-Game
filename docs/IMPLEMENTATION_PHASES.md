@@ -339,7 +339,16 @@ src/mechanics/vehiclePhysics.js  — Euler forward/steer/friction model
 
 ## Phase 7: Polish, UI, Audio, Performance, Deploy
 
-**Status**: Pending
+**Status**: Done — `src/ui/loadingScreen.js` (THREE.LoadingManager progress bar, pointer-events
+none so it can't block the start overlay, 8s stall fallback). `src/audio/audioManager.js`:
+fully procedural Web Audio — footstep noise ticks fired from the player's bob half-cycles,
+indoor machinery hum (3 detuned oscillators through a lowpass, gain driven by the zone blend),
+punch noise burst; created on the start-overlay click for autoplay policy. `src/ui/missionLog.js`:
+Tab-toggled shift log of all objectives. Minimap: indoor floor-plan mode (room rects + labels)
+swaps in via zones, plus a golf cart marker on the campus view. deploy.yml branch list trimmed
+to main. Performance audit (headless, swiftshader): 33,774 triangles rendered at spawn
+(budget < 100k), 145 KB gzipped JS (budget < 500 KB), 144 KB textures (budget < 32 MB);
+shadow map stays at 2048 and fog at 420 — no cuts needed. verify.mjs: 37 checks, all passing.
 **Goal**: Final quality pass. Loading screen, audio, mission log, minimap indoor floors, performance audit.
 
 ### What Changes

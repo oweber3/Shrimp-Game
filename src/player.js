@@ -21,6 +21,8 @@ export class Player {
     this.keys = {};
     this.movementLocked = false;
     this.carrying = null;
+    this.onStep = null; // fired once per footfall (audio hook)
+    this._stepCycle = -1;
 
     this.mesh = createShrimpWorker({
       shellColor: 0xf2825a,
@@ -103,6 +105,12 @@ export class Player {
       const t = performance.now() * 0.001;
       const freq = this.isJogging() ? 14 : 9;
       this.mesh.position.y = Math.abs(Math.sin(t * freq)) * 0.08;
+      // Each |sin| half-cycle is one footfall — fire the step hook there.
+      const cycle = Math.floor((t * freq) / Math.PI);
+      if (cycle !== this._stepCycle) {
+        this._stepCycle = cycle;
+        if (this.onStep) this.onStep();
+      }
       this.mesh.rotation.y = lerpAngle(this.mesh.rotation.y, this.heading, dt * 10);
       const swing = Math.sin(t * freq) * (this.isJogging() ? 0.55 : 0.4);
       this.parts.armL.rotation.x = swing;

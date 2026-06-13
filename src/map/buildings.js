@@ -184,7 +184,7 @@ export function addBuildings(ctx) {
   addSigns(ctx, { lm, hqB, wh });
 }
 
-function addSigns({ world, colliders, M, box }, { lm, hqB, wh }) {
+function addSigns({ world, colliders, M, box, loadingManager }, { lm, hqB, wh }) {
   // ---- Monument signs ----
   const monument = (x, z, text) => {
     box(8, 2.4, 1.2, M.concrete, x, 1.2, z, { collide: true });
@@ -236,7 +236,9 @@ function addSigns({ world, colliders, M, box }, { lm, hqB, wh }) {
   // ---- Image signs ----
   // Each sign is a dark-framed billboard on two posts that loads a WebP texture.
   // The face plane is resized to the image's natural aspect ratio after load.
-  const imgLoader = new THREE.TextureLoader();
+  // Routed through the shared LoadingManager so the loading screen can
+  // track texture progress.
+  const imgLoader = new THREE.TextureLoader(loadingManager);
 
   const addImageSign = (imgPath, x, z, rotY) => {
     const H = 6;              // sign height (world units)

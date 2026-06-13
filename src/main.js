@@ -8,6 +8,9 @@ import { Minimap } from './minimap.js';
 import { ZoneSystem } from './zones.js';
 import { GolfCart } from './mechanics/vehicle.js';
 import { PunchSystem } from './mechanics/combat.js';
+import { LoadingScreen } from './ui/loadingScreen.js';
+import { MissionLog } from './ui/missionLog.js';
+import { AudioManager } from './audio/audioManager.js';
 
 // Shrimp Shift: Laitram Town
 // Low-poly third-person walking game set on an industrial campus
@@ -48,17 +51,25 @@ sun.shadow.bias = -0.0005;
 scene.add(sun);
 
 // World, player, NPCs, missions, UI.
-const { colliders, bounds, update: updateWorld } = buildWorld(scene);
+const loading = new LoadingScreen();
+const { colliders, bounds, update: updateWorld } = buildWorld(scene, loading.manager);
 const ui = new UI();
 const minimap = new Minimap();
+const missionLog = new MissionLog();
+const audio = new AudioManager();
 const player = new Player(scene, camera, POI.spawn);
 const npcs = new NPCManager(scene);
-const missions = new Missions(scene, ui, npcs, player);
+const missions = new Missions(scene, ui, npcs, player, missionLog);
 const zones = new ZoneSystem(camera, scene, { ambient, hemi, sun });
 const cart = new GolfCart(scene, colliders);
 const punch = new PunchSystem(player, npcs);
 
+// Procedural audio hooks (all gated behind the start-overlay click).
+player.onStep = () => audio.footstep(player.isJogging());
+punch.onSwing = () => audio.punch();
+
 ui.onStart(() => {
+  audio.unlock();
   try {
     const p = renderer.domElement.requestPointerLock();
     if (p && p.catch) p.catch(() => {});
@@ -68,7 +79,7 @@ ui.onStart(() => {
 });
 
 // Debug/testing handle.
-window.__game = { player, missions, npcs, ui, zones, cart, punch };
+window.__game = { player, missions, npcs, ui, zones, cart, punch, audio, minimap, missionLog, renderer };
 
 // Interaction: E talks/picks up/advances dialogue, or mounts/dismounts the
 // cart. F throws a punch (on foot only).
@@ -120,6 +131,7 @@ renderer.setAnimationLoop(() => {
   missions.update(time);
   updateWorld(dt, time); // animated map elements (canal water drift)
   zones.update(dt, player.position); // indoor/outdoor transitions
+  audio.setIndoorBlend(zones.blend); // indoor hum fades with the lights
 
   // Update minimap markers and NPC positions each frame.
   const mState = missions.state;
@@ -143,6 +155,8 @@ renderer.setAnimationLoop(() => {
   minimap.setNPCPositions(
     npcs.npcs.map((n) => ({ wx: n.group.position.x, wz: n.group.position.z }))
   );
+  minimap.setVehicle({ wx: cart.group.position.x, wz: cart.group.position.z });
+  minimap.setIndoor(zones.isIndoor);
   minimap.update(player.position, player.yaw);
 
   // Find the nearest available interactable in range (on foot only).

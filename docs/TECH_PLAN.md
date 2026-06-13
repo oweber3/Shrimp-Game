@@ -55,6 +55,11 @@ src/
     combat.js        — punch swing, hit cone, cooldown
     vehicle.js       — golf cart mesh, mount/dismount, movable collider
     vehiclePhysics.js — Euler accelerate/steer/friction model
+  audio/
+    audioManager.js  — procedural Web Audio: footsteps, indoor hum, punch
+  ui/
+    loadingScreen.js — THREE.LoadingManager progress overlay
+    missionLog.js    — Tab-toggled objective history panel
   npc.js           — NPC definitions and manager (re-exports createShrimpWorker)
   missions.js      — state machine, dialogue, items
   collision.js     — 2D circle-AABB collision resolver
@@ -125,15 +130,15 @@ Camera lerps toward target position at `dt * 12` for smooth follow.
 
 ## Performance Budgets
 
-| Metric | Target | Current |
+| Metric | Target | Current (measured, Phase 7) |
 |--------|--------|---------|
-| Triangle count (scene) | < 100k | ~40–60k (estimated) |
-| Draw calls | < 200 | ~100–150 (estimated) |
-| Texture memory | < 32 MB | ~4 MB |
-| JS bundle size (gzipped) | < 500 KB | ~250 KB |
-| Initial page load | < 3s on 4G | ~2–3s (sign-image-2.png is 3 MB — known issue) |
+| Triangle count (scene) | < 100k | ~34k rendered at spawn |
+| Draw calls | < 200 | ~150 (estimated) |
+| Texture memory | < 32 MB | < 1 MB (two 768px WebP signs + canvas textures) |
+| JS bundle size (gzipped) | < 500 KB | 145 KB |
+| Initial page load | < 3s on 4G | ~144 KB of assets + bundle — well under |
 | Target frame rate | 60 fps on mid-range laptop w/ integrated GPU | Meets on modern hardware |
-| Shadow map resolution | 2048×2048 (may reduce to 1024 if needed) | 2048 |
+| Shadow map resolution | 2048×2048 (may reduce to 1024 if needed) | 2048 (no reduction needed) |
 
 ### Known Performance Issue (resolved in Phase 1)
 `public/sign-image-2.png` (~3 MB) and `sign-image-1.png` (~1 MB) were downscaled to 768px and

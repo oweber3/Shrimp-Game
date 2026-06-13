@@ -20,11 +20,12 @@ const STATES = [
 ];
 
 export class Missions {
-  constructor(scene, ui, npcManager, player) {
+  constructor(scene, ui, npcManager, player, missionLog = null) {
     this.scene = scene;
     this.ui = ui;
     this.npcs = npcManager;
     this.player = player;
+    this.log = missionLog;
     this.state = 'M1_TALK';
     this.flavorIndex = {};
 
@@ -247,6 +248,7 @@ export class Missions {
       DONE: 'Shift complete. Explore Laitram Town freely. Press R if you get stuck.'
     };
     this.ui.setObjective(O[state]);
+    if (this.log) this.log.push(O[state]);
     this.wrenchMarker.visible = state === 'M1_FIND';
     this.boxMarker.visible = state === 'M2_PICKUP';
     this.potMarker.visible = state === 'M3_FETCH';

@@ -29,7 +29,8 @@ export class UI {
       <div id="help" class="panel">
         <span class="key">WASD / Arrows</span> move &nbsp; <span class="key">Mouse</span> look &nbsp;
         <span class="key">Shift</span> jog &nbsp; <span class="key">E</span> interact / drive &nbsp;
-        <span class="key">F</span> punch &nbsp; <span class="key">R</span> reset position
+        <span class="key">F</span> punch &nbsp; <span class="key">Tab</span> log &nbsp;
+        <span class="key">R</span> reset position
       </div>
       <div id="completion" class="panel">
         <h1>Shift Complete</h1>
