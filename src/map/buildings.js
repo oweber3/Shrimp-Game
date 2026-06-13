@@ -27,19 +27,38 @@ export function addBuildings(ctx) {
   }
 
   // ---- Laitram Machinery complex (center, most detail) ----
+  // The shell mesh has no blanket collider: the interior (src/map/interior.js)
+  // is walkable. Perimeter colliders below have a gap on the south face
+  // (x 30..40) lining up with the lobby doorway behind the office front.
   const lm = { x: 40, z: -15, sx: 60, sz: 50 };
-  box(lm.sx, 14, lm.sz, M.whiteWall, lm.x, 7, lm.z, { collide: true });
+  box(lm.sx, 14, lm.sz, M.whiteWall, lm.x, 7, lm.z);
+  colliders.push(makeCollider(10, -15, 1.4, 50.8)); // west face
+  colliders.push(makeCollider(70, -15, 1.4, 50.8)); // east face
+  colliders.push(makeCollider(40, -40, 60.8, 1.4)); // north face
+  colliders.push(makeCollider(20, 10, 20.4, 1.4)); // south face, west of opening
+  colliders.push(makeCollider(55, 10, 30.4, 1.4)); // south face, east of opening
   box(lm.sx + 1, 1.3, lm.sz + 1, M.roof, lm.x, 14.65, lm.z, { castShadow: false });
   box(lm.sx + 0.3, 2, lm.sz + 0.3, M.blueTrim, lm.x, 11.4, lm.z, { castShadow: false });
   box(lm.sx + 0.3, 1.3, lm.sz + 0.3, M.glass, lm.x, 9, lm.z, { castShadow: false });
   for (const [rx, rz] of [[24, -28], [40, -12], [56, -28]]) {
     box(7, 2.8, 5, M.roof, rx, 16.7, rz);
   }
-  // Office front section on the south face, with glass and an entry canopy.
-  box(40, 8, 9, M.officeWall, 35, 4, 14.5, { collide: true });
+  // Office front section on the south face — wall slabs with a real doorway
+  // (x 32.5..37.5) so the lobby behind it is walkable. The lintel has no
+  // collider: collision is 2D, so a collider there would block the door.
+  box(17.5, 8, 0.9, M.officeWall, 23.75, 4, 19, { collide: true }); // south wall, west of door
+  box(17.5, 8, 0.9, M.officeWall, 46.25, 4, 19, { collide: true }); // south wall, east of door
+  box(5.4, 4.8, 0.9, M.officeWall, 35, 5.6, 19); // lintel above the door
+  box(0.9, 8, 9, M.officeWall, 15.45, 4, 14.5, { collide: true }); // west end cap
+  box(0.9, 8, 9, M.officeWall, 54.55, 4, 14.5, { collide: true }); // east end cap
+  // Dark doorway backdrop: reads as an open entrance from outside, and is
+  // culled with the rest of the exterior once the player steps in.
+  box(4.6, 3.1, 0.12, mat(0x1b2126), 35, 1.6, 18.6);
   box(41, 0.8, 10, M.roof, 35, 8.4, 14.5, { castShadow: false });
   for (const wy of [2.5, 5.5]) {
-    box(40.3, 1.5, 9.3, M.glass, 35, wy, 14.5, { castShadow: false });
+    // Glass bands split around the doorway.
+    box(17.9, 1.5, 9.3, M.glass, 23.8, wy, 14.5, { castShadow: false });
+    box(17.9, 1.5, 9.3, M.glass, 46.2, wy, 14.5, { castShadow: false });
   }
   box(12, 0.6, 5, M.blueTrim, 35, 4.4, 21.5);
   box(0.5, 4.1, 0.5, M.concrete, 30, 2.05, 23.2);

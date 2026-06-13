@@ -5,6 +5,7 @@ import { NPCManager } from './npc.js';
 import { Missions } from './missions.js';
 import { UI } from './ui.js';
 import { Minimap } from './minimap.js';
+import { ZoneSystem } from './zones.js';
 
 // Shrimp Shift: Laitram Town
 // Low-poly third-person walking game set on an industrial campus
@@ -27,7 +28,9 @@ const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerH
 camera.position.set(0, 6, 62);
 
 // Humid Louisiana afternoon light: warm low-ish sun, soft sky bounce.
-scene.add(new THREE.AmbientLight(0xcfe5ec, 0.5));
+// The zone system retunes these when the player goes indoors.
+const ambient = new THREE.AmbientLight(0xcfe5ec, 0.5);
+scene.add(ambient);
 const hemi = new THREE.HemisphereLight(0xbfe3f0, 0x5a7a4a, 0.4);
 scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffe7c2, 1.35);
@@ -49,6 +52,7 @@ const minimap = new Minimap();
 const player = new Player(scene, camera, POI.spawn);
 const npcs = new NPCManager(scene);
 const missions = new Missions(scene, ui, npcs, player);
+const zones = new ZoneSystem(camera, scene, { ambient, hemi, sun });
 
 ui.onStart(() => {
   try {
@@ -60,7 +64,7 @@ ui.onStart(() => {
 });
 
 // Debug/testing handle.
-window.__game = { player, missions, npcs, ui };
+window.__game = { player, missions, npcs, ui, zones };
 
 // Interaction: E talks/picks up, or advances open dialogue.
 let currentInteractable = null;
@@ -90,6 +94,7 @@ renderer.setAnimationLoop(() => {
   npcs.update(dt, time, player.position);
   missions.update(time);
   updateWorld(dt, time); // animated map elements (canal water drift)
+  zones.update(dt, player.position); // indoor/outdoor transitions
 
   // Update minimap markers and NPC positions each frame.
   const mState = missions.state;

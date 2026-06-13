@@ -4,6 +4,8 @@ import { createMaterials, createBuilders } from '../utils/geometry.js';
 import { addBuildings } from './buildings.js';
 import { addProps } from './props.js';
 import { addLandscaping } from './landscaping.js';
+import { addInterior } from './interior.js';
+import { EXTERIOR_LAYER, INTERIOR_LAYER } from '../zones.js';
 
 // Low-poly approximation of the Laitram campus in Harahan/Elmwood, Louisiana,
 // laid out to match the aerial view: the long white Intralox plant runs
@@ -41,6 +43,13 @@ export function buildWorld(scene) {
   addBuildings(ctx);
   addProps(ctx);
   addLandscaping(ctx);
+
+  // Interior in its own group; layer split lets the zone system cull the
+  // exterior when indoors and the interior when outdoors. Player, NPCs and
+  // mission items stay on the default layer 0, always visible.
+  const interior = addInterior(scene, colliders);
+  world.traverse((o) => o.layers.set(EXTERIOR_LAYER));
+  interior.traverse((o) => o.layers.set(INTERIOR_LAYER));
 
   const update = (dt, time) => {
     for (const u of updaters) u(dt, time);

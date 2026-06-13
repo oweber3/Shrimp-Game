@@ -41,6 +41,8 @@ src/
     terrain.js     — ground, roads, bounds, POI, buildWorld() orchestrator
     buildings.js   — building geometry and signage
     props.js       — vehicles, trees, pallets, parking lots
+    interior.js    — LM interior: lobby, cubicles, manager office, breakroom
+  zones.js         — indoor/outdoor zone detection, layer culling, light blend
   utils/
     geometry.js    — shared box()/flat() builders, materials, textTexture()
   characters/
