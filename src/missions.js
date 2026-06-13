@@ -292,7 +292,7 @@ export class Missions {
 
 function buildWrench() {
   const g = new THREE.Group();
-  const metal = new THREE.MeshLambertMaterial({ color: 0xb9c4c9 });
+  const metal = new THREE.MeshStandardMaterial({ color: 0xb9c4c9, roughness: 0.3, metalness: 0.9 });
   const handle = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.7), metal);
   g.add(handle);
   const head1 = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.06, 8), metal);
@@ -308,13 +308,13 @@ function buildPartsBox() {
   const g = new THREE.Group();
   const body = new THREE.Mesh(
     new THREE.BoxGeometry(1, 0.8, 1),
-    new THREE.MeshLambertMaterial({ color: 0x2b6cb0 })
+    new THREE.MeshStandardMaterial({ color: 0x2b6cb0, roughness: 0.6, metalness: 0.15 })
   );
   body.castShadow = true;
   g.add(body);
   const tape = new THREE.Mesh(
     new THREE.BoxGeometry(1.02, 0.12, 1.02),
-    new THREE.MeshLambertMaterial({ color: 0xe8e6df })
+    new THREE.MeshStandardMaterial({ color: 0xe8e6df, roughness: 0.8 })
   );
   tape.position.y = 0.3;
   g.add(tape);
@@ -323,24 +323,24 @@ function buildPartsBox() {
 
 function buildCoffeePot() {
   const g = new THREE.Group();
-  const glass = new THREE.MeshLambertMaterial({ color: 0x8fc4d8 });
+  const glass = new THREE.MeshStandardMaterial({ color: 0x8fc4d8, roughness: 0.1, metalness: 0.2 });
   const body = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.17, 0.26, 10), glass);
   g.add(body);
   const coffee = new THREE.Mesh(
     new THREE.CylinderGeometry(0.13, 0.16, 0.14, 10),
-    new THREE.MeshLambertMaterial({ color: 0x3a2a1c })
+    new THREE.MeshStandardMaterial({ color: 0x3a2a1c, roughness: 0.4 })
   );
   coffee.position.y = -0.05;
   g.add(coffee);
   const lid = new THREE.Mesh(
     new THREE.CylinderGeometry(0.15, 0.15, 0.04, 10),
-    new THREE.MeshLambertMaterial({ color: 0x2f3338 })
+    new THREE.MeshStandardMaterial({ color: 0x2f3338, roughness: 0.5 })
   );
   lid.position.y = 0.15;
   g.add(lid);
   const handle = new THREE.Mesh(
     new THREE.BoxGeometry(0.04, 0.2, 0.1),
-    new THREE.MeshLambertMaterial({ color: 0x2f3338 })
+    new THREE.MeshStandardMaterial({ color: 0x2f3338, roughness: 0.5 })
   );
   handle.position.set(0.2, 0, 0);
   g.add(handle);

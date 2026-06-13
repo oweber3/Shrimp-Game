@@ -18,6 +18,7 @@ export class UI {
           </svg>
         </div>
         <div class="target" id="compass-target"></div>
+        <div class="clock" id="clock"></div>
       </div>
       <div id="toast" class="panel"></div>
       <div id="prompt" class="panel"><span class="key">E</span><span id="prompt-text"></span></div>
@@ -30,6 +31,7 @@ export class UI {
         <span class="key">WASD / Arrows</span> move &nbsp; <span class="key">Mouse</span> look &nbsp;
         <span class="key">Shift</span> jog &nbsp; <span class="key">E</span> interact / drive &nbsp;
         <span class="key">F</span> punch &nbsp; <span class="key">Tab</span> log &nbsp;
+        <span class="key">M</span> map &nbsp; <span class="key">[ ]</span> time &nbsp;
         <span class="key">R</span> reset position
       </div>
       <div id="completion" class="panel">
@@ -43,6 +45,7 @@ export class UI {
     this.compassDir = hud.querySelector('#compass-dir');
     this.compassArrow = hud.querySelector('#compass-arrow');
     this.compassTarget = hud.querySelector('#compass-target');
+    this.clock = hud.querySelector('#clock');
     this.prompt = hud.querySelector('#prompt');
     this.promptText = hud.querySelector('#prompt-text');
     this.dialogue = hud.querySelector('#dialogue');
@@ -66,7 +69,8 @@ export class UI {
       <div class="controls">
         <span class="key">WASD / Arrows</span> move &nbsp;&nbsp; <span class="key">Mouse</span> look<br>
         <span class="key">Shift</span> jog &nbsp;&nbsp; <span class="key">E</span> interact / drive &nbsp;&nbsp;
-        <span class="key">F</span> punch &nbsp;&nbsp; <span class="key">R</span> reset position
+        <span class="key">F</span> punch &nbsp;&nbsp; <span class="key">M</span> map<br>
+        <span class="key">[ ]</span> time of day &nbsp;&nbsp; <span class="key">R</span> reset position
       </div>
       <div class="click">Click to clock in</div>
     `;
@@ -89,6 +93,10 @@ export class UI {
 
   setObjective(text) {
     this.objectiveText.textContent = text;
+  }
+
+  setClock(text) {
+    if (this.clock) this.clock.textContent = text;
   }
 
   showPrompt(text) {

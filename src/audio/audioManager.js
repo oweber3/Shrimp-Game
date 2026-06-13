@@ -70,6 +70,26 @@ export class AudioManager {
     this._burst({ seconds: 0.16, freq: 320, q: 0.8, peak: 0.4, decay: 0.14 });
   }
 
+  // Bright two-note arpeggio for collecting a Golden Shrimp.
+  collect() {
+    if (!this.unlocked) return;
+    const t0 = this.ctx.currentTime;
+    [880, 1320].forEach((f, i) => {
+      const osc = this.ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = f;
+      const g = this.ctx.createGain();
+      const start = t0 + i * 0.08;
+      g.gain.setValueAtTime(0.0001, start);
+      g.gain.exponentialRampToValueAtTime(0.22, start + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.001, start + 0.22);
+      osc.connect(g);
+      g.connect(this.master);
+      osc.start(start);
+      osc.stop(start + 0.24);
+    });
+  }
+
   _burst({ seconds, freq, q, peak, decay }) {
     if (!this.unlocked) return;
     const t0 = this.ctx.currentTime;

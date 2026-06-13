@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { makeCollider } from '../collision.js';
 import { createMaterials, createBuilders } from '../utils/geometry.js';
 import { addBuildings } from './buildings.js';
+import { addCampusDetail } from './campusDetail.js';
 import { addProps } from './props.js';
 import { addLandscaping } from './landscaping.js';
 import { addInterior } from './interior.js';
@@ -43,6 +44,7 @@ export function buildWorld(scene, loadingManager) {
 
   addTerrain(ctx);
   addBuildings(ctx);
+  addCampusDetail(ctx);
   addProps(ctx);
   addLandscaping(ctx);
 

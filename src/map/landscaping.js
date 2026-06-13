@@ -123,7 +123,10 @@ function addCanal({ world, colliders, M, box, flat, updaters }) {
   tex.repeat.set(2, 28);
   const water = new THREE.Mesh(
     new THREE.PlaneGeometry(10, 270),
-    new THREE.MeshLambertMaterial({ color: 0x4a7d8c, map: tex })
+    new THREE.MeshStandardMaterial({
+      color: 0x3a6d80, map: tex, roughnessMap: tex,
+      roughness: 0.18, metalness: 0.35
+    })
   );
   water.rotation.x = -Math.PI / 2;
   water.position.set(172, 0.06, 0);

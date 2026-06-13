@@ -15,8 +15,9 @@ import { addHardHat, addToolbelt, addClipboard } from './accessories.js';
 // Stable API (used by player.js, npc.js and missions.js):
 //   root.userData.parts = { torso, head, armL, armR, legL, legR, tail, carryAnchor }
 
+// Shrimp shells read best with a faint wet sheen, so a low-ish roughness.
 function mat(color) {
-  return new THREE.MeshLambertMaterial({ color });
+  return new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.05 });
 }
 
 // Outfit palettes for variety when a color is not explicitly specified.

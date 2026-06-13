@@ -62,12 +62,26 @@ Deployment options:
 - `WASD` or arrow keys: move
 - Mouse: look (click the screen to capture the mouse)
 - `Shift`: jog
-- `E`: interact / advance dialogue
+- `E`: interact / advance dialogue / mount-dismount the golf cart
+- `F`: punch
+- `Tab`: shift log
+- `M`: expand the campus map
+- `[` / `]`: rewind / advance the time of day (`O` pauses the day/night cycle)
 - `R`: reset position to the front gate if stuck
 - `Esc`: release the mouse
 
 ## Features implemented
 
+- **Director's Cut visuals**: ACES-filmic tone mapping and PBR (physically
+  based) materials, a real atmospheric-scattering sky baked to a cube for
+  performance, image-based lighting/reflections, soft shadows, a bloom pass,
+  and a cinematic vignette
+- **Day/night cycle**: the sun arcs across the sky over a ~3.5-minute day,
+  retinting the light, fog, and horizon; streetlamps and lit signs glow at
+  dusk, with a drifting cloud deck, stars, and a moon at night. A HUD clock
+  shows the time; `[` / `]` scrub it
+- Frame-rate-independent movement via a fixed-timestep simulation, so the
+  game stays accurate on slow/software renderers
 - Low-poly industrial campus: headquarters office, large Intralox
   manufacturing plant, distribution warehouse with a west dock, machinery
   building, guard shack, break pavilion, roads, sidewalks, parking lots

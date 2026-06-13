@@ -37,6 +37,12 @@ const BUILDINGS = [
   { cx: -100, cz:   95, sx: 80,  sz:  44, color: '#4a5f72' }, // Distribution / 5000 River Road
   { cx: -171, cz:   40, sx: 14,  sz:  18, color: '#3d5465' }, // 200 Plantation
   { cx:    8, cz:  112, sx:  5,  sz:   5, color: '#3d5465' }, // Guard Shack
+  // Phase 9 (map accuracy): additional named campus buildings.
+  { cx:  -30, cz:  -92, sx: 30,  sz:  24, color: '#4a5f72' }, // 5306 Toler / ILOX IMF
+  { cx:  140, cz:   46, sx: 16,  sz:  16, color: '#4a5f72' }, // 211 Laitram Ln
+  { cx:  140, cz:   88, sx: 18,  sz:  22, color: '#3d5465' }, // 116 Laitram Ln
+  { cx:   96, cz:   80, sx: 18,  sz:  16, color: '#3d5465' }, // 5040 Storey
+  { cx:   76, cz:   48, sx: 14,  sz:  12, color: '#3d5465' }, // 5210 Storey
 ];
 
 // Indoor floor plan (Phase 7): shown instead of the campus overhead while
@@ -64,6 +70,10 @@ const ZONES = [
   { wx: -171, wz:   40, text: '200\nPLANTATION' },
   { wx:    8, wz:  112, text: 'GUARD\nSHACK' },
   { wx:   85, wz:   30, text: 'BREAK\nAREA' },
+  { wx:  -30, wz:  -92, text: '5306\nTOLER' },
+  { wx:  140, wz:   46, text: '211\nLAITRAM LN' },
+  { wx:  140, wz:   88, text: '116\nLAITRAM LN' },
+  { wx:   96, wz:   80, text: '5040\nSTOREY' },
 ];
 
 export class Minimap {

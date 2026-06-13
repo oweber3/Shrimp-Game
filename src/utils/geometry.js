@@ -3,8 +3,23 @@ import { makeCollider } from '../collision.js';
 
 // Shared geometry/material helpers used by all map modules.
 
-export function mat(color) {
-  return new THREE.MeshLambertMaterial({ color });
+// PBR material factory. Defaults to a matte dielectric; pass roughness /
+// metalness / emissive to tune. Standard materials (not Lambert) so the
+// sky's environment map drives image-based lighting and reflections.
+export function mat(color, opts = {}) {
+  const {
+    roughness = 0.9,
+    metalness = 0.0,
+    emissive,
+    emissiveIntensity = 1,
+    flatShading = false
+  } = opts;
+  const m = new THREE.MeshStandardMaterial({ color, roughness, metalness, flatShading });
+  if (emissive !== undefined) {
+    m.emissive = new THREE.Color(emissive);
+    m.emissiveIntensity = emissiveIntensity;
+  }
+  return m;
 }
 
 export function textTexture(text, opts = {}) {
@@ -29,37 +44,38 @@ export function textTexture(text, opts = {}) {
 // are shared across every mesh that uses them.
 export function createMaterials() {
   return {
-    grass: mat(0x6f9e58),
-    asphalt: mat(0x3c4146),
-    roadLine: mat(0xd8d2b8),
-    sidewalk: mat(0xb9b9b0),
-    whiteWall: mat(0xe8e6df),
-    blueTrim: mat(0x1f5fa8),
-    officeWall: mat(0xd9d4c8),
-    glass: mat(0x7fb6cf),
-    roof: mat(0x9ba0a3),
-    dock: mat(0x8a8d90),
-    dockDoor: mat(0x5a6a72),
-    fence: mat(0x7d8489),
-    trunk: mat(0x6b4a2f),
-    oakLeaf: mat(0x4d7a3a),
-    oakLeafDark: mat(0x40682e),
-    palmLeaf: mat(0x4f8f46),
-    grassPatch: mat(0x7aa863),
-    water: mat(0x4a7d8c),
-    pallet: mat(0xa9824f),
-    crate: mat(0xb08d57),
-    barrelBlue: mat(0x2b6cb0),
-    barrelOrange: mat(0xd96c2c),
-    tableWood: mat(0x9c6b3f),
-    signPost: mat(0x55595d),
-    concrete: mat(0xc4c2ba),
-    yellow: mat(0xd9b13b),
-    metal: mat(0x9aa4ab),
-    hvac: mat(0xb6bcc1),
-    tankWhite: mat(0xdfe3e6),
-    dumpster: mat(0x3d6b46),
-    vending: mat(0xb03a2e)
+    grass: mat(0x6f9e58, { roughness: 0.97 }),
+    asphalt: mat(0x35393e, { roughness: 0.85 }),
+    roadLine: mat(0xd8d2b8, { roughness: 0.8 }),
+    sidewalk: mat(0xb9b9b0, { roughness: 0.92 }),
+    whiteWall: mat(0xe8e6df, { roughness: 0.78 }),
+    blueTrim: mat(0x1f5fa8, { roughness: 0.55, metalness: 0.2 }),
+    officeWall: mat(0xd9d4c8, { roughness: 0.8 }),
+    // Low roughness + a little metalness => the sky reflects in the glass.
+    glass: mat(0x8fc0d8, { roughness: 0.08, metalness: 0.25 }),
+    roof: mat(0x9ba0a3, { roughness: 0.7, metalness: 0.15 }),
+    dock: mat(0x8a8d90, { roughness: 0.85 }),
+    dockDoor: mat(0x5a6a72, { roughness: 0.6, metalness: 0.3 }),
+    fence: mat(0x7d8489, { roughness: 0.55, metalness: 0.6 }),
+    trunk: mat(0x6b4a2f, { roughness: 0.95 }),
+    oakLeaf: mat(0x4d7a3a, { roughness: 0.9, flatShading: true }),
+    oakLeafDark: mat(0x40682e, { roughness: 0.9, flatShading: true }),
+    palmLeaf: mat(0x4f8f46, { roughness: 0.9, flatShading: true }),
+    grassPatch: mat(0x7aa863, { roughness: 0.97 }),
+    water: mat(0x4a7d8c, { roughness: 0.12, metalness: 0.1 }),
+    pallet: mat(0xa9824f, { roughness: 0.95 }),
+    crate: mat(0xb08d57, { roughness: 0.92 }),
+    barrelBlue: mat(0x2b6cb0, { roughness: 0.5, metalness: 0.3 }),
+    barrelOrange: mat(0xd96c2c, { roughness: 0.5, metalness: 0.3 }),
+    tableWood: mat(0x9c6b3f, { roughness: 0.9 }),
+    signPost: mat(0x55595d, { roughness: 0.6, metalness: 0.5 }),
+    concrete: mat(0xc4c2ba, { roughness: 0.92 }),
+    yellow: mat(0xd9b13b, { roughness: 0.7 }),
+    metal: mat(0x9aa4ab, { roughness: 0.35, metalness: 0.85 }),
+    hvac: mat(0xb6bcc1, { roughness: 0.5, metalness: 0.6 }),
+    tankWhite: mat(0xdfe3e6, { roughness: 0.4, metalness: 0.4 }),
+    dumpster: mat(0x3d6b46, { roughness: 0.7, metalness: 0.3 }),
+    vending: mat(0xb03a2e, { roughness: 0.5, metalness: 0.2 })
   };
 }
 
