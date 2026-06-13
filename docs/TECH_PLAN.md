@@ -43,7 +43,10 @@ src/
     props.js       — vehicles, trees, pallets, parking lots
   utils/
     geometry.js    — shared box()/flat() builders, materials, textTexture()
-  npc.js           — shrimp character builder, NPC manager
+  characters/
+    shrimpWorker.js — Group-hierarchy shrimp builder (parts API, carryAnchor)
+    accessories.js  — hard hat, toolbelt, clipboard builders
+  npc.js           — NPC definitions and manager (re-exports createShrimpWorker)
   missions.js      — state machine, dialogue, items
   collision.js     — 2D circle-AABB collision resolver
   ui.js            — DOM-based HUD panels

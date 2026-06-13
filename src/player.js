@@ -1,6 +1,8 @@
 import * as THREE from 'three';
-import { createShrimpWorker } from './npc.js';
+import { createShrimpWorker } from './characters/shrimpWorker.js';
 import { resolveCollisions, clampToBounds } from './collision.js';
+
+const _anchorWorld = new THREE.Vector3();
 
 const WALK_SPEED = 6;
 const JOG_SPEED = 11;
@@ -26,6 +28,7 @@ export class Player {
       hatColor: 0xffffff,
       accessory: 'toolbelt'
     });
+    this.parts = this.mesh.userData.parts;
     this.mesh.position.copy(this.position);
     scene.add(this.mesh);
 
@@ -93,23 +96,31 @@ export class Player {
     clampToBounds(this.position, bounds, PLAYER_RADIUS + 0.2);
     this.position.y = 0; // never fall through the world
 
-    // Mesh follows position, rotates toward travel direction, bobs while moving.
+    // Mesh follows position, rotates toward travel direction, bobs while
+    // moving, and swings arms/legs around their pivot groups.
     this.mesh.position.set(this.position.x, 0, this.position.z);
     if (moving) {
       const t = performance.now() * 0.001;
-      this.mesh.position.y = Math.abs(Math.sin(t * (this.isJogging() ? 14 : 9))) * 0.08;
+      const freq = this.isJogging() ? 14 : 9;
+      this.mesh.position.y = Math.abs(Math.sin(t * freq)) * 0.08;
       this.mesh.rotation.y = lerpAngle(this.mesh.rotation.y, this.heading, dt * 10);
+      const swing = Math.sin(t * freq) * (this.isJogging() ? 0.55 : 0.4);
+      this.parts.armL.rotation.x = swing;
+      this.parts.armR.rotation.x = -swing;
+      this.parts.legL.rotation.x = -swing * 1.2;
+      this.parts.legR.rotation.x = swing * 1.2;
+    } else {
+      const k = Math.min(1, dt * 8);
+      for (const limb of [this.parts.armL, this.parts.armR, this.parts.legL, this.parts.legR]) {
+        limb.rotation.x += (0 - limb.rotation.x) * k;
+      }
     }
 
-    // Carried object floats in front of the player.
+    // Carried object floats at the character's carry anchor.
     if (this.carrying) {
-      const fx = Math.sin(this.mesh.rotation.y);
-      const fz = Math.cos(this.mesh.rotation.y);
-      this.carrying.position.set(
-        this.position.x + fx * 0.7,
-        1.2 + Math.sin(performance.now() * 0.003) * 0.05,
-        this.position.z + fz * 0.7
-      );
+      this.parts.carryAnchor.getWorldPosition(_anchorWorld);
+      _anchorWorld.y += Math.sin(performance.now() * 0.003) * 0.05;
+      this.carrying.position.copy(_anchorWorld);
       this.carrying.rotation.y = this.mesh.rotation.y;
     }
 
