@@ -71,6 +71,14 @@ export const FLAVOR = {
   benny: [
     'The microwave and I have an understanding: thirty seconds, and absolutely no fish.',
     'Somebody put decaf in the orange pot. We are investigating. There will be findings.'
+  ],
+  // Shrimply Gigantic: the angry giant inspector who roams the east truck
+  // court. Lines cycle one at a time, same as every other flavor NPC.
+  shrimply: [
+    'WHO MOVED MY WRENCH?',
+    'Careful, small fry. I inspect the BIG machinery.',
+    'You call that a torque spec? My antennae could do better.',
+    'Everything on this dock is undersized. Including you.'
   ]
 };
 
