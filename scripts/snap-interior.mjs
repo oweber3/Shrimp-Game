@@ -25,10 +25,12 @@ const shot = async (x, z, yaw, pitch, file) => {
   console.log('Saved', file);
 };
 
-// Office floor, looking north up the cubicle aisle toward the production wall.
-await shot(28, 2, Math.PI, 0.35, 'scripts/interior-office.png');
-// Breakroom, looking east at the counter/fridge/vending wall.
-await shot(56, 3.5, -Math.PI / 2, 0.3, 'scripts/interior-breakroom.png');
+// Office floor, looking north up the cubicle aisle toward the production wall
+// (intern Nina seated in the center row-A cubicle).
+await shot(28, -8, Math.PI, 0.35, 'scripts/interior-office.png');
+// Manager's office: Marge seated behind the desk, camera diagonal from NE
+// so it clears the room walls.
+await shot(61, -13, -2.4, 0.45, 'scripts/interior-breakroom.png');
 
 await browser.close();
 await server.close();

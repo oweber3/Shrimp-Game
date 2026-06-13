@@ -224,7 +224,14 @@ src/zones.js          — zone detection (isIndoor?, which zone?)
 
 ## Phase 5: NPCs and Intern/Workplace Interactions
 
-**Status**: Pending
+**Status**: Done — five indoor NPCs (Rita at reception, interns Nina and Theo in cubicles,
+Marge seated in the manager's office, Benny in the breakroom). `src/characters/npcBehaviors.js`
+implements the idle | patrol | sit | talk | react state machine: seated NPCs use static limb
+offsets and head-only player tracking; react (backward stumble + wobble) is wired as the
+Phase 6 punch hook via reactToHit(). All dialogue extracted to `src/dialogue/dialogueData.js`.
+NPC updates are distance-culled at 40 units. New indoor Mission 3 (Coffee Run: Dot → Marge →
+breakroom pot → Marge) chains after Mission 2; verify.mjs covers the full 3-mission run
+(28 checks). Multi-choice dialogue buttons (optional in this phase) were deferred.
 **Goal**: Populate the indoor area, expand NPC behaviors, add workplace flavor.
 
 ### What Changes

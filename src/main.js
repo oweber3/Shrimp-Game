@@ -109,6 +109,11 @@ renderer.setAnimationLoop(() => {
       color: '#6fd3ff', label: 'Parts Box',
       visible: mState === 'M2_PICKUP' || mState === 'M2_DELIVER',
     },
+    {
+      wx: POI.coffeePot.x, wz: POI.coffeePot.z,
+      color: '#d9a05b', label: 'Coffee Pot',
+      visible: mState === 'M3_FETCH',
+    },
   ]);
   minimap.setNPCPositions(
     npcs.npcs.map((n) => ({ wx: n.group.position.x, wz: n.group.position.z }))

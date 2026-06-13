@@ -16,7 +16,7 @@ without breaking browser performance or requiring a full rewrite.
 | 2 | Outdoor Map Realism | More accurate campus layout, better landscaping, improved building detail | M | Done |
 | 3 | Shrimp Model Improvements | More organic characters, Group-based hierarchy for future animation | M | Done |
 | 4 | Indoor Building Interior | Walkable interior with offices, cubicles, breakroom, zone transitions | L | Done |
-| 5 | NPC & Workplace Interactions | More NPCs, sitting behaviors, intern dialogue | M | Pending |
+| 5 | NPC & Workplace Interactions | More NPCs, sitting behaviors, intern dialogue | M | Done |
 | 6 | GTA-Like Mechanics | Basic melee punch + driveable golf cart | M | Pending |
 | 7 | Polish & Deploy | Loading screen, audio, mission log, minimap indoor floors, performance audit | M | Pending |
 
