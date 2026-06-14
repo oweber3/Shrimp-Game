@@ -19,6 +19,11 @@ export class Player {
     this.pitch = 0.25;
     this.heading = Math.PI;
     this.keys = {};
+    // Analog movement axis, written by non-keyboard input sources (the mobile
+    // virtual joystick). Same convention as the WASD contribution below:
+    // +z is forward, +x is right, magnitude 0..1. Stays {0,0} on desktop so
+    // keyboard behaviour is completely unchanged.
+    this.moveAxis = { x: 0, z: 0 };
     this.movementLocked = false;
     this.carrying = null;
     this.onStep = null; // fired once per footfall (audio hook)
@@ -68,6 +73,21 @@ export class Player {
     return !!(this.keys['ShiftLeft'] || this.keys['ShiftRight']);
   }
 
+  // Digital movement intent (forward/back/left/right) merged from the
+  // keyboard and the analog joystick. Consumed by digital-input systems such
+  // as the golf cart so they get a single, source-agnostic view of the input.
+  getMoveInput() {
+    const k = this.keys;
+    const a = this.moveAxis;
+    const T = 0.35; // analog threshold so a resting stick reads as "no input"
+    return {
+      forward: !!(k['KeyW'] || k['ArrowUp']) || a.z > T,
+      back: !!(k['KeyS'] || k['ArrowDown']) || a.z < -T,
+      left: !!(k['KeyA'] || k['ArrowLeft']) || a.x < -T,
+      right: !!(k['KeyD'] || k['ArrowRight']) || a.x > T,
+    };
+  }
+
   update(dt, colliders, bounds) {
     let mx = 0;
     let mz = 0;
@@ -76,13 +96,22 @@ export class Player {
       if (this.keys['KeyS'] || this.keys['ArrowDown']) mz -= 1;
       if (this.keys['KeyA'] || this.keys['ArrowLeft']) mx -= 1;
       if (this.keys['KeyD'] || this.keys['ArrowRight']) mx += 1;
+      // Analog joystick contribution (mobile). Adds on top of the keyboard so
+      // the two never fight; on desktop moveAxis is {0,0} and this is a no-op.
+      mx += this.moveAxis.x;
+      mz += this.moveAxis.z;
     }
 
-    const moving = mx !== 0 || mz !== 0;
+    const moving = Math.hypot(mx, mz) > 1e-3;
     if (moving) {
+      // Clamp the input vector to unit length instead of always normalising:
+      // a full keyboard press (len >= 1) is unchanged, while a partly-pushed
+      // joystick (len < 1) keeps its magnitude for smooth, analog speed.
       const len = Math.hypot(mx, mz);
-      mx /= len;
-      mz /= len;
+      if (len > 1) {
+        mx /= len;
+        mz /= len;
+      }
       const speed = this.isJogging() ? JOG_SPEED : WALK_SPEED;
       // Move relative to camera yaw. Forward is -Z when yaw is PI.
       const sin = Math.sin(this.yaw);

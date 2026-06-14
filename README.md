@@ -70,6 +70,23 @@ Deployment options:
 - `R`: reset position to the front gate if stuck
 - `Esc`: release the mouse
 
+### Touch controls (phones & tablets)
+
+On touch devices the game automatically shows on-screen controls (hidden on
+desktop):
+
+- **Left joystick**: drag in any direction to move; analog, so a light push
+  walks slowly and a full push walks at normal speed. Maps onto the same
+  movement as `WASD`.
+- **JUMP button** (lower-right, large): emulates `Space`.
+- **E button** (lower-right, smaller): emulates `E` (interact / advance
+  dialogue / mount-dismount the cart).
+
+The controls are built on Pointer Events and support multi-touch, so you can
+move and press the action buttons at the same time. Pinch-zoom and page
+scrolling are suppressed during play. Add `?mobile=1` to the URL to force the
+touch controls on in a desktop browser (useful for testing).
+
 ## Features implemented
 
 - **Director's Cut visuals**: ACES-filmic tone mapping and PBR (physically
@@ -111,5 +128,7 @@ Deployment options:
 - Building interiors are intentionally not modeled
 - No sound or music
 - No save game; refresh restarts the shift
-- Desktop browser with keyboard and mouse required (no touch controls)
+- Touch devices get an on-screen joystick and action buttons, but there is no
+  on-screen camera-look control yet, so movement is relative to a fixed
+  camera heading on phones/tablets
 - NPC patrol paths do not avoid the player; NPCs are not collision solids

@@ -50,14 +50,11 @@ export class GolfCart {
     );
   }
 
-  update(dt, keys, colliders, bounds) {
+  // `input` is a { forward, back, left, right } booleans object (see
+  // Player.getMoveInput), so the cart drives identically from the keyboard or
+  // the mobile joystick without knowing which one is active.
+  update(dt, input, colliders, bounds) {
     if (!this.mounted) return;
-    const input = {
-      forward: !!(keys['KeyW'] || keys['ArrowUp']),
-      back: !!(keys['KeyS'] || keys['ArrowDown']),
-      left: !!(keys['KeyA'] || keys['ArrowLeft']),
-      right: !!(keys['KeyD'] || keys['ArrowRight'])
-    };
     stepVehicle(this.state, this.group.position, input, dt, colliders, bounds);
     this.group.rotation.y = this.state.yaw;
     // Spin the wheels with travel.
