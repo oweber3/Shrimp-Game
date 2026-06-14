@@ -15,6 +15,7 @@ import { Atmosphere } from './world/sky.js';
 import { createPostFX } from './world/postfx.js';
 import { addStreetlights } from './world/streetlights.js';
 import { Collectibles } from './mechanics/collectibles.js';
+import { MobileControls } from './ui/mobileControls.js';
 
 // Shrimp Shift: Laitram Town
 // Low-poly third-person walking game set on an industrial campus
@@ -79,6 +80,13 @@ const punch = new PunchSystem(player, npcs);
 const collectibles = new Collectibles(scene, audio, ui);
 const postfx = createPostFX(renderer, scene, camera);
 
+// Touch controls: a virtual joystick (writes player.moveAxis) plus Jump/Interact
+// buttons (dispatch synthetic Space/E key events). Only built on touch devices;
+// ?mobile=1 forces them on for testing in a desktop browser.
+const mobileControls = new MobileControls(player, {
+  force: new URLSearchParams(window.location.search).has('mobile'),
+});
+
 // Procedural audio hooks (all gated behind the start-overlay click).
 player.onStep = () => audio.footstep(player.isJogging());
 punch.onSwing = () => audio.punch();
@@ -96,7 +104,7 @@ ui.onStart(() => {
 // Debug/testing handle.
 window.__game = {
   player, missions, npcs, ui, zones, cart, punch, audio, minimap, missionLog,
-  renderer, atmosphere, postfx, streetlights, collectibles
+  renderer, atmosphere, postfx, streetlights, collectibles, mobileControls
 };
 
 // Interaction: E talks/picks up/advances dialogue, or mounts/dismounts the
@@ -152,7 +160,7 @@ renderer.setAnimationLoop(() => {
   while (physicsAcc >= FIXED_DT && steps < MAX_SUBSTEPS) {
     player.update(FIXED_DT, colliders, bounds);
     punch.update(FIXED_DT); // after player.update so the swing overrides arm pose
-    cart.update(FIXED_DT, player.keys, colliders, bounds);
+    cart.update(FIXED_DT, player.getMoveInput(), colliders, bounds);
     if (cart.mounted) player.position.copy(cart.group.position);
     physicsAcc -= FIXED_DT;
     steps++;
