@@ -216,7 +216,7 @@ renderer.setAnimationLoop(() => {
     },
   ]);
   minimap.setNPCPositions(
-    npcs.npcs.map((n) => ({ wx: n.group.position.x, wz: n.group.position.z }))
+    npcs.npcs.map((n) => ({ wx: n.group.position.x, wz: n.group.position.z, color: n.def.mapColor }))
   );
   minimap.setVehicle({ wx: cart.group.position.x, wz: cart.group.position.z });
   minimap.setIndoor(zones.isIndoor);

@@ -1,6 +1,7 @@
 import { createShrimpWorker } from './characters/shrimpWorker.js';
 import { initBehavior, updateNPC } from './characters/npcBehaviors.js';
 import { createShrimplyGigantic, initGiant, updateGiant, SHRIMPLY } from './characters/giantShrimp.js';
+import { createFishPerson, GERALD } from './characters/fishPerson.js';
 
 // NPC definitions and the per-frame NPC manager. The shrimp builder lives
 // in src/characters/shrimpWorker.js, per-frame behavior in
@@ -135,6 +136,10 @@ export class NPCManager {
     // pushed into this.npcs so the existing dialogue (the missions flavor
     // loop) and the minimap pick him up for free.
     this.addShrimplyGigantic(scene);
+
+    // Gerald: a stationary fish person in a business suit who does not belong
+    // here and is aware of it. Driven by the standard idle behavior.
+    this.addGerald(scene);
   }
 
   // Shrimply Gigantic: one large, angry, detail-rich shrimp that patrols the
@@ -155,6 +160,25 @@ export class NPCManager {
       pathIndex: 0
     };
     initGiant(npc);
+    this.npcs.push(npc);
+  }
+
+  addGerald(scene) {
+    const group = createFishPerson();
+    group.position.set(GERALD.pos[0], 0, GERALD.pos[1]);
+    group.rotation.y = GERALD.rotY;
+    scene.add(group);
+    const i = this.npcs.length;
+    const npc = {
+      def: { id: GERALD.id, name: GERALD.name, mapColor: GERALD.mapColor },
+      group,
+      parts: group.userData.parts,
+      baseRotY: GERALD.rotY,
+      pathIndex: 0,
+      bobPhase: i * 1.7,
+      bobFreq: 1.7 + ((i * 0.37) % 1) * 0.9
+    };
+    initBehavior(npc);
     this.npcs.push(npc);
   }
 

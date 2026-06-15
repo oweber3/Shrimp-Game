@@ -195,11 +195,11 @@ export class Minimap {
       ctx.strokeRect(v.x - vr / 2, v.y - vr / 2, vr, vr);
     }
 
-    // NPC dots (small orange markers for all shrimp workers)
+    // NPC dots — each NPC can carry an optional color override (e.g. Gerald).
     const nr = Math.max(1.8, cw / 68);
-    ctx.fillStyle = '#c96a30';
     for (const n of this._npcs) {
       const { x, y } = p(n.wx, n.wz);
+      ctx.fillStyle = n.color || '#c96a30';
       ctx.beginPath();
       ctx.arc(x, y, nr, 0, Math.PI * 2);
       ctx.fill();
@@ -294,10 +294,10 @@ export class Minimap {
 
     // NPCs inside the region.
     const nr = Math.max(2, cw / 60);
-    ctx.fillStyle = '#c96a30';
     for (const n of this._npcs) {
       if (n.wx < R.minX || n.wx > R.maxX || n.wz < R.minZ || n.wz > R.maxZ) continue;
       const { x, y } = p(n.wx, n.wz);
+      ctx.fillStyle = n.color || '#c96a30';
       ctx.beginPath();
       ctx.arc(x, y, nr, 0, Math.PI * 2);
       ctx.fill();
