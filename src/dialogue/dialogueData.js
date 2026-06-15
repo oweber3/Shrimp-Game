@@ -72,6 +72,16 @@ export const FLAVOR = {
     'The microwave and I have an understanding: thirty seconds, and absolutely no fish.',
     'Somebody put decaf in the orange pot. We are investigating. There will be findings.'
   ],
+  // Gerald: a fish person who ended up here and cannot explain how.
+  // Lines cycle one at a time on repeated E interactions.
+  gerald: [
+    "I'm just a foreign material.",
+    'The system wasn\'t designed for me. I know that.',
+    'Everyone here has a role. I just... ended up here.',
+    'I passed QC somehow. I shouldn\'t have.',
+    'They\'ll find me eventually and remove me. That\'s correct procedure.',
+    'I don\'t blame the process. The process is sound.'
+  ],
   // Shrimply Gigantic: the angry giant inspector who roams the east truck
   // court. Lines cycle one at a time, same as every other flavor NPC.
   shrimply: [
