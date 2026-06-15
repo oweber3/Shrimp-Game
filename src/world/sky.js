@@ -20,7 +20,7 @@ import { EXTERIOR_LAYER } from '../zones.js';
 // lighting baseline and `skyTexture` as the outdoor background.
 
 const MAX_ELEV = 1.18;        // ~68° peak sun elevation
-const DAY_LENGTH = 210;       // seconds for one full in-game day
+const DAY_LENGTH = 1260;       // seconds for one full in-game day
 const START_TIME = 0.70;      // start in warm late-afternoon golden hour
 const ENV_STEP = 0.05;        // re-bake when the sun moves ~2.9°
 
