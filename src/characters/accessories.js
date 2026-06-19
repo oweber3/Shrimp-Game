@@ -8,6 +8,15 @@ function mat(color) {
   return new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.1 });
 }
 
+// Hard hats are glossy polycarbonate — a clearcoat lacquer layer over a matte
+// base sells the molded-plastic sheen far better than a flat standard material.
+function helmetMat(color) {
+  return new THREE.MeshPhysicalMaterial({
+    color, roughness: 0.35, metalness: 0.0,
+    clearcoat: 0.7, clearcoatRoughness: 0.1, envMapIntensity: 1.0
+  });
+}
+
 const SILVER = 0xc9d4d9;
 
 function add(parent, mesh) {
@@ -17,14 +26,15 @@ function add(parent, mesh) {
 }
 
 export function addHardHat(head, hatColor) {
+  const shellMat = helmetMat(hatColor);
   const hat = add(head, new THREE.Mesh(
-    new THREE.SphereGeometry(0.27, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2),
-    mat(hatColor)
+    new THREE.SphereGeometry(0.27, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2),
+    shellMat
   ));
   hat.position.set(0, 0.15, -0.02);
-  const brim = add(head, new THREE.Mesh(new THREE.CylinderGeometry(0.33, 0.345, 0.05, 12), mat(hatColor)));
+  const brim = add(head, new THREE.Mesh(new THREE.CylinderGeometry(0.33, 0.345, 0.05, 20), shellMat));
   brim.position.set(0, 0.16, -0.02);
-  const ridge = add(head, new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.04, 0.42), mat(hatColor)));
+  const ridge = add(head, new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.04, 0.42), shellMat));
   ridge.position.set(0, 0.38, -0.02);
 }
 
