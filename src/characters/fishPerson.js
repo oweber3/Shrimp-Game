@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createSkinTexture } from '../utils/geometry.js';
 
 // Gerald: a fish person in a business suit. He does not belong here and he
 // knows it. Built from the same BoxGeometry/CylinderGeometry/SphereGeometry
@@ -22,7 +23,11 @@ export function createFishPerson() {
 
   const suit   = mat(0x2C2C3A, 0.65);
   const lapel  = mat(0x3D3D50, 0.65);
-  const scales = mat(0x7EB8C9, 0.4, 0.08);   // pale silver/gray-blue fish skin
+  // Fish skin gets a soft procedural texture (the map carries the hue, so the
+  // base color stays white and lets it through).
+  const scales = new THREE.MeshStandardMaterial({
+    color: 0xffffff, roughness: 0.4, metalness: 0.08, map: createSkinTexture(0x7EB8C9)
+  });
   const scaleD = mat(0x5A96A8, 0.45, 0.08);  // slightly darker accent
   const eyeM   = mat(0x101418, 0.2);
   const white  = mat(0xEEEEEE, 0.5);
@@ -36,17 +41,17 @@ export function createFishPerson() {
     const leg = new THREE.Group();
     leg.position.set(side * 0.15, 0.7, 0);
 
-    const thigh = add(leg, new THREE.Mesh(new THREE.CylinderGeometry(0.088, 0.095, 0.33, 7), suit));
+    const thigh = add(leg, new THREE.Mesh(new THREE.CylinderGeometry(0.088, 0.095, 0.33, 14), suit));
     thigh.position.y = -0.06;
 
-    const shin = add(leg, new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.082, 0.33, 7), suit));
+    const shin = add(leg, new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.082, 0.33, 14), suit));
     shin.position.y = -0.37;
 
     // Dress shoe: low flat box with a rounded toe cap
     const shoe = add(leg, new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.11, 0.38), suit));
     shoe.position.set(side * 0.01, -0.615, 0.05);
 
-    const toe = add(leg, new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 5), suit));
+    const toe = add(leg, new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 8), suit));
     toe.scale.set(1.0, 0.55, 1.1);
     toe.position.set(side * 0.01, -0.635, 0.22);
 
@@ -55,46 +60,63 @@ export function createFishPerson() {
   }
 
   // ---- Torso: suit jacket body ----
+  // Two stacked tapered cylinders give a real suit silhouette — broader chest,
+  // cinched waist, flared hips/peplum — instead of one uniform barrel.
   const torso = new THREE.Group();
   root.add(torso);
 
-  const jacket = add(torso, new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.37, 0.64, 10), suit));
-  jacket.position.set(0, 1.17, 0.01);
-  jacket.rotation.x = 0.08;
+  const chest = add(torso, new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.27, 0.4, 16), suit));
+  chest.position.set(0, 1.3, 0.01);
+  chest.rotation.x = 0.08;
+
+  const waist = add(torso, new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.36, 0.32, 16), suit));
+  waist.position.set(0, 1.0, 0.02);
+  waist.rotation.x = 0.05;
 
   // Jacket lapels: two angled flat boxes on the chest
   for (const side of [-1, 1]) {
-    const lp = add(torso, new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.22, 0.05), lapel));
-    lp.position.set(side * 0.085, 1.22, 0.31);
+    const lp = add(torso, new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.24, 0.05), lapel));
+    lp.position.set(side * 0.085, 1.24, 0.29);
     lp.rotation.z = side * 0.25;
     lp.rotation.x = 0.12;
   }
 
-  // White shirt collar peeking above the jacket
-  const collar = add(torso, new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.09, 0.05), white));
-  collar.position.set(0, 1.4, 0.31);
+  // White shirt collar: a small V of two angled panels framing the tie knot
+  for (const side of [-1, 1]) {
+    const col = add(torso, new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.11, 0.04), white));
+    col.position.set(side * 0.04, 1.4, 0.305);
+    col.rotation.z = side * -0.5;
+  }
 
-  // Dark tie
-  const tieM = add(torso, new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.28, 0.025), tie));
+  // Dark tie: knot plus a tapering blade
+  const knot = add(torso, new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.05, 0.03), tie));
+  knot.position.set(0, 1.36, 0.32);
+  const tieM = add(torso, new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.26, 0.025), tie));
   tieM.position.set(0, 1.18, 0.33);
 
-  // ---- Fish tail fin: two triangular lobes protruding from the back of the torso ----
-  // ConeGeometry with 3 radial segments gives a triangular cross-section.
+  // ---- Fish tail fin: a fan of four triangular lobes from the back of the torso ----
+  // ConeGeometry with 3 radial segments gives a flat triangular cross-section.
+  // Four lobes at increasing fan angles, each flattened in Z, leave concave
+  // negative space between them for a proper caudal-fin silhouette.
   const tail = new THREE.Group();
-  tail.position.set(0, 1.1, -0.28);
+  tail.position.set(0, 1.1, -0.3);
   torso.add(tail);
 
   const finMat = new THREE.MeshStandardMaterial({ color: 0x7EB8C9, roughness: 0.4, metalness: 0.08, side: THREE.DoubleSide });
 
-  // Upper lobe: tip points backward and slightly upward
-  const lobeU = add(tail, new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.28, 3), finMat));
-  lobeU.position.set(0, 0.1, -0.1);
-  lobeU.rotation.x = -(Math.PI / 2) + 0.38; // mostly -Z, fanned up
-
-  // Lower lobe: tip points backward and slightly downward
-  const lobeL = add(tail, new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.28, 3), finMat));
-  lobeL.position.set(0, -0.08, -0.1);
-  lobeL.rotation.x = -(Math.PI / 2) - 0.38; // mostly -Z, fanned down
+  // tilt: fan angle off straight-back, len: lobe length (outer lobes longest).
+  const lobes = [
+    { tilt: 0.62, len: 0.3 },
+    { tilt: 0.2, len: 0.24 },
+    { tilt: -0.2, len: 0.24 },
+    { tilt: -0.62, len: 0.3 }
+  ];
+  for (const { tilt, len } of lobes) {
+    const lobe = add(tail, new THREE.Mesh(new THREE.ConeGeometry(0.13, len, 3), finMat));
+    lobe.scale.set(1, 1, 0.35); // flatten into a thin fin blade
+    lobe.position.set(0, Math.sin(tilt) * 0.16, -0.1 - Math.cos(tilt) * 0.02);
+    lobe.rotation.x = -(Math.PI / 2) + tilt; // mostly -Z, fanned up/down
+  }
 
   // ---- Arms: suit sleeves ending in scaly fish hands ----
   const arms = {};
@@ -102,18 +124,24 @@ export function createFishPerson() {
     const arm = new THREE.Group();
     arm.position.set(side * 0.35, 1.42, 0.01);
 
-    const upper = add(arm, new THREE.Mesh(new THREE.CylinderGeometry(0.063, 0.068, 0.3, 7), suit));
+    const upper = add(arm, new THREE.Mesh(new THREE.CylinderGeometry(0.063, 0.068, 0.3, 14), suit));
     upper.position.set(side * 0.1, -0.13, 0.02);
     upper.rotation.z = side * 0.52;
     upper.rotation.x = -0.1;
 
-    const fore = add(arm, new THREE.Mesh(new THREE.CylinderGeometry(0.053, 0.063, 0.28, 7), suit));
+    const fore = add(arm, new THREE.Mesh(new THREE.CylinderGeometry(0.053, 0.063, 0.28, 14), suit));
     fore.position.set(side * 0.2, -0.38, 0.11);
     fore.rotation.z = side * 0.24;
     fore.rotation.x = -0.44;
 
+    // Shirt cuff: a thin white ring peeking out of the jacket sleeve end
+    const cuff = add(arm, new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.058, 0.05, 14), white));
+    cuff.position.set(side * 0.245, -0.49, 0.19);
+    cuff.rotation.z = side * 0.24;
+    cuff.rotation.x = -0.44;
+
     // Fish hand: a slightly flattened sphere in fish-skin color
-    const hand = add(arm, new THREE.Mesh(new THREE.SphereGeometry(0.068, 8, 6), scales));
+    const hand = add(arm, new THREE.Mesh(new THREE.SphereGeometry(0.068, 12, 8), scales));
     hand.scale.set(1.0, 0.7, 1.0);
     hand.position.set(side * 0.265, -0.52, 0.22);
 
@@ -128,16 +156,16 @@ export function createFishPerson() {
   torso.add(head);
 
   // Skull: scaled wide and flat — fish head is wider than it is tall
-  const skull = add(head, new THREE.Mesh(new THREE.SphereGeometry(0.26, 12, 9), scales));
+  const skull = add(head, new THREE.Mesh(new THREE.SphereGeometry(0.26, 20, 14), scales));
   skull.scale.set(1.18, 0.65, 1.02);
 
   // Side-facing eye bumps (fish eyes sit on the sides, not the front)
   for (const side of [-1, 1]) {
-    const eyeBump = add(head, new THREE.Mesh(new THREE.SphereGeometry(0.075, 8, 6), scales));
+    const eyeBump = add(head, new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 8), scales));
     eyeBump.scale.set(0.55, 1.0, 0.55);
     eyeBump.position.set(side * 0.265, 0.04, 0.0);
 
-    const pupil = add(head, new THREE.Mesh(new THREE.SphereGeometry(0.045, 7, 6), eyeM));
+    const pupil = add(head, new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), eyeM));
     pupil.position.set(side * 0.305, 0.04, 0.0);
   }
 
