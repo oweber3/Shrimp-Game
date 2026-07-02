@@ -1,283 +1,278 @@
-# Shrimp Game: Realism Upgrade Plan
+# Shrimp Shift: Realism Plan v2 — Track A (Visual/Technical)
 
-## Context
+**Status: PLANNING — supersedes the original REALISM_PLAN.md (v1).**
 
-Shrimp Shift is currently a low-poly Three.js web game built entirely from primitive geometry (boxes, cylinders, spheres, cones). Characters are procedural rigs with flat-colored PBR materials and no textures. Buildings are primitive boxes with solid-color walls.
+This document is the design home for Track A (visual/technical realism). Its
+sibling, [docs/LAITRAM_ACCURACY.md](./docs/LAITRAM_ACCURACY.md), covers Track B
+(accuracy to the real Laitram/Intralox company). Per-phase implementation
+breakdowns in the standard format live in
+[docs/IMPLEMENTATION_PHASES.md](./docs/IMPLEMENTATION_PHASES.md) (Phases 9–16),
+and the roadmap table in [docs/ROADMAP.md](./docs/ROADMAP.md) is the index.
 
-The goal is to progressively upgrade the game toward realism — starting with character visuals, then the map/environment — while keeping the game running in the browser (Three.js + Vite, no backend). The existing animation rig structure and collision system must remain intact throughout.
-
----
-
-## Phased Plan
-
----
-
-## Phase 1: Realistic Characters
-
-**Goal:** Make shrimp workers, Gerald, and Shrimply Gigantic look organic and textured rather than low-poly toy figures.
-
-### 1A — Higher-Quality Body Geometry
-
-**File:** `src/characters/shrimpWorker.js`
-
-- Increase `radialSegments` on shell cylinders from default 8 → 16–20 for smoother curves
-- Replace the 5-segment stacked-box torso with a single smooth tapered `CylinderGeometry` with more height segments and a slight bend via vertex shader or morph
-- Increase `taperedTube()` path points from ~6 → 12–16 for a smoother tail curve
-- Add proper carapace edge geometry: thin flat rings extruded at each shell segment boundary (gives segmented "crease" look)
-- Make claws more detailed: two asymmetric lobes with sharper tips using `ConeGeometry` vs flat box
-
-**File:** `src/characters/fishPerson.js`
-
-- Give Gerald a proper torso that tapers at the waist/hips (tapered cylinders, not a uniform box)
-- Add detailed collar, cuffs on jacket sleeves
-- Fish tail: fan out 3–4 cone lobes with a slight concave negative space between them
-
-### 1B — Shell & Skin Textures via Canvas
-
-**File:** `src/utils/geometry.js` (add new texture factory functions)
-
-Add `createShellTexture(color)` — procedurally drawn canvas texture (~256×256):
-- Base shell color tinted with subtle gradient (lighter at center, darker at edges)
-- Fine horizontal lines suggesting chitin segmentation
-- Small specular highlight smear for wet-shell look
-- Convert to `THREE.CanvasTexture`
-
-Add `createSkinTexture(color)` — for belly/underside segments:
-- Softer color, slightly translucent-looking gradient
-- Very fine horizontal lines at lower opacity than shell
-
-Apply these as `map` on the relevant shell and belly materials.
-
-### 1C — Normal Maps for Surface Depth
-
-**File:** `src/utils/geometry.js`
-
-Add `createShellNormalMap()` — canvas-drawn normal map (~256×256):
-- Encode per-pixel surface normals as RGB (128,128,255 = flat)
-- Draw subtle horizontal ridges (sine-wave luminance → encoded normals)
-- Subtle dimple cluster near segment seams
-
-Apply as `.normalMap` + `.normalScale = new THREE.Vector2(0.6, 0.6)` on shell material.
-
-### 1D — Improved Shell Material Properties
-
-**File:** `src/utils/geometry.js` (material palette) and `src/characters/shrimpWorker.js`
-
-- Shell: roughness 0.35 (shinier, wet), metalness 0.08, add `envMapIntensity: 1.2` for stronger IBL
-- Add `clearcoat: 0.4, clearcoatRoughness: 0.15` using `MeshPhysicalMaterial` — simulates wet exoskeleton lacquer layer
-- Antenna: thin `TubeGeometry` along a slight curve (instead of straight cylinder) with semi-matte finish
-- Eyes: `MeshPhysicalMaterial` with `transmission: 0.6, ior: 1.45` for glass-like wet eye look
-
-### 1E — Facial & Detail Upgrades
-
-**File:** `src/characters/shrimpWorker.js`
-
-- Eyes: replace flat spheres with proper "eyeball" — white sclera sphere + smaller iris disc + tiny pupil disc, layered
-- Add subtle eyelid ridge above eye (thin half-ellipse geometry)
-- Antennae: replace cylinders with `TubeGeometry` following a gentle outward-curving `CatmullRomCurve3`
-- Add rostrum (pointed nose spike between antennae base) — a small `ConeGeometry` jutting forward
-
-### 1F — Clothing Texture Detail
-
-**File:** `src/characters/shrimpWorker.js`
-
-- Safety vest: canvas texture with subtle fabric weave grid (~128×128, very fine crosshatch lines)
-- Hi-vis stripes: actual texture band with reflective silver shimmer (emissive: 0xaaaaaa, emissiveIntensity: 0.1)
-- Hard hat: switch from flat hemisphere to `MeshPhysicalMaterial` with clearcoat (helmets have glossy polycarbonate finish)
-- Boots: subtle leather texture via canvas normal map (horizontal stress lines)
+The combined **Implementation Order** across both tracks and the **Open
+Questions** you need to decide are at the bottom of this file.
 
 ---
 
-## Phase 2: Realistic Buildings & Architecture
+## What happened to Realism Plan v1
 
-**Goal:** Replace solid-color box buildings with textured, detailed structures that look like real industrial/office buildings.
+The v1 plan had four phases. Status check against the actual codebase:
 
-### 2A — Building Texture System
+| v1 Phase | Content | Status |
+|----------|---------|--------|
+| 1 (Characters) | Shell/skin canvas textures, normal maps, clearcoat, layered eyes, fabric/leather maps | **Shipped** (commit `2eea18c`, PR #21) — do not redo |
+| 2 (Buildings/Ground) | Concrete/brick/metal canvas textures, architectural detail, multi-pane windows, landscaping | Not started — folded into new **Phases 9, 10, 12** |
+| 3 (Environment) | Shadow quality, SSAO, clouds, road markings | Not started — folded into new **Phases 9, 11, 12** |
+| 4 (Rendering polish) | Interior IBL probe, night emissives, texture atlas | Not started — folded into new **Phases 9, 10, 11** |
 
-**File:** `src/utils/geometry.js` (extend material factory)
+### Critique of v1 (why this rewrite goes further)
 
-Add a `createBuildingTextures()` factory that returns UV-mapped canvas textures:
-
-- **`concreteTexture()`**: Medium gray base, random dark flecks, subtle weathering streaks, slight color variation tile (~512×512, repeating)
-- **`brickTexture()`**: Classic staggered brick pattern, mortar lines (slightly recessed brightness), color variation per brick (~512×256)
-- **`metalPanelTexture()`**: Horizontal panel lines with subtle seam shadows, brushed direction lines, rivet dots at corners (~256×512)
-- **`asphaltTexture()`**: Dark base, aggregate specks, subtle crack hairlines
-
-Apply all textures with `texture.wrapS = texture.wrapT = THREE.RepeatWrapping` and scale repeats to building dimensions.
-
-### 2B — Normal Maps for Building Surfaces
-
-Add corresponding normal maps for each surface type:
-
-- **Concrete**: low-frequency bump noise (procedural sine superposition)
-- **Brick**: mortar joints recessed (encoded as normals pointing inward at seams)
-- **Metal panel**: panel seam edges (sharp normal breaks at lines)
-
-Apply at `normalScale: new THREE.Vector2(0.5, 0.5)` for subtle relief without overwhelming the silhouette.
-
-### 2C — Architectural Detail Geometry
-
-**File:** `src/map/buildings.js`
-
-For the **Intralox Plant** (main warehouse):
-- Add parapet wall cap along roofline (thin flat BoxGeometry overhang)
-- Add window frames: recessed BoxGeometry inset into wall, inner face as glass
-- Add pilaster columns at corners (slight vertical wall projections)
-- Loading dock: add dock leveler lip geometry, rubber bumper strip
-- Clerestory: improve glass-to-wall transition with thin mullion strips
-
-For the **Laitram Machinery** building:
-- Add cornice detail at roofline (thin extruded ledge)
-- Office front facade: window banding with horizontal spandrel panels between floors
-- Entry: add awning geometry over front door (flat plane + support arms)
-- Truck court: add wheel guide curbs on dock approach
-
-For the **301 Complex** buildings:
-- Add cross-brace X-pattern on visible gable ends (suggests steel structure)
-- Downspout pipes on building corners (thin vertical cylinders)
-
-### 2D — Window Realism
-
-**File:** `src/map/buildings.js`
-
-Replace single glass planes with multi-pane window assemblies:
-- Outer frame: dark BoxGeometry border
-- Horizontal and vertical mullion bars (thin BoxGeometry strips)
-- Glass panes: `MeshPhysicalMaterial` with `transmission: 0.9, roughness: 0.05, ior: 1.5` for true glass refraction
-- Interior backing: dark gray plane ~0.3 units behind glass (suggests interior depth)
-- Optional: faint emissive on interior backing at night to suggest lit offices
-
-### 2E — Ground Surface Textures
-
-**File:** `src/map/terrain.js`
-
-- Apply `asphaltTexture()` to parking lots and roads (repeat ~every 4 units)
-- Apply `concreteTexture()` to sidewalks and dock aprons
-- Add painted line texture overlay (yellow/white striping for parking spaces) — thin `PlaneGeometry` decals at z-offset +0.01 to avoid z-fighting
-- Grass: canvas texture with fine blade stroke lines, slight color variation (not just flat green polygon)
-
-### 2F — Landscaping Upgrade
-
-**File:** `src/map/landscaping.js`
-
-**Live Oaks (more realistic):**
-- Replace single large icosahedron canopy with multi-lobe arrangement using `SphereGeometry(r, 8, 6)` at high subdivision
-- Add canvas leaf texture (dark green, semi-transparent leaf silhouettes) as `alphaMap` for transparency cutout
-- Apply billboard-style alpha-tested material: `alphaTest: 0.5, side: THREE.DoubleSide`
-- Add secondary smaller canopy spheres for visual complexity
-- Trunk: `CylinderGeometry` with canvas bark texture (vertical furrow lines, brown variation)
-
-**Palms:**
-- Fronds: replace cone geometry with `PlaneGeometry` alpha-tested with a palm frond texture (feather-like silhouette)
-- Add slight droop via rotation + translate offset for hanging frond look
-
-**Drainage Canal:**
-- Add animated normal map on water surface (`clock.getElapsedTime()` drives UV offset each frame)
-- Water material: `MeshPhysicalMaterial` with `transmission: 0.4, roughness: 0.1, color: 0x4a7d8c`
+- **It was albedo+normal only.** Real PBR surfaces need per-texel *roughness*
+  variation (oil stains on asphalt, rain streaks on metal panel, polished
+  vs. scuffed concrete). v1 never touched `roughnessMap`/`aoMap` — that is
+  where most of the "realism per byte" lives, and canvas can generate it.
+- **It didn't offer a tiered choice.** Everything assumed the locked
+  constraints (procedural-only, no deps). This rewrite makes the constraint
+  relaxations explicit (Tier 2) so each one can be approved or rejected.
+- **It undercounted GPU texture memory.** ~20 canvas textures at 512² RGBA
+  with mipmaps is ~27 MB of GPU memory — near the 32 MB budget. The new plan
+  budgets GPU bytes per phase, standardizes on 256²/512² with a shared atlas,
+  and uses single-channel textures for roughness/AO where possible.
+- **Some v1 items are already shipped elsewhere.** The "Director's Cut" work
+  (ACES, baked scattering sky + PMREM IBL, bloom, day/night, streetlamps,
+  stars/moon) landed after ROADMAP Phase 8. v1's cloud/shadow sections were
+  written against the older sky. Also note **docs drift**: TECH_PLAN claims a
+  2048 shadow map but `src/main.js` currently uses **1024** with a loose
+  ±200-unit frustum — Phase 11 fixes both the code and the doc.
+- **It ignored animation entirely.** Characters got better *materials* in
+  Phase 1 but still slide-walk with sine-bob limbs. Believable motion (foot
+  plant, secondary motion, blinking) moves the realism needle more than any
+  additional texture — that is new Phase 13.
+- **It ignored weather.** A Louisiana campus with no rain, haze, or heat
+  shimmer reads as a diorama — new Phase 12.
 
 ---
 
-## Phase 3: Realistic Environment & Atmosphere
+## The two tiers — choose one (or approve Tier 2 à la carte)
 
-**Goal:** Upgrade ambient environment details — sky, clouds, lighting quality, shadows.
+Every Track A phase below has a **Tier 1** scope and a **Tier 2** upgrade.
 
-### 3A — Shadow Quality
+### Tier 1 — "Stylized-realistic, constraints preserved"
 
-**File:** `src/main.js`
+- 100% procedural geometry (Three.js primitives + custom BufferGeometry)
+- All textures canvas- or shader-generated at runtime (plus the existing
+  two WebP signs); no downloaded texture packs
+- No external `.glb`/`.gltf` model files
+- No physics engine, no new npm dependencies (three/addons only — they
+  tree-shake into the existing bundle)
+- Stays inside every TECH_PLAN budget: <100k triangles, <200 draw calls,
+  <32 MB texture memory, <500 KB gz bundle, 60 fps on integrated GPU
 
-- Increase sun shadow map from 1024×1024 → 2048×2048
-- Tighten shadow camera frustum to reduce texel waste (±120 units instead of ±200)
-- Lower shadow bias from `-0.0005` → `-0.0003` to reduce acne with better resolution
+Realistic ceiling: a coherent, filmic, *miniature-model* look — think
+"architectural visualization of a toy campus," not photoreal. Everything
+reads as real materials under real light, but silhouettes stay simple.
 
-### 3B — Ambient Occlusion (SSAO)
+### Tier 2 — "True realism, constraints relaxed"
 
-**File:** `src/world/postfx.js`
+Each relaxation is independent. What each one buys:
 
-Add `SSAOPass` from Three.js examples post-processing suite:
-- Insert between RenderPass and BloomPass in the EffectComposer chain
-- Settings: kernelRadius 8, minDistance 0.005, maxDistance 0.1
-- Adds contact shadows and depth at junctions between walls/floors and props
+| # | Constraint to renegotiate (ROADMAP/TECH_PLAN) | Relaxed to | Realism gain | Cost |
+|---|---|---|---|---|
+| R1 | "All geometry stays procedural / no external 3D model files" | Allow **original, self-made** `.glb` files (≤ 300 KB each, ≤ 2 MB total; skinned characters + hero props) | Biggest single jump: organic shrimp silhouettes, real skinned walk/idle/facial animation instead of rigid-part bobbing | Asset pipeline (Blender), GLTFLoader (+~25 KB), loading latency, rig API migration |
+| R2 | "No heavy asset files" (texture side) | Allow small **CC0/self-made photo textures**, ideally KTX2/basis compressed (+~60 KB transcoder) | Photographic material grain (concrete, asphalt, bark) that canvas noise can't fake | +2–6 MB download, GPU memory toward ~24 MB, attribution bookkeeping |
+| R3 | JS bundle < 500 KB gz | Raise to **~700 KB gz** | Room for `postprocessing`/N8AO (better AO than three's SSAOPass), CSM shadows, spring/IK helpers | Slower first load on 4G (~+1 s); still fine on GitHub Pages |
+| R4 | "No physics engine" | Allow **Rapier (WASM ~1.5 MB)** | Ragdoll punch reactions, cart suspension, tumbling props | Large download, sim complexity, collision-system rewrite. **Recommended: reject** — worst realism-per-byte in this table |
+| R5 | GitHub Pages static hosting | Move to a host with server features | Nothing Track A needs. Streaming assets/multiplayer only | **Recommended: reject** — every phase below deploys fine as static files |
 
-### 3C — Realistic Clouds
+Tier 2 still honors the "no copyrighted assets" rule — external files must be
+original or CC0, never ripped.
 
-**File:** `src/world/sky.js`
-
-- Replace icosahedron puffs with layered disc-stack cloud sprites
-- Each cloud: stack of `PlaneGeometry` billboards with canvas cloud texture (soft white → transparent edges via radial gradient alpha)
-- 3–5 overlapping planes per cloud, slightly offset in Y and XZ for volumetric appearance
-- Animate UV offset or rotation slightly each frame for subtle turbulence
-
-### 3D — Improved Road Markings & Curbs
-
-**File:** `src/map/terrain.js`
-
-- Add curb geometry along all road edges: narrow `BoxGeometry` strips (height ~0.15 units)
-- Road center lines and edge lines: thin plane decals with `roadLine` material, repeat every 6 units
-- Crosswalk stripes: array of thin BoxGeometry strips at intersections
-
----
-
-## Phase 4: Advanced Rendering Polish
-
-**Goal:** Add final rendering fidelity touches that distinguish "realistic" from "high-quality low-poly."
-
-### 4A — Reflection Probes (Local IBL)
-
-- Bake separate environment cube for interior (when indoors, swap envMap to interior probe)
-- Makes interior windows reflect the inside rather than outdoor sky
-
-### 4B — Emissive Detail at Night
-
-**File:** `src/world/streetlights.js`, `src/map/buildings.js`
-
-- Office window backing planes become emissive at night (yellowish 0xffe8a0, intensity 0.4)
-- Loading dock area floodlights: add `PointLight` (warm 0xffee88, distance 15, decay 2) above dock doors
-- Parking lot poles: `SpotLight` pointing down (cool 0xd0e8ff, angle 0.5) for sodium vapor feel
-
-### 4C — Texture Atlasing
-
-**File:** `src/utils/geometry.js`
-
-- Combine small canvas textures into a single atlas texture (4×4 grid of 128×128 tiles)
-- Reference via UV offset — reduces texture bind calls per frame
+**Recommendation:** ship Tier 1 for Phases 9–12 first (it is most of the
+visible win), then decide Tier 2 only for Phase 13 (characters), where R1 is
+the difference in kind rather than degree.
 
 ---
 
-## Implementation Order
+## Track A phases (summary — full breakdowns in docs/IMPLEMENTATION_PHASES.md)
 
-| Phase | Files Changed | Complexity |
-|-------|---------------|------------|
-| 1A–1C | `shrimpWorker.js`, `geometry.js` | Medium |
-| 1D–1F | `shrimpWorker.js`, `fishPerson.js`, `geometry.js` | Medium |
-| 2A–2B | `geometry.js` (new texture factories) | Medium-High |
-| 2C–2D | `buildings.js` | High |
-| 2E–2F | `terrain.js`, `landscaping.js` | Medium |
-| 3A–3B | `main.js`, `postfx.js` | Low-Medium |
-| 3C–3D | `sky.js`, `terrain.js` | Medium |
-| 4A–4C | `streetlights.js`, `buildings.js`, `geometry.js` | Medium |
+### Phase 9 — Surface Materials Everywhere (buildings + ground)
+
+The single highest-impact phase. A shared procedural PBR texture factory
+(`src/utils/surfaceTextures.js`): tilable canvas albedo + normal + roughness
+(+AO where cheap) for concrete tilt-up, brick, corrugated/ribbed metal panel,
+asphalt, painted concrete floor, grass, bark. Applied across `buildings.js`,
+`terrain.js`, `interior.js`, `campusDetail.js` with world-scale UV repeats,
+per-building hue jitter, and grime/weathering passes (drip streaks under roof
+edges, tire wear on drive lanes, oil spots at parking stalls).
+
+- **Tier 1:** all canvas-generated; packed into 2–3 atlases (roughness in a
+  single channel); budget ≤ 14 MB GPU texture memory, +0 deps, draw calls flat
+  (materials swap in place).
+- **Tier 2 (R2):** replace the 4–5 hero surfaces (asphalt, concrete, metal
+  panel) with compressed photo textures for photographic grain. +2–4 MB
+  download.
+- **Tradeoff:** canvas textures upload once at boot (~100–200 ms hit on the
+  loading screen); atlasing constrains per-surface repeat settings, so ground
+  planes get real UVs sized in world units.
+
+### Phase 10 — Architectural Detail & Glass
+
+Silhouette realism for the buildings: parapet caps, cornices, pilasters,
+recessed multi-pane window assemblies with mullions, dock levelers + rubber
+bumpers + guide curbs, downspouts, wall-pack light fixtures, bollard rows,
+roof-edge flashing. Windows become framed assemblies with a dark
+"interior-depth" backing plane that turns emissive at night.
+
+- **Tier 1:** all primitives, heavy use of `InstancedMesh` (one instanced
+  mullion/window/bollard mesh each) and `BufferGeometryUtils.mergeGeometries`
+  per material. Budget: +18–25k triangles (to ~60k total), draw calls +≤15.
+- **Tier 2 (R1):** a few original hero-prop `.glb`s (rooftop HVAC unit, dock
+  leveler, wall-pack fixture) modeled once in Blender with beveled edges and
+  baked AO — crisper than primitive assemblies for the same triangle count.
+- **Tradeoff:** true refractive glass (`transmission`) forces a transparent
+  render pass per window; use it only on the lobby/clerestory glass and keep
+  plain low-roughness reflective glass elsewhere, or the draw-call budget dies.
+
+### Phase 11 — Lighting, Shadows & Post-Processing
+
+Fix the shadow rig (1024 → 2048, frustum tightened from ±200 to ~±90 following
+the camera in ~30-unit snaps to avoid shimmer, bias retuned), add ambient
+occlusion, and upgrade night lighting (instanced pole/wall fixtures with a
+small pool of real `SpotLight`s assigned to the nearest N fixtures; emissive
+window grids after dusk; baked AO darkening under canopies/eaves).
+
+- **Tier 1:** three/addons `SSAOPass` at half resolution, gated by a quality
+  toggle and auto-disabled on the software-renderer fallback path (postfx.js
+  already has the try/catch pattern). Budget: +2–4 ms GPU on integrated
+  graphics — the tightest budget item in Track A; ship with a perf switch.
+- **Tier 2 (R3):** `postprocessing` + N8AO (better quality/perf than SSAOPass)
+  and three/addons CSM (2–3 cascades) for sharp near shadows *and* full-campus
+  coverage. Bundle +~80–120 KB gz; CSM multiplies shadow draw calls by cascade
+  count.
+- **Tradeoff:** every effect here is a frame-time tax, not a byte tax. The
+  phase ships a `quality` setting (auto-detected, user-overridable) or the
+  60 fps budget on integrated GPUs is at risk.
+
+### Phase 12 — Water, Vegetation & Weather
+
+The canal gets a real water material (scrolling dual normal maps, fresnel
+reflection of the baked sky cube, banked edges with a scum line). Vegetation
+goes from lollipop icosahedra to alpha-cutout foliage: live oaks as clusters
+of camera-facing leaf-cluster cards (canvas leaf-silhouette alphaMap,
+`alphaTest`), palms with drooping frond cards, instanced grass tufts near
+sidewalks. Weather states (clear / hazy / overcast / rain shower) blend into
+the existing day/night atmosphere: instanced rain streaks, wet-ground
+roughness drop + puddle decals, distance haze, drifting cloud-billboard deck
+replacing the icosahedron puffs. Louisiana heat shimmer (subtle screen-space
+distortion above asphalt) as a stretch item.
+
+- **Tier 1:** all shader/canvas driven; rain is one `InstancedMesh` (~400
+  streaks in a cylinder around the camera). Budget: +6–10k triangles, +1–2 ms
+  GPU in rain, texture +~3 MB.
+- **Tier 2 (R3):** three/addons `Water` (planar reflection at half res) for
+  the canal — real reflections of buildings, ~+1.5 ms GPU; optional raymarched
+  low-res volumetric cloud layer (expensive, desktop-only).
+- **Tradeoff:** alpha-tested foliage causes overdraw; cap oak card counts and
+  fade cards to billboards past ~80 units. Weather must also modulate audio
+  (rain on the existing procedural Web Audio bed) or it reads as a screensaver.
+
+### Phase 13 — Character Realism II: Animation & Faces
+
+Phase 1 (v1) made characters *look* better standing still; this makes them
+move believably. Applies to shrimp workers, Gerald (`fishPerson.js`), and
+Shrimply Gigantic (`giantShrimp.js`).
+
+- **Tier 1 (procedural, rig API preserved):** a gait engine on the existing
+  Group hierarchy — planted-foot stepping (two-bone analytic knee solve on
+  the leg Groups, feet stop sliding), weight shift + hip sway, speed-matched
+  cadence walk↔jog, antenna/tail spring-damper secondary motion, breathing
+  idle, blink cycles (eyelid scale), pupils/head tracking with saccade
+  timing, mouth-plate flap while dialogue advances, hand-poses for carry.
+  Budget: pure CPU, ~0.1 ms for 13 characters; 0 bytes.
+- **Tier 2 (R1 — the flagship relaxation):** original Blender-built skinned
+  shrimp (~5–8k triangles), exported `.glb` with baked idle/walk/jog/wave/
+  talk clips and morph-target blinks, driven by `AnimationMixer`. The rig
+  ships an adapter that still exposes `root.userData.parts` +
+  `carryAnchor` so `player.js`/`missions.js`/`combat.js` don't change.
+  ~250–400 KB per unique character (workers share one mesh with color
+  variants), +GLTFLoader. This is the visible difference between "nice toy"
+  and "creature" — and also the biggest risk to the game's charm; see open
+  questions.
+- **Tradeoff:** Tier 1 keeps the exact current silhouette (charm preserved,
+  realism capped); Tier 2 buys organic deformation but adds an asset
+  pipeline, load time, and a one-way art-style door.
 
 ---
 
-## Verification Per Phase
+## Combined Implementation Order (Track A + Track B)
 
-- **Phase 1**: Run `npm run dev`, inspect characters close-up — shell should show texture/normal detail, eyes should look glassy, tail curve should be smooth
-- **Phase 2**: Walk around campus — building walls should show surface texture relief, windows should appear multi-pane with glass depth, ground should show asphalt/concrete texture
-- **Phase 3**: Check shadow sharpness at building bases, verify SSAO creates contact darkening at corners, verify cloud appearance at different times of day
-- **Phase 4**: Check night-time building emission, verify dock area point lights, confirm interior IBL looks correct when indoors
+Track B phases (14–16) are defined in
+[docs/LAITRAM_ACCURACY.md](./docs/LAITRAM_ACCURACY.md). Order chosen so the
+cheap, high-grounding accuracy work lands early, materials/lighting (biggest
+visual payoff) land before detail work that depends on them, and the riskiest
+phase (13) goes last, after the tier decision.
+
+| Order | Phase | Track | Name | Size | Depends on | Gate |
+|-------|-------|-------|------|------|------------|------|
+| 1 | 14 | B | Campus Geography & Signage Accuracy | S | — | none |
+| 2 | 9 | A | Surface Materials Everywhere | M | — | Tier choice affects scope only (R2) |
+| 3 | 11 | A | Lighting, Shadows & Post | M | 9 (materials respond to light/AO) | R3 if Tier 2 |
+| 4 | 10 | A | Architectural Detail & Glass | M–L | 9 (shares textures) | R1 optional |
+| 5 | 15 | B | Company Heritage & Product Grounding | M | 14 (signage system), 9 (sign textures) | none |
+| 6 | 12 | A | Water, Vegetation & Weather | M–L | 11 (postfx hooks) | R3 optional |
+| 7 | 16 | B | Workplace Realism: PPE, Safety & Org | M | 15 (roles/flavor), 9 (striping/decals) | none |
+| 8 | 13 | A | Character Animation & Faces | L | none hard; benefits from all above | **Tier 1 vs Tier 2 (R1) decision required** |
+
+Each phase independently shippable; `node scripts/verify.mjs` must stay green
+after every one.
 
 ---
 
-## Key Files Reference
+## Open Questions (decide before implementation starts)
+
+1. **Tier 1 or Tier 2 — and global or à la carte?** Recommendation: Tier 1
+   for Phases 9–12 now; decide R1 (external `.glb`) only when Phase 13 starts.
+2. **If any Tier 2: which relaxations exactly?** R1 (small original `.glb`s)?
+   R2 (compressed photo textures)? R3 (bundle to ~700 KB gz for
+   `postprocessing`/N8AO/CSM)? R4 physics and R5 hosting are recommended
+   rejections — confirm.
+3. **Art-style ceiling for characters (Phase 13):** keep the charming rigid-
+   part shrimp and make them *move* like creatures (Tier 1), or rebuild as
+   skinned organic models (Tier 2/R1)? This is a one-way aesthetic door.
+4. **Founder naming (Track B):** the in-game heritage exhibit can tell the
+   true 1949 story with the founder unnamed ("a 16-year-old inventor from
+   Houma") — recommended — or use the real historical name. See
+   LAITRAM_ACCURACY.md §Guardrails.
+5. **Real division names on buildings:** the game already writes "Intralox" /
+   "Laitram" as plain text signage (no logos). Keep that, or fictionalize
+   (e.g. "Intershrimp")? Recommendation: keep plain-text real names + add a
+   fan-game disclaimer to the README and title screen.
+6. **"220 Plantation" label** for the Intralox plant is not publicly
+   corroborated (public sources put Intralox/Laitram HQ at 301 Plantation
+   Rd). Relabel the big plant as part of the 301 complex, or keep the
+   current label as internal-style numbering? (LAITRAM_ACCURACY.md §Audit.)
+7. **Weather scope (Phase 12):** rain-only, or the full clear/hazy/overcast/
+   rain state machine (+~30% of that phase's effort)?
+8. **Performance floor:** must Tier 2 effects hold 30 fps on mobile/touch
+   devices, or is mobile allowed to auto-drop to Tier 1 quality? (Plan
+   assumes a `quality` auto-toggle either way.)
+9. **Docs drift cleanup:** OK to fold small corrections into Phase 9 (TECH
+   _PLAN's stale 2048-shadow claim, missing `src/world/`, `fishPerson.js`,
+   `giantShrimp.js`, `collectibles.js`, `campusDetail.js`, `mobileControls.js`
+   entries in its module map)?
+
+---
+
+## Key Files Reference (verified against the current tree)
 
 | File | Role |
 |------|------|
-| `src/characters/shrimpWorker.js` | Main character rig — geometry & materials |
-| `src/characters/fishPerson.js` | Gerald character |
-| `src/characters/giantShrimp.js` | Shrimply |
-| `src/utils/geometry.js` | Material + texture factories (central) |
-| `src/map/buildings.js` | Campus building geometry |
-| `src/map/terrain.js` | Ground, roads, sidewalks |
-| `src/map/landscaping.js` | Trees, canal, grass |
-| `src/world/postfx.js` | Post-processing pipeline |
-| `src/world/sky.js` | Atmosphere, clouds |
-| `src/main.js` | Lighting rig, shadow config |
+| `src/utils/geometry.js` | Material palette + character texture factories (v1 Phase 1 lives here) |
+| `src/characters/shrimpWorker.js` | Worker rig (parts API, carryAnchor) — **already textured** |
+| `src/characters/fishPerson.js` / `giantShrimp.js` | Gerald / Shrimply Gigantic |
+| `src/map/buildings.js`, `terrain.js`, `props.js`, `landscaping.js`, `campusDetail.js`, `interior.js`, `vehicles.js` | Campus geometry |
+| `src/world/sky.js` | Baked scattering sky, day/night, clouds, PMREM IBL |
+| `src/world/postfx.js` | EffectComposer: bloom + ACES output (has software-renderer fallback) |
+| `src/world/streetlights.js` | Night fixtures |
+| `src/main.js` | Renderer, lighting rig, shadow config (currently 1024 map) |
+| `src/mechanics/collectibles.js` | Collectible system (Track B heritage tour hooks in here) |
