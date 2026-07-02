@@ -358,4 +358,14 @@ function addSigns({ world, colliders, M, box, loadingManager }, { lm, hqB, wh })
   // Sign 2 – south-east of the break pavilion / LM front lot.
   // Faces west toward the main campus interior.
   addImageSign(import.meta.env.BASE_URL + 'sign-image-2.webp', 95, 42, -Math.PI / 2);
+
+  // Sign 3 – north strip, along Toler St facing the 301 production row.
+  addImageSign(import.meta.env.BASE_URL + 'sign-image-3.webp', -20, -70, 0);
+
+  // Sign 4 – west dock yard near Intralox plant, facing east toward the yard.
+  addImageSign(import.meta.env.BASE_URL + 'sign-image-4.webp', -155, 60, Math.PI / 2);
+
+  // Sign 5 – Storey St frontage north of the 5040 Storey building, facing north
+  // toward the street/campus interior.
+  addImageSign(import.meta.env.BASE_URL + 'sign-image-5.webp', 100, 66, Math.PI);
 }
