@@ -8,6 +8,11 @@
 //     Interact) dispatch synthetic keyboard events so they flow through the
 //     EXACT same handlers as the physical Space / E keys. No gameplay action
 //     is re-implemented here.
+//   * A drag-to-look zone over the right half of the screen turns the camera,
+//     the touch equivalent of desktop pointer-lock mouse-look. Since pointer
+//     lock doesn't exist on touch, it writes player.yaw/pitch directly from
+//     raw position deltas (touch has no movementX/Y semantics), mirroring the
+//     sensitivity and clamping in player.js.
 //   * Built on Pointer Events. Every control captures its own pointerId, so
 //     move + jump + interact can all be held at once (true multi-touch).
 //   * Created and shown only on coarse-pointer (touch) devices; desktop is
@@ -50,6 +55,7 @@ export class MobileControls {
     this.enabled = detectTouch(force);
     this.root = null;
     this.joyPointerId = null;
+    this.lookPointerId = null;
     this.joyRadius = 0;
     this._destroyers = [];
 
@@ -66,6 +72,7 @@ export class MobileControls {
     root.id = 'mobile-controls';
     root.classList.add('active');
     root.innerHTML = `
+      <div id="look-zone" aria-hidden="true"></div>
       <div id="joystick" aria-label="Movement joystick">
         <div class="joy-knob"></div>
       </div>
@@ -83,7 +90,9 @@ export class MobileControls {
 
     this.joystick = root.querySelector('#joystick');
     this.knob = root.querySelector('.joy-knob');
+    this.lookZone = root.querySelector('#look-zone');
     this._initJoystick();
+    this._initLookZone();
 
     // Action buttons (jump/interact) and time buttons share the same
     // press → dispatchKey → release lifecycle.
@@ -160,6 +169,67 @@ export class MobileControls {
     this.knob.style.transform = 'translate(0px, 0px)';
     this.player.moveAxis.x = 0;
     this.player.moveAxis.z = 0;
+  }
+
+  // ---- drag-to-look zone ----------------------------------------------------
+
+  // Right-half touch zone that turns the camera, the touch analogue of the
+  // desktop pointer-lock mouse-look. It captures its own pointerId so it can
+  // run at the same time as the (left-side) joystick and the action buttons;
+  // the buttons paint above it in the DOM, so a tap on a button is hit-tested
+  // to the button, never swallowed here. The CSS insets the zone below the
+  // top-right minimap so that panel's tap-to-expand still works.
+  _initLookZone() {
+    let lastX = 0;
+    let lastY = 0;
+    const onDown = (e) => {
+      // Ignore extra fingers while one already owns the look drag.
+      if (this.lookPointerId !== null) return;
+      this.lookPointerId = e.pointerId;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      try {
+        this.lookZone.setPointerCapture(e.pointerId);
+      } catch (err) {
+        /* no-op */
+      }
+      e.preventDefault();
+    };
+    const onMove = (e) => {
+      if (e.pointerId !== this.lookPointerId) return;
+      // Raw position delta since the last move. Touch has no meaningful
+      // movementX/Y, so we diff clientX/Y ourselves. Same sensitivity and
+      // pitch clamp as the desktop pointer-lock handler in player.js.
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      this.player.yaw -= dx * 0.0025;
+      this.player.pitch += dy * 0.002;
+      this.player.pitch = Math.max(-0.1, Math.min(1.1, this.player.pitch));
+      e.preventDefault();
+    };
+    const onUp = (e) => {
+      if (e.pointerId !== this.lookPointerId) return;
+      this.lookPointerId = null;
+      try {
+        this.lookZone.releasePointerCapture(e.pointerId);
+      } catch (err) {
+        /* no-op */
+      }
+      e.preventDefault();
+    };
+
+    this.lookZone.addEventListener('pointerdown', onDown, { passive: false });
+    this.lookZone.addEventListener('pointermove', onMove, { passive: false });
+    this.lookZone.addEventListener('pointerup', onUp, { passive: false });
+    this.lookZone.addEventListener('pointercancel', onUp, { passive: false });
+    this._destroyers.push(() => {
+      this.lookZone.removeEventListener('pointerdown', onDown);
+      this.lookZone.removeEventListener('pointermove', onMove);
+      this.lookZone.removeEventListener('pointerup', onUp);
+      this.lookZone.removeEventListener('pointercancel', onUp);
+    });
   }
 
   // ---- action buttons -------------------------------------------------------

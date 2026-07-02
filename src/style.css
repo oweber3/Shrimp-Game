@@ -360,6 +360,23 @@ body {
   display: block;
 }
 
+/* Drag-to-look zone: the right half of the screen (the side without the
+   joystick), the touch analogue of desktop pointer-lock mouse-look. It is the
+   first child of #mobile-controls so the joystick, action buttons and time
+   buttons all paint above it and receive their own taps. Its top is inset
+   below the top-right minimap/collectibles panels so the minimap's
+   tap-to-expand is never swallowed. */
+#look-zone {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  top: calc(env(safe-area-inset-top, 0px) + clamp(118px, 30vmin, 200px) + 72px);
+  width: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Hide the keyboard cheat-sheet on touch; it overlaps the joystick and is
    irrelevant without a keyboard. */
 body.touch-device #help {
@@ -430,8 +447,26 @@ body.touch-device .mm-label,
 body.touch-device .mm-hint {
   font-size: clamp(9px, 2.4vmin, 12px);
 }
+
+/* Top-right panels. The minimap panel is fixed 200px on desktop; on short
+   landscape phones it shrinks with the viewport. The mini canvas is sized to
+   190px inline by minimap.js, so it needs !important to yield to the panel —
+   height:auto then preserves its aspect ratio from the bitmap dimensions. */
+body.touch-device #minimap {
+  width: clamp(118px, 30vmin, 200px);
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  right: calc(env(safe-area-inset-right, 0px) + 10px);
+  padding: 6px 8px 5px;
+}
+body.touch-device .mm-canvas {
+  width: 100% !important;
+  height: auto !important;
+}
+/* Keep the collectibles counter pinned just below the (reflowed) minimap. */
 body.touch-device #collectibles-hud {
   font-size: clamp(13px, 3.4vmin, 16px);
+  top: calc(env(safe-area-inset-top, 0px) + 10px + clamp(118px, 30vmin, 200px) + clamp(40px, 10vmin, 52px));
+  right: calc(env(safe-area-inset-right, 0px) + 10px);
 }
 
 /* Mission log: roomier text and constrained to the short viewport height. */
