@@ -351,6 +351,7 @@ body {
   --knob-size: calc(var(--joy-size) * 0.44);
   --jump-size: clamp(78px, 20vmin, 110px);
   --interact-size: clamp(60px, 15vmin, 84px);
+  --time-size: clamp(46px, 12vmin, 66px);
   --edge-x: 22px;
   --edge-y: 26px;
 }
@@ -363,6 +364,90 @@ body {
    irrelevant without a keyboard. */
 body.touch-device #help {
   display: none;
+}
+
+/* ── Touch/landscape readability overrides ─────────────────────────────
+   Applied via body.touch-device (real touch capability, not just a narrow
+   window) so desktop keeps its original px sizing untouched. Landscape phones
+   are short vertically, so text tracks vmin (≈ viewport height in landscape)
+   and clamp() keeps it legible without blowing up on tablets. */
+
+/* Nudge the compass down so the top-edge time buttons never overlap it. */
+body.touch-device #compass {
+  top: calc(env(safe-area-inset-top, 0px) + clamp(66px, 17vmin, 88px));
+}
+
+body.touch-device #objective {
+  max-width: min(42vw, 300px);
+}
+body.touch-device #objective h2 {
+  font-size: clamp(12px, 3.2vmin, 16px);
+}
+body.touch-device #objective p {
+  font-size: clamp(13px, 3.6vmin, 17px);
+}
+
+body.touch-device #compass .dir {
+  font-size: clamp(15px, 4.4vmin, 20px);
+}
+body.touch-device #compass .target,
+body.touch-device #compass .clock {
+  font-size: clamp(11px, 2.9vmin, 14px);
+}
+body.touch-device #compass .arrow {
+  font-size: clamp(18px, 5vmin, 24px);
+}
+
+body.touch-device #prompt {
+  font-size: clamp(14px, 3.8vmin, 18px);
+}
+body.touch-device #prompt .key {
+  padding: 2px 10px;
+}
+
+body.touch-device #dialogue .speaker {
+  font-size: clamp(12px, 3.2vmin, 15px);
+}
+body.touch-device #dialogue .text {
+  font-size: clamp(15px, 4vmin, 19px);
+}
+body.touch-device #dialogue .hint {
+  font-size: clamp(11px, 2.9vmin, 14px);
+}
+
+body.touch-device #toast {
+  font-size: clamp(14px, 3.8vmin, 18px);
+}
+
+body.touch-device #completion h1 {
+  font-size: clamp(22px, 6vmin, 30px);
+}
+body.touch-device #completion p {
+  font-size: clamp(14px, 3.8vmin, 18px);
+}
+
+body.touch-device .mm-label,
+body.touch-device .mm-hint {
+  font-size: clamp(9px, 2.4vmin, 12px);
+}
+body.touch-device #collectibles-hud {
+  font-size: clamp(13px, 3.4vmin, 16px);
+}
+
+/* Mission log: roomier text and constrained to the short viewport height. */
+body.touch-device #mission-log {
+  width: min(60vw, 340px);
+  max-height: 60vh;
+}
+body.touch-device #mission-log .log-title {
+  font-size: clamp(12px, 3.2vmin, 15px);
+}
+body.touch-device #mission-log .log-hint {
+  font-size: clamp(10px, 2.6vmin, 12px);
+}
+body.touch-device #mission-log .log-entry {
+  font-size: clamp(12.5px, 3.2vmin, 15px);
+  margin-bottom: clamp(7px, 1.8vmin, 11px);
 }
 
 #joystick {
@@ -449,6 +534,47 @@ body.touch-device #help {
 
 .action-btn.interact.pressed {
   background: rgba(111, 211, 255, 0.72);
+}
+
+/* Time-of-day buttons: a compact pair centred along the top edge, clear of the
+   joystick (bottom-left) and jump/interact buttons (bottom-right). They emulate
+   the [ / ] keys via mobileControls.js. Same clamp()/vmin + safe-area rules as
+   the action buttons so they scale with the (short) landscape viewport. */
+#time-buttons {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: clamp(10px, 3vmin, 20px);
+  pointer-events: none;
+}
+
+.time-btn {
+  pointer-events: auto;
+  touch-action: none;
+  width: var(--time-size);
+  height: var(--time-size);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: clamp(18px, 5vmin, 26px);
+  line-height: 1;
+  color: #25160c;
+  background: rgba(255, 158, 94, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: transform 0.06s ease, background 0.06s ease;
+}
+
+.time-btn.pressed {
+  transform: scale(0.9);
+  background: rgba(255, 158, 94, 0.75);
 }
 
 #start-overlay {

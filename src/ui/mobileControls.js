@@ -37,6 +37,10 @@ const ACTIONS = {
   // button id -> the keyboard event it emulates
   jump: { code: 'Space', key: ' ' },
   interact: { code: 'KeyE', key: 'e' },
+  // Time-of-day advance/rewind. These emulate the [ and ] keys so sky.js's
+  // existing keydown handler fires untouched — no time logic is re-implemented.
+  timeForward: { code: 'BracketRight', key: ']' },
+  timeBack: { code: 'BracketLeft', key: '[' },
 };
 
 export class MobileControls {
@@ -69,6 +73,10 @@ export class MobileControls {
         <button type="button" class="action-btn interact" data-action="interact" aria-label="Interact">E</button>
         <button type="button" class="action-btn jump" data-action="jump" aria-label="Jump">JUMP</button>
       </div>
+      <div id="time-buttons">
+        <button type="button" class="time-btn time-back" data-action="timeBack" aria-label="Rewind time of day">&laquo;</button>
+        <button type="button" class="time-btn time-forward" data-action="timeForward" aria-label="Advance time of day">&raquo;</button>
+      </div>
     `;
     document.body.appendChild(root);
     this.root = root;
@@ -77,7 +85,9 @@ export class MobileControls {
     this.knob = root.querySelector('.joy-knob');
     this._initJoystick();
 
-    for (const btn of root.querySelectorAll('.action-btn')) {
+    // Action buttons (jump/interact) and time buttons share the same
+    // press → dispatchKey → release lifecycle.
+    for (const btn of root.querySelectorAll('.action-btn, .time-btn')) {
       this._initButton(btn);
     }
   }
