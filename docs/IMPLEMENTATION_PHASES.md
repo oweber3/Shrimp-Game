@@ -720,8 +720,16 @@ src/utils/foliage.js  — leaf-cluster card builder: canvas leaf-silhouette alph
 
 ## Phase 13: Character Realism II — Animation & Faces
 
-**Status**: Planned — **gated on the Tier 1 vs Tier 2 (R1) decision** (REALISM_PLAN.md
-open question #1/#3). Do not start until decided.
+**Status**: Tier 1 shipped — the procedural path (open question #1/#3 resolved toward
+Tier 1: keep the charming rigid-part silhouette, make it *move*). A shared gait engine
+(`src/characters/animation.js`) drives planted-foot stepping via an analytic two-bone knee
+solve, weight-shift hip sway, cadence matched to ground speed, a walk↔jog blend, vertical
+bob and idle breathing; a face system (`src/characters/face.js`) adds irregular blinks,
+player-tracking gaze with saccades and a dialogue-driven mouth flap; a critically-damped
+spring util (`src/characters/springs.js`) gives antennae/tail trailing secondary motion.
+Wired into `player.js`, `npcBehaviors.js`, `giantShrimp.js` (scaled heavy cadence) and the
+`main.js` talk-state; the `userData.parts` + `carryAnchor` contract is untouched, so
+missions/combat/cart are unaffected. Tier 2 (R1 skinned `.glb`) remains deferred.
 **Goal**: Characters move believably. v1 Phase 1 (shipped) made them look right standing
 still; feet still slide and faces are static.
 

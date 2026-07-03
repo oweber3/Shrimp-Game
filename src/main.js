@@ -213,7 +213,7 @@ renderer.setAnimationLoop(() => {
     player.parts.armR.rotation.x = -0.9;
   }
 
-  npcs.update(frameDelta, time, player.position);
+  npcs.update(frameDelta, time, player.position, ui.isDialogueOpen());
   missions.update(time);
   collectibles.update(frameDelta, player.position);
   updateWorld(frameDelta, time); // animated map elements (canal water drift)

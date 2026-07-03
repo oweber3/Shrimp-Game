@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { createShrimpWorker } from './characters/shrimpWorker.js';
+import { createGait, updateGait } from './characters/animation.js';
+import { createFace, updateFace } from './characters/face.js';
 import { resolveCollisions, clampToBounds } from './collision.js';
 
 const _anchorWorld = new THREE.Vector3();
@@ -27,7 +29,6 @@ export class Player {
     this.movementLocked = false;
     this.carrying = null;
     this.onStep = null; // fired once per footfall (audio hook)
-    this._stepCycle = -1;
 
     this.mesh = createShrimpWorker({
       shellColor: 0xf2825a,
@@ -36,6 +37,16 @@ export class Player {
       accessory: 'toolbelt'
     });
     this.parts = this.mesh.userData.parts;
+    this.rig = this.mesh.userData.rig;
+    // Procedural gait + face (Phase 13). The gait's footfall hook drives the
+    // existing footstep audio, replacing the old |sin| cycle counter.
+    // The player moves fast; larger strides keep the cadence from looking
+    // frantic, and a deeper foot reach gives visible, weighty steps.
+    this.gait = createGait(this.rig, {
+      walkStride: 2.0, jogStride: 2.5, footReach: 0.34, stepHeight: 0.16, armSwing: 0.55
+    });
+    this.gait.stepCb = () => { if (this.onStep) this.onStep(); };
+    this.face = createFace(this.rig && this.rig.face);
     this.mesh.position.copy(this.position);
     scene.add(this.mesh);
 
@@ -127,31 +138,22 @@ export class Player {
     clampToBounds(this.position, bounds, PLAYER_RADIUS + 0.2);
     this.position.y = 0; // never fall through the world
 
-    // Mesh follows position, rotates toward travel direction, bobs while
-    // moving, and swings arms/legs around their pivot groups.
+    // Mesh follows position (feet stay grounded; the gait bobs the torso) and
+    // rotates toward the travel direction.
     this.mesh.position.set(this.position.x, 0, this.position.z);
+    const prevYaw = this._prevMeshYaw ?? this.mesh.rotation.y;
     if (moving) {
-      const t = performance.now() * 0.001;
-      const freq = this.isJogging() ? 14 : 9;
-      this.mesh.position.y = Math.abs(Math.sin(t * freq)) * 0.08;
-      // Each |sin| half-cycle is one footfall — fire the step hook there.
-      const cycle = Math.floor((t * freq) / Math.PI);
-      if (cycle !== this._stepCycle) {
-        this._stepCycle = cycle;
-        if (this.onStep) this.onStep();
-      }
       this.mesh.rotation.y = lerpAngle(this.mesh.rotation.y, this.heading, dt * 10);
-      const swing = Math.sin(t * freq) * (this.isJogging() ? 0.55 : 0.4);
-      this.parts.armL.rotation.x = swing;
-      this.parts.armR.rotation.x = -swing;
-      this.parts.legL.rotation.x = -swing * 1.2;
-      this.parts.legR.rotation.x = swing * 1.2;
-    } else {
-      const k = Math.min(1, dt * 8);
-      for (const limb of [this.parts.armL, this.parts.armR, this.parts.legL, this.parts.legR]) {
-        limb.rotation.x += (0 - limb.rotation.x) * k;
-      }
     }
+    const turnRate = dt > 0 ? shortestAngle(this.mesh.rotation.y - prevYaw) / dt : 0;
+    this._prevMeshYaw = this.mesh.rotation.y;
+
+    const speed = moving ? (this.isJogging() ? JOG_SPEED : WALK_SPEED) : 0;
+    updateGait(this.rig, this.gait, dt, {
+      speed, moving, jogging: this.isJogging(), turnRate
+    });
+    // Player face just blinks/breathes (no gaze target in third person).
+    updateFace(this.face, dt, {});
 
     // Carried object floats at the character's carry anchor.
     if (this.carrying) {
@@ -177,4 +179,12 @@ function lerpAngle(a, b, t) {
   if (d > Math.PI) d -= Math.PI * 2;
   if (d < -Math.PI) d += Math.PI * 2;
   return a + d * Math.min(1, t);
+}
+
+// Wrap an angle delta into [-π, π] so turn rate stays sane across the seam.
+function shortestAngle(d) {
+  d %= Math.PI * 2;
+  if (d > Math.PI) d -= Math.PI * 2;
+  if (d < -Math.PI) d += Math.PI * 2;
+  return d;
 }

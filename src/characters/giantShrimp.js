@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import { createShrimpWorker } from './shrimpWorker.js';
 import { lerpAngle } from './npcBehaviors.js';
+import { createGait, updateGait } from './animation.js';
+import { createFace, updateFace } from './face.js';
+
+const _giantGaze = new THREE.Vector3();
 
 // ============================================================================
 // Shrimply Gigantic — a single oversized, angry, roaming "inspector" shrimp.
@@ -125,25 +129,40 @@ export function initGiant(npc) {
   npc.gstate = 'walk'; // 'walk' | 'wait'
   npc.pathIndex = 0;
   npc.waitTimer = 0;
+  // Heavy, slow gait: long strides, tall foot lift, exaggerated sway/bob and a
+  // pronounced forward lean read as ponderous weight. Cadence is driven by his
+  // LOCAL ground speed (world speed / SCALE) so his big feet stay planted.
+  npc.gait = createGait(npc.group.userData.rig, {
+    walkStride: 1.05,
+    jogStride: 1.05,
+    stepHeight: 0.2,
+    duty: 0.66,
+    footReach: 0.22,
+    armSwing: 0.42,
+    hipSway: 0.09,
+    bob: 0.09,
+    lean: 0.16
+  });
+  npc.face = createFace(npc.group.userData.rig && npc.group.userData.rig.face);
 }
 
-export function updateGiant(npc, dt, time, playerPos) {
+const GIANT_LOCAL_SPEED = GIANT_SPEED / SCALE; // stride is authored in local units
+
+export function updateGiant(npc, dt, time, playerPos, dialogueOpen = false) {
   const p = npc.group.position;
   const dist = Math.hypot(playerPos.x - p.x, playerPos.z - p.z);
   if (dist > GIANT_ACTIVE) return;
 
-  // Heavy stomping bob: lifts on each footfall while walking (kept >= 0 so
-  // the feet never sink), a slow heave while standing.
-  p.y = npc.gstate === 'walk'
-    ? Math.abs(Math.sin(time * 4 + npc.bobPhase)) * 0.12
-    : Math.sin(time * 1.3 + npc.bobPhase) * 0.04;
+  p.y = 0; // gait bobs the torso; feet stay planted on the pavement
 
   // Player is close: turn to face them and keep grumbling (angry idle).
   if (dist < GIANT_TALK) {
     const target = Math.atan2(playerPos.x - p.x, playerPos.z - p.z);
     npc.group.rotation.y = lerpAngle(npc.group.rotation.y, target, dt * 5);
     npc.group.rotation.z = 0;
-    angryIdle(npc, time, dt);
+    updateGait(npc.group.userData.rig, npc.gait, dt, { speed: 0, moving: false });
+    angryIdle(npc, time, dt); // claw flex + head sweep flavor over the idle
+    updateGiantFace(npc, dt, playerPos, dist, dialogueOpen && dist < GIANT_TALK);
     return;
   }
 
@@ -151,9 +170,10 @@ export function updateGiant(npc, dt, time, playerPos) {
 
   // Idle pause at a waypoint: flex claws and sweep his head around angrily.
   if (npc.gstate === 'wait') {
-    npc.group.rotation.y = lerpAngle(npc.group.rotation.y, npc.group.rotation.y, 1);
     npc.group.rotation.z = 0;
+    updateGait(npc.group.userData.rig, npc.gait, dt, { speed: 0, moving: false });
     angryIdle(npc, time, dt);
+    updateGiantFace(npc, dt, playerPos, dist, false);
     npc.waitTimer -= dt;
     if (npc.waitTimer <= 0) npc.gstate = 'walk';
     return;
@@ -174,33 +194,33 @@ export function updateGiant(npc, dt, time, playerPos) {
   p.x += (dx / d) * GIANT_SPEED * dt;
   p.z += (dz / d) * GIANT_SPEED * dt;
   const target = Math.atan2(dx, dz);
-  npc.group.rotation.y = lerpAngle(npc.group.rotation.y, target, dt * GIANT_TURN);
-  // Heavy waddle + big alternating limb swing = stomping gait.
-  npc.group.rotation.z = Math.sin(time * 4 + npc.bobPhase) * 0.07;
-  stompSwing(npc.parts, time * 4 + npc.bobPhase);
+  const prev = npc.group.rotation.y;
+  npc.group.rotation.y = lerpAngle(prev, target, dt * GIANT_TURN);
+  npc.group.rotation.z = 0;
+  npc.parts.head.rotation.y = lerpAngle(npc.parts.head.rotation.y, 0, dt * 4);
+  updateGait(npc.group.userData.rig, npc.gait, dt, {
+    speed: GIANT_LOCAL_SPEED, moving: true, jogging: false,
+    turnRate: dt > 0 ? (npc.group.rotation.y - prev) / dt : 0
+  });
+  updateGiantFace(npc, dt, playerPos, dist, false);
 }
 
-// Angry idle: claws flex menacingly, head sweeps as if hunting for whoever
-// moved his wrench, legs relax back to neutral.
+// Angry idle: claws flex menacingly and the head sweeps as if hunting for
+// whoever moved his wrench. Runs AFTER the gait so it overrides the idle arms.
 function angryIdle(npc, time, dt) {
-  const { armL, armR, head, legL, legR } = npc.parts;
+  const { armL, armR, head } = npc.parts;
   const flex = (Math.sin(time * 2.2 + npc.bobPhase) * 0.5 + 0.5) * 0.5;
   armL.rotation.x = -0.3 - flex;
   armR.rotation.x = -0.3 - flex;
   head.rotation.y = Math.sin(time * 0.8 + npc.bobPhase) * 0.5;
-  const k = Math.min(1, dt * 6);
-  legL.rotation.x += (0 - legL.rotation.x) * k;
-  legR.rotation.x += (0 - legR.rotation.x) * k;
 }
 
-// Heavier version of the worker walk swing, biased forward for an aggressive,
-// hunched stomp.
-function stompSwing(parts, phase) {
-  const arm = Math.sin(phase) * 0.5;
-  const leg = Math.sin(phase) * 0.7;
-  parts.armL.rotation.x = arm - 0.2;
-  parts.armR.rotation.x = -arm - 0.2;
-  parts.legL.rotation.x = -leg;
-  parts.legR.rotation.x = leg;
-  parts.head.rotation.y *= 0.9; // settle his gaze forward while marching
+// Giant eyes track the player (within a generous range for his bulk) and his
+// mouth flaps while he grumbles at you.
+function updateGiantFace(npc, dt, playerPos, dist, talking) {
+  if (!npc.face) return;
+  const target = dist < GIANT_TALK * 1.6
+    ? _giantGaze.set(playerPos.x, 1.6, playerPos.z)
+    : null;
+  updateFace(npc.face, dt, { target, headNode: npc.parts.head, talking });
 }
