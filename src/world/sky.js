@@ -44,6 +44,14 @@ export class Atmosphere {
     this._sunDir = new THREE.Vector3();
     this._skyParams = { turbidity: 4, rayleigh: 1.5, sunPos: new THREE.Vector3() };
 
+    // Phase 11: the shadow frustum follows the player (see main.js) instead
+    // of sitting fixed over the world origin, so the sun's position tracks a
+    // follow point rather than the origin. The target must be in the scene
+    // graph for its matrixWorld (and therefore the shadow camera's look
+    // direction) to update.
+    this._followPoint = new THREE.Vector3(0, 0, 0);
+    scene.add(this.sun.target);
+
     // Live outdoor lighting state, read by ZoneSystem each frame.
     this.outdoor = {
       ambientColor: new THREE.Color(0xbcd9e8),
@@ -131,12 +139,13 @@ export class Atmosphere {
     if (this.skyTexture) scene.background = this.skyTexture;
   }
 
-  update(dt) {
+  update(dt, followX = 0, followZ = 0) {
     if (this.autoRun) this.time = (this.time + dt / DAY_LENGTH) % 1;
     for (const puff of this.clouds.children) {
       puff.position.x += puff.userData.speed * dt;
       if (puff.position.x > 720) puff.position.x = -720;
     }
+    this._followPoint.set(followX, 0, followZ);
     this._apply(false);
   }
 
@@ -161,8 +170,12 @@ export class Atmosphere {
     this._skyParams.sunPos.copy(this._sunDir);
 
     // ---- Sun light ----
-    this.sun.position.copy(this._sunDir).multiplyScalar(180);
-    this.sun.position.y = Math.max(8, this.sun.position.y);
+    // Position is the follow point plus the sun-direction offset, so the
+    // shadow frustum (sized/centered around sun.target in main.js) tracks
+    // the player while the light's actual direction stays correct.
+    this.sun.position.copy(this._sunDir).multiplyScalar(180).add(this._followPoint);
+    this.sun.position.y = Math.max(this._followPoint.y + 8, this.sun.position.y);
+    this.sun.target.position.copy(this._followPoint);
     this.sun.color.copy(new THREE.Color(0xfff1d6)).lerp(new THREE.Color(0xff7a2e), dusk * 0.85);
     this.outdoor.sunIntensity = (0.05 + 2.7 * above) * (1 - night * 0.7);
     this.sun.intensity = this.outdoor.sunIntensity;

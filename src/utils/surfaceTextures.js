@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { detectSoftwareRenderer } from '../world/quality.js';
 
 // ============================================================================
 // Procedural PBR surface textures (Phase 9 realism upgrade)
@@ -33,22 +34,14 @@ let lowQuality = null;
 
 export function isLowQualitySurfaces() {
   if (lowQuality !== null) return lowQuality;
-  lowQuality = false;
   try {
-    const params = new URLSearchParams(window.location.search);
-    const forced = params.get('surfaces');
+    const forced = new URLSearchParams(window.location.search).get('surfaces');
     if (forced === 'flat') return (lowQuality = true);
     if (forced === 'full') return (lowQuality = false);
-    const gl = document.createElement('canvas').getContext('webgl2')
-      || document.createElement('canvas').getContext('webgl');
-    if (!gl) return (lowQuality = true);
-    const info = gl.getExtension('WEBGL_debug_renderer_info');
-    const name = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
-    lowQuality = /swiftshader|llvmpipe|softpipe|software/i.test(name);
   } catch (err) {
-    lowQuality = false;
+    // no window (headless-style harness) - fall through to renderer detection
   }
-  return lowQuality;
+  return (lowQuality = detectSoftwareRenderer());
 }
 
 // Average albedo (0–1 per channel) and representative roughness per surface,

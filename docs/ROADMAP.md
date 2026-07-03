@@ -22,7 +22,7 @@ without breaking browser performance or requiring a full rewrite.
 | 8 | Campus Accuracy | Match the real campus map: road names, north strip (5307 Toler + 301 row), south block (5211 Storey), real addresses | S | Done |
 | 9 | Surface Materials Everywhere | Procedural PBR texture set (albedo+normal+roughness) for all buildings and ground; grime/weathering; per-surface tiling textures (atlases dropped — see IMPLEMENTATION_PHASES) | M | Done |
 | 10 | Architectural Detail & Glass | Parapets, mullioned window assemblies, dock hardware, downspouts; instanced/merged geometry; night-lit interiors | M–L | Planned |
-| 11 | Lighting, Shadows & Post | Shadow rig fix (1024→2048, tight follow frustum), SSAO, upgraded night lighting, quality auto-toggle | M | Planned |
+| 11 | Lighting, Shadows & Post | Shadow rig fix (1024→2048, tight follow frustum), SSAO, upgraded night lighting, quality auto-toggle | M | Done |
 | 12 | Water, Vegetation & Weather | Real canal water, alpha-cutout foliage, rain/haze/overcast weather states, billboard cloud deck | M–L | Planned |
 | 13 | Character Animation & Faces | Planted-foot gait, secondary motion, blinks/eye tracking/talk flap (Tier 1) or original skinned .glb characters (Tier 2) | L | Planned |
 | 14 | Campus Geography & Signage Accuracy | Fix flagged addresses (220 vs 301 Plantation), levee berm, street/wayfinding signs, fan-project disclaimer | S | Done |
