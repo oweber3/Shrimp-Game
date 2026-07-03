@@ -564,7 +564,33 @@ src/map/architecture.js  — reusable builders: windowAssembly(), parapet(), pil
 
 ## Phase 11: Lighting, Shadows & Post-Processing
 
-**Status**: Planned
+**Status**: Done (Tier 1) — `src/world/quality.js` auto-detects a `low`/`high` tier
+(renderer-string check, reused from Phase 9's `isLowQualitySurfaces`, plus a 2s
+boot FPS probe that can downgrade once), with a `?quality=` override, `Q` debug
+toggle, and localStorage persistence; `postfx.js`/`main.js` read it. Shadow rig:
+map size 1024→2048 (`high` tier only; `low` keeps 1024), frustum ±200→±90, and
+it now **follows the player** — `Atmosphere` gained a `followPoint` (set from
+`main.js`, snapped to a 30-unit grid to avoid shimmer) that the sun's position
+tracks alongside its existing day-night direction, with `sun.target` added to
+the scene so the shadow camera's look direction actually updates; bias retuned
+(`-0.00015`) and `normalBias` (`0.03`) added for the tighter texel size.
+`postfx.js` inserts `SSAOPass` (three/addons) between the render and bloom
+passes at half resolution, gated by the quality tier (`enabled` toggles live on
+quality change) — same try/catch pattern as the existing composer fallback, so
+a construction failure on a headless GPU still degrades to plain rendering.
+`streetlights.js` rebuilt on four `InstancedMesh`es (poles/arms/heads/glows,
+one draw call each instead of one mesh per fixture) plus a pool of 6 real,
+non-shadow-casting `SpotLight`s reassigned each frame to the fixtures nearest
+the player — dark streets now actually light the ground at night, not just
+bloom-glow. **Deviation from plan**: no Phase 10 emissive-window hook landed
+(Phase 10 hasn't shipped yet and there are no windows to hook into); land that
+in Phase 10 instead of stubbing dead code here. Verified: `npm run build`
+(176 KB gz, in budget), manual puppeteer smoke test on the software-renderer
+path (`quality: low (auto-detected)`, no console/page errors) and again with
+`?quality=high` at night (SSAO + 2048 shadow map active, no errors, streetlamp
+glow renders correctly). `node scripts/verify.mjs` is flaky in this sandbox on
+both the pre-Phase-11 baseline and this branch (13–20 failures either way, same
+tests, timing-dependent under swiftshader) — not a regression from this phase.
 **Goal**: Fix the shadow rig, add ambient occlusion, upgrade night lighting — the
 frame-time phase (everything here costs milliseconds, not bytes), shipped behind a
 quality auto-toggle.

@@ -16,12 +16,15 @@ import { createPostFX } from './world/postfx.js';
 import { addStreetlights } from './world/streetlights.js';
 import { Collectibles } from './mechanics/collectibles.js';
 import { MobileControls } from './ui/mobileControls.js';
+import { initQuality, getQuality, onQualityChange, startBootProbe, sampleFrame } from './world/quality.js';
 
 // Shrimp Shift: Laitram Town
 // Low-poly third-person walking game set on an industrial campus
 // inspired by the Laitram/Intralox property in Harahan/Elmwood, LA.
 
 const app = document.getElementById('app');
+
+initQuality();
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -51,14 +54,34 @@ scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffe7c2, 1.35);
 sun.position.set(70, 100, 80);
 sun.castShadow = true;
-sun.shadow.mapSize.set(1024, 1024);
-sun.shadow.camera.left = -200;
-sun.shadow.camera.right = 200;
-sun.shadow.camera.top = 200;
-sun.shadow.camera.bottom = -200;
+// Phase 11: the frustum shrank from a fixed ±200 (covering the whole static
+// campus at low resolution) to ±90 following the player (see the
+// SHADOW_SNAP loop below and Atmosphere's followPoint) - much sharper
+// shadows near the player, at the cost of shadows for buildings far away.
+// Map size and bias scale with the quality tier; low keeps the old 1024
+// budget for software renderers and low-end devices.
+const SHADOW_HALF_EXTENT = 90;
+sun.shadow.camera.left = -SHADOW_HALF_EXTENT;
+sun.shadow.camera.right = SHADOW_HALF_EXTENT;
+sun.shadow.camera.top = SHADOW_HALF_EXTENT;
+sun.shadow.camera.bottom = -SHADOW_HALF_EXTENT;
+sun.shadow.camera.near = 1;
 sun.shadow.camera.far = 400;
-sun.shadow.bias = -0.0005;
+sun.shadow.bias = -0.00015;
+sun.shadow.normalBias = 0.03;
+applyShadowMapSize(getQuality());
 scene.add(sun);
+
+function applyShadowMapSize(tier) {
+  const size = tier === 'high' ? 2048 : 1024;
+  if (sun.shadow.mapSize.width === size) return;
+  sun.shadow.mapSize.set(size, size);
+  if (sun.shadow.map) {
+    sun.shadow.map.dispose();
+    sun.shadow.map = null;
+  }
+}
+onQualityChange(applyShadowMapSize);
 
 // World, player, NPCs, missions, UI.
 const loading = new LoadingScreen();
@@ -149,9 +172,16 @@ const FIXED_DT = 1 / 60;
 const MAX_SUBSTEPS = 16;
 let physicsAcc = 0;
 
+// Shadow frustum follow point snaps to a coarse grid so it only jumps (never
+// shimmers) as the player walks the tightened ±90 frustum around.
+const SHADOW_SNAP = 30;
+
+startBootProbe();
+
 renderer.setAnimationLoop(() => {
   const frameDelta = Math.min(clock.getDelta(), 0.25);
   const time = clock.elapsedTime;
+  sampleFrame(frameDelta);
 
   player.movementLocked = ui.isDialogueOpen() || minimap.isExpanded() || cart.mounted;
 
@@ -188,9 +218,13 @@ renderer.setAnimationLoop(() => {
   collectibles.update(frameDelta, player.position);
   updateWorld(frameDelta, time); // animated map elements (canal water drift)
   // Atmosphere first (sets the outdoor lighting baseline for this frame),
-  // then zones overrides it toward the indoor profile when inside.
-  atmosphere.update(frameDelta);
-  streetlights.update(atmosphere.nightFactor);
+  // then zones overrides it toward the indoor profile when inside. The
+  // shadow frustum follows the player, snapped to a coarse grid so it jumps
+  // instead of shimmering.
+  const shadowFollowX = Math.round(player.position.x / SHADOW_SNAP) * SHADOW_SNAP;
+  const shadowFollowZ = Math.round(player.position.z / SHADOW_SNAP) * SHADOW_SNAP;
+  atmosphere.update(frameDelta, shadowFollowX, shadowFollowZ);
+  streetlights.update(atmosphere.nightFactor, player.position);
   postfx.setNight(atmosphere.nightFactor);
   zones.update(frameDelta, player.position); // indoor/outdoor transitions
   audio.setIndoorBlend(zones.blend); // indoor hum fades with the lights
