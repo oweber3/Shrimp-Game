@@ -39,14 +39,24 @@ src/
   player.js        — third-person camera, controls, movement
   map/
     terrain.js     — ground, roads, bounds, POI, buildWorld() orchestrator
-    buildings.js   — building geometry and signage
-    props.js       — vehicles, trees, pallets, parking lots
+    buildings.js   — building geometry, signage, weathering decals
+    campusDetail.js — in-fill named buildings, street blades, wayfinding
+    props.js       — parking lots, pallets, barrels, bollards
+    vehicles.js    — car/truck/forklift mesh builders
+    landscaping.js — live oaks, palms, grass patches, drainage canal
     interior.js    — LM interior: lobby, cubicles, manager office, breakroom
+  world/
+    sky.js         — baked scattering sky, day/night cycle, clouds, PMREM IBL
+    postfx.js      — EffectComposer: bloom + ACES output (software-GL fallback)
+    streetlights.js — night fixtures driven by the day/night cycle
   zones.js         — indoor/outdoor zone detection, layer culling, light blend
   utils/
     geometry.js    — shared box()/flat() builders, materials, textTexture()
+    surfaceTextures.js — procedural PBR maps (albedo/normal/roughness), decals
   characters/
     shrimpWorker.js — Group-hierarchy shrimp builder (parts API, carryAnchor)
+    fishPerson.js   — Gerald the fish person
+    giantShrimp.js  — Shrimply Gigantic
     accessories.js  — hard hat, toolbelt, clipboard builders
     npcBehaviors.js — behavior state machine (idle/patrol/sit/talk/react)
   dialogue/
@@ -55,11 +65,13 @@ src/
     combat.js        — punch swing, hit cone, cooldown
     vehicle.js       — golf cart mesh, mount/dismount, movable collider
     vehiclePhysics.js — Euler accelerate/steer/friction model
+    collectibles.js  — Golden Shrimp collectible system
   audio/
     audioManager.js  — procedural Web Audio: footsteps, indoor hum, punch
   ui/
     loadingScreen.js — THREE.LoadingManager progress overlay
     missionLog.js    — Tab-toggled objective history panel
+    mobileControls.js — touch joystick + Jump/Interact buttons
   npc.js           — NPC definitions and manager (re-exports createShrimpWorker)
   missions.js      — state machine, dialogue, items
   collision.js     — 2D circle-AABB collision resolver
@@ -68,32 +80,8 @@ src/
   style.css        — HUD styling
 ```
 
-Future additions (planned):
-```
-src/map/
-  terrain.js       — ground, roads, world bounds
-  buildings.js     — building geometry
-  props.js         — vehicles, trees, barrels, bollards
-  interior.js      — indoor geometry (Phase 4)
-  landscaping.js   — trees, grass patches, canal edges
-
-src/characters/
-  shrimpWorker.js  — extracted from npc.js (Phase 3)
-  accessories.js   — toolbelt, clipboard, hard hat
-
-src/mechanics/
-  combat.js        — punch hitbox, NPC reaction, cooldown (Phase 6)
-  vehicle.js       — cart mesh, mount/dismount (Phase 6)
-  vehiclePhysics.js — simple Euler forward/steer/friction (Phase 6)
-
-src/zones.js       — indoor/outdoor zone detection (Phase 4)
-src/audio/         — Web Audio API manager (Phase 7)
-src/ui/
-  loadingScreen.js — THREE.LoadingManager progress (Phase 7)
-  missionLog.js    — scrollable mission history (Phase 7)
-
-docs/              — planning documents (this folder)
-```
+Planned additions land per the ROADMAP phase table (Phases 10–16); the module
+map above reflects the tree as of Phase 9.
 
 ### Game Loop
 
@@ -134,11 +122,11 @@ Camera lerps toward target position at `dt * 12` for smooth follow.
 |--------|--------|---------|
 | Triangle count (scene) | < 100k | ~34k rendered at spawn |
 | Draw calls | < 200 | ~150 (estimated) |
-| Texture memory | < 32 MB | < 1 MB (two 768px WebP signs + canvas textures) |
-| JS bundle size (gzipped) | < 500 KB | 145 KB |
+| Texture memory | < 32 MB | ~13 MB GPU (Phase 9 procedural PBR sets: 256² tiles, 512² asphalt; download unchanged) |
+| JS bundle size (gzipped) | < 500 KB | ~150 KB |
 | Initial page load | < 3s on 4G | ~144 KB of assets + bundle — well under |
 | Target frame rate | 60 fps on mid-range laptop w/ integrated GPU | Meets on modern hardware |
-| Shadow map resolution | 2048×2048 (may reduce to 1024 if needed) | 2048 (no reduction needed) |
+| Shadow map resolution | 2048×2048 target | **1024** in `src/main.js` (drift fixed in this doc; Phase 11 raises it to 2048 with a tight camera-following frustum) |
 
 ### Known Performance Issue (resolved in Phase 1)
 `public/sign-image-2.png` (~3 MB) and `sign-image-1.png` (~1 MB) were downscaled to 768px and

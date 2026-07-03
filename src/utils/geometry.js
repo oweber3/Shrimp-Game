@@ -1,5 +1,13 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { makeCollider } from '../collision.js';
+import {
+  surfaceMat,
+  applyWorldUVs,
+  getDecalTexture,
+  logGenerationTime,
+  isLowQualitySurfaces
+} from './surfaceTextures.js';
 
 // Shared geometry/material helpers used by all map modules.
 
@@ -256,26 +264,35 @@ export function createLeatherNormalMap() {
 
 // Campus-wide material palette. Created once per world build so materials
 // are shared across every mesh that uses them.
+//
+// Phase 9: every large surface swaps from a flat MeshStandardMaterial to a
+// full procedural PBR set (albedo + normal + roughness) from
+// surfaceTextures.js. Textures are shared across tint variants — whiteWallB/C
+// are cheap per-building hue jitter on the same concrete maps. The texScale
+// on each material drives the world-space UV projection in createBuilders().
 export function createMaterials() {
-  return {
-    grass: mat(0x6f9e58, { roughness: 0.97 }),
-    asphalt: mat(0x35393e, { roughness: 0.85 }),
+  const materials = {
+    grass: surfaceMat('grass'),
+    asphalt: surfaceMat('asphalt', { color: 0x6b6f75 }),
     roadLine: mat(0xd8d2b8, { roughness: 0.8 }),
-    sidewalk: mat(0xb9b9b0, { roughness: 0.92 }),
-    whiteWall: mat(0xe8e6df, { roughness: 0.78 }),
+    sidewalk: surfaceMat('sidewalk', { color: 0xc8c8c0 }),
+    whiteWall: surfaceMat('concrete', { color: 0xe8e6df, texScale: 7 }),
+    whiteWallB: surfaceMat('concrete', { color: 0xdedcd0, texScale: 7.6 }),
+    whiteWallC: surfaceMat('concrete', { color: 0xe4ded2, texScale: 6.5 }),
     blueTrim: mat(0x1f5fa8, { roughness: 0.55, metalness: 0.2 }),
-    officeWall: mat(0xd9d4c8, { roughness: 0.8 }),
+    officeWall: surfaceMat('concrete', { color: 0xd9d4c8, texScale: 5.5 }),
+    brick: surfaceMat('brick'),
     // Low roughness + a little metalness => the sky reflects in the glass.
     glass: mat(0x8fc0d8, { roughness: 0.08, metalness: 0.25 }),
-    roof: mat(0x9ba0a3, { roughness: 0.7, metalness: 0.15 }),
-    dock: mat(0x8a8d90, { roughness: 0.85 }),
-    dockDoor: mat(0x5a6a72, { roughness: 0.6, metalness: 0.3 }),
+    roof: surfaceMat('roofMembrane', { color: 0xa8adb0, metalness: 0.1 }),
+    dock: surfaceMat('concrete', { color: 0x9b9ea1, texScale: 5 }),
+    dockDoor: surfaceMat('metalRib', { color: 0x707f88, metalness: 0.45 }),
     fence: mat(0x7d8489, { roughness: 0.55, metalness: 0.6 }),
-    trunk: mat(0x6b4a2f, { roughness: 0.95 }),
+    trunk: surfaceMat('bark', { color: 0xa77d5c }),
     oakLeaf: mat(0x4d7a3a, { roughness: 0.9, flatShading: true }),
     oakLeafDark: mat(0x40682e, { roughness: 0.9, flatShading: true }),
     palmLeaf: mat(0x4f8f46, { roughness: 0.9, flatShading: true }),
-    grassPatch: mat(0x7aa863, { roughness: 0.97 }),
+    grassPatch: surfaceMat('grass', { color: 0xeaffd8, texScale: 17 }),
     water: mat(0x4a7d8c, { roughness: 0.12, metalness: 0.1 }),
     pallet: mat(0xa9824f, { roughness: 0.95 }),
     crate: mat(0xb08d57, { roughness: 0.92 }),
@@ -283,7 +300,7 @@ export function createMaterials() {
     barrelOrange: mat(0xd96c2c, { roughness: 0.5, metalness: 0.3 }),
     tableWood: mat(0x9c6b3f, { roughness: 0.9 }),
     signPost: mat(0x55595d, { roughness: 0.6, metalness: 0.5 }),
-    concrete: mat(0xc4c2ba, { roughness: 0.92 }),
+    concrete: surfaceMat('concrete', { color: 0xc4c2ba, texScale: 5 }),
     yellow: mat(0xd9b13b, { roughness: 0.7 }),
     metal: mat(0x9aa4ab, { roughness: 0.35, metalness: 0.85 }),
     hvac: mat(0xb6bcc1, { roughness: 0.5, metalness: 0.6 }),
@@ -291,6 +308,8 @@ export function createMaterials() {
     dumpster: mat(0x3d6b46, { roughness: 0.7, metalness: 0.3 }),
     vending: mat(0xb03a2e, { roughness: 0.5, metalness: 0.2 })
   };
+  logGenerationTime();
+  return materials;
 }
 
 // box()/flat() factories bound to a world group and a shared collider list,
@@ -299,7 +318,12 @@ export function createMaterials() {
 // same list that buildWorld() ultimately returns.
 export function createBuilders(world, colliders) {
   const box = (sx, sy, sz, material, x, y, z, opts = {}) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material);
+    const geo = new THREE.BoxGeometry(sx, sy, sz);
+    // Textured materials tile in world units: project world-space planar UVs
+    // (offset by the mesh position so adjacent meshes line up seamlessly).
+    const s = material.userData && material.userData.texScale;
+    if (s) applyWorldUVs(geo, s, x, y, z);
+    const m = new THREE.Mesh(geo, material);
     m.position.set(x, y, z);
     if (opts.rotY) m.rotation.y = opts.rotY;
     m.castShadow = opts.castShadow !== false;
@@ -310,7 +334,13 @@ export function createBuilders(world, colliders) {
   };
 
   const flat = (sx, sz, material, x, z, y = 0.02) => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(sx, sz), material);
+    const geo = new THREE.PlaneGeometry(sx, sz);
+    // The plane is rotated -90° about X on the mesh, so geometry-local
+    // (x, y) maps to world (x, -z): offsetting v by -z keeps ground planes
+    // world-aligned with each other (grass patches match the grass below).
+    const s = material.userData && material.userData.texScale;
+    if (s) applyWorldUVs(geo, s, x, -z, 0);
+    const m = new THREE.Mesh(geo, material);
     m.rotation.x = -Math.PI / 2;
     m.position.set(x, y, z);
     m.receiveShadow = true;
@@ -319,4 +349,66 @@ export function createBuilders(world, colliders) {
   };
 
   return { box, flat };
+}
+
+// Weathering decal batch (Phase 9): collects thin transparent overlay quads
+// (drip streaks, tire wear, oil spots) and merges them into a single mesh per
+// texture, so a campus worth of grime costs one draw call per decal type.
+export function createDecalBatch(world, decalName) {
+  const parts = [];
+  // Software renderers skip the grime pass entirely (see surfaceTextures.js).
+  const disabled = isLowQualitySurfaces();
+
+  // Tile the decal texture along an axis of one quad (long tire-wear runs).
+  const repeatUV = (g, ru, rv) => {
+    const uv = g.attributes.uv;
+    for (let i = 0; i < uv.count; i++) {
+      uv.setXY(i, uv.getX(i) * ru, uv.getY(i) * rv);
+    }
+  };
+
+  // Horizontal ground decal at (x, z), w × d world units, yaw rotation.
+  // The texture's V axis runs along d; repeatV tiles it down long runs.
+  const addGround = (x, z, w, d, rotY = 0, y = 0.05, repeatV = 1) => {
+    const g = new THREE.PlaneGeometry(w, d);
+    if (repeatV !== 1) repeatUV(g, 1, repeatV);
+    g.rotateZ(rotY);
+    g.rotateX(-Math.PI / 2);
+    g.translate(x, y, z);
+    parts.push(g);
+  };
+
+  // Vertical wall decal centred at (x, y, z), facing rotY like wall signs.
+  const addWall = (x, y, z, rotY, w, h, repeatU = 1) => {
+    const g = new THREE.PlaneGeometry(w, h);
+    if (repeatU !== 1) repeatUV(g, repeatU, 1);
+    g.rotateY(rotY);
+    g.translate(x, y, z);
+    parts.push(g);
+  };
+
+  const commit = () => {
+    if (disabled || !parts.length) {
+      for (const g of parts) g.dispose();
+      return null;
+    }
+    const merged = mergeGeometries(parts);
+    for (const g of parts) g.dispose();
+    const m = new THREE.Mesh(
+      merged,
+      new THREE.MeshStandardMaterial({
+        map: getDecalTexture(decalName),
+        transparent: true,
+        depthWrite: false,
+        roughness: 1,
+        polygonOffset: true,
+        polygonOffsetFactor: -1
+      })
+    );
+    m.receiveShadow = true;
+    world.add(m);
+    return m;
+  };
+
+  return { addGround, addWall, commit };
 }

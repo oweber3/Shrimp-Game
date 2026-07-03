@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { makeCollider } from '../collision.js';
+import { createDecalBatch } from '../utils/geometry.js';
 import { addCar, addTruck, addForklift } from './vehicles.js';
 
 // Campus dressing: parked vehicles, parking lots, pallets, crates,
@@ -69,6 +70,9 @@ export function addProps(ctx) {
   addForklift(world, colliders, 94, -2);
 
   // ---- Parking lots (paving, stripes, wheel stops, parked cars) ----
+  // Phase 9 weathering: deterministic oil-drip spots in a subset of stalls,
+  // batched into a single transparent mesh.
+  const oil = createDecalBatch(world, 'oil');
   const paintLot = (x, z, sx, sz, rows, cols, carChance) => {
     flat(sx, sz, M.asphalt, x, z, 0.04);
     const spotW = 3, spotD = 6;
@@ -86,6 +90,17 @@ export function addProps(ctx) {
           // Concrete wheel stop near the head of each spot.
           box(2, 0.18, 0.3, M.concrete, px + spotW / 2, 0.09, pz + 0.8, { castShadow: false });
         }
+        const stallJitter = Math.sin(px * 9.7 + pz * 5.3) * 0.5 + 0.5;
+        if (stallJitter > 0.62) {
+          // Oil spot where the engine sits (rear half of the stall).
+          oil.addGround(
+            px + spotW / 2,
+            pz + spotD * 0.6 + (stallJitter - 0.8),
+            1 + stallJitter,
+            1.2 + stallJitter,
+            stallJitter * Math.PI
+          );
+        }
         if (Math.sin(px * 12.9 + pz * 7.7) * 0.5 + 0.5 < carChance && c % 2 === 0) {
           addCar(world, colliders, px + spotW / 2, pz + spotD / 2, 0);
         }
@@ -96,4 +111,9 @@ export function addProps(ctx) {
   paintLot(-33, 41, 50, 34, 2, 13, 0.5); // Intralox employee lot
   paintLot(130, 12, 36, 20, 1, 9, 0.5); // Laitram office lot
   paintLot(105, -68, 44, 14, 1, 12, 0.4); // Lapeyre Stair lot
+
+  // Forklift traffic stains at the two busiest docks.
+  oil.addGround(92, -4, 2.2, 2.6, 0.8);
+  oil.addGround(-148, 92, 2, 2.4, 2.1);
+  oil.commit();
 }

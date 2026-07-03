@@ -20,7 +20,7 @@ without breaking browser performance or requiring a full rewrite.
 | 6 | GTA-Like Mechanics | Basic melee punch + driveable golf cart | M | Done |
 | 7 | Polish & Deploy | Loading screen, audio, mission log, minimap indoor floors, performance audit | M | Done |
 | 8 | Campus Accuracy | Match the real campus map: road names, north strip (5307 Toler + 301 row), south block (5211 Storey), real addresses | S | Done |
-| 9 | Surface Materials Everywhere | Procedural PBR texture set (albedo+normal+roughness) for all buildings and ground; grime/weathering; texture atlases | M | Planned |
+| 9 | Surface Materials Everywhere | Procedural PBR texture set (albedo+normal+roughness) for all buildings and ground; grime/weathering; per-surface tiling textures (atlases dropped — see IMPLEMENTATION_PHASES) | M | Done |
 | 10 | Architectural Detail & Glass | Parapets, mullioned window assemblies, dock hardware, downspouts; instanced/merged geometry; night-lit interiors | M–L | Planned |
 | 11 | Lighting, Shadows & Post | Shadow rig fix (1024→2048, tight follow frustum), SSAO, upgraded night lighting, quality auto-toggle | M | Planned |
 | 12 | Water, Vegetation & Weather | Real canal water, alpha-cutout foliage, rain/haze/overcast weather states, billboard cloud deck | M–L | Planned |
@@ -71,7 +71,8 @@ REALISM_PLAN.md "two tiers" table). Everything else stays locked.
 | `src/map/terrain.js` | Ground, roads, bounds, POI, `buildWorld()` orchestrator |
 | `src/map/buildings.js` | Building geometry and signage |
 | `src/map/props.js` | Vehicles, trees, pallets, parking lots |
-| `src/utils/geometry.js` | Shared `box()`/`flat()` builders and material palette |
+| `src/utils/geometry.js` | Shared `box()`/`flat()` builders, material palette, decal batching |
+| `src/utils/surfaceTextures.js` | Procedural PBR maps (albedo/normal/roughness), weathering decals, quality gate |
 | `src/npc.js` | Shrimp character builder, NPC manager |
 | `src/missions.js` | Mission state machine, dialogue, items |
 | `src/collision.js` | 2D circle-AABB collision resolver |

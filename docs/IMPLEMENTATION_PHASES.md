@@ -427,7 +427,27 @@ Budget baseline (TECH_PLAN, measured Phase 7): ~34k triangles at spawn (budget <
 
 ## Phase 9: Surface Materials Everywhere
 
-**Status**: Planned
+**Status**: Done (Tier 1) — `src/utils/surfaceTextures.js` generates tileable canvas PBR sets
+(albedo + normal + roughness) for concrete tilt-up, brick, ribbed metal panel, asphalt,
+sidewalk slab, VCT floor tile, painted drywall, roof membrane, grass and bark; the
+`createMaterials()` palette swaps to them and `box()`/`flat()` project world-space planar
+UVs (offset by mesh position) so adjacent meshes tile seamlessly — including the levee's
+custom geometry. Per-building hue jitter ships as whiteWallB/C tint variants sharing the
+same maps (301 row cycles them; campusDetail buildings pick by position hash); the
+pharmacy and 5123 River Rd went brick. Weathering: drip-streak decals under six big roof
+edges, tire-wear bands on the main roads/aprons, and deterministic oil spots in parking
+stalls — each decal type merges into a single mesh (3 draw calls total). **Deviation from
+plan**: no texture atlases — RepeatWrapping can't tile an atlas sub-rect without custom
+shaders, and separate 256² tiles (512² asphalt) land at ~12 MB GPU, inside the 14 MB
+budget anyway. A quality gate (`isLowQualitySurfaces()`, `?surfaces=full|flat` override)
+detects software renderers (SwiftShader/llvmpipe) and falls back to flat materials tinted
+to each surface's average albedo, so headless verify and low-end fallback paths keep
+their old cost. Generation is ~250 ms on a slow container CPU (logged at boot), lattice
+noise precomputed per octave. TECH_PLAN drift fixed: module map now lists `src/world/`,
+`campusDetail.js`, `landscaping.js`, `vehicles.js`, `fishPerson.js`, `giantShrimp.js`,
+`collectibles.js`, `mobileControls.js`, `surfaceTextures.js`; the shadow-map row now
+states the real 1024 (Phase 11 raises it). Splash-zone wall-base darkening was skipped
+(drip streaks + hue jitter already break up the walls).
 **Goal**: Every large surface (building walls, roofs, roads, lots, sidewalks, interior
 floors, grass) gets a full procedural PBR material — albedo + normal + **roughness**
 (v1 REALISM_PLAN stopped at albedo+normal) — with weathering, so the campus reads as

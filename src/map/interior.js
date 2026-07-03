@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { makeCollider } from '../collision.js';
 import { mat, textTexture, createBuilders } from '../utils/geometry.js';
+import { surfaceMat } from '../utils/surfaceTextures.js';
 
 // Laitram Machinery interior: lobby (inside the office front), an office
 // floor with cubicles, a manager's office and a breakroom. The north half
@@ -23,8 +24,10 @@ export function addInterior(scene, colliders) {
   const { box, flat } = createBuilders(g, colliders);
 
   const M = {
-    floor: mat(0xcdd2cf),
-    wall: mat(0xe6e3da),
+    // Phase 9: waxed VCT tile underfoot and painted drywall — both tile in
+    // world units via the shared UV projection in createBuilders().
+    floor: surfaceMat('floorTile', { color: 0xf4faf6 }),
+    wall: surfaceMat('paint', { color: 0xf2efe6 }),
     partition: mat(0x9fb0bc),
     deskTop: mat(0xb58a55),
     chair: mat(0x44525c),

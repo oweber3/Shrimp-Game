@@ -23,8 +23,12 @@ export function addCampusDetail(ctx) {
   };
 
   // Generic low-poly industrial shell: walls, roof cap, trim band, rooftop unit.
+  // Wall tint cycles the Phase 9 concrete variants (position-hashed) so the
+  // in-fill buildings don't all share one identical panel tone.
+  const wallVariants = [M.whiteWall, M.whiteWallB, M.whiteWallC];
   const building = (x, z, sx, sz, h) => {
-    box(sx, h, sz, M.whiteWall, x, h / 2, z, { collide: true });
+    const wall = wallVariants[Math.abs(Math.round(x * 7 + z * 13)) % 3];
+    box(sx, h, sz, wall, x, h / 2, z, { collide: true });
     box(sx + 1, 1.2, sz + 1, M.roof, x, h + 0.6, z, { castShadow: false });
     box(sx + 0.3, 1.8, sz + 0.3, M.blueTrim, x, h - 1.6, z, { castShadow: false });
     box(5, 2.2, 4, M.hvac, x + sx * 0.18, h + 1.3, z - sz * 0.18);
