@@ -22,7 +22,7 @@ const ROADS = [
 
 // Buildings [centerX, centerZ, sizeX, sizeZ, fill].
 const BUILDINGS = [
-  { cx: -100, cz:  -27, sx: 75,  sz: 160, color: '#4a5f72' }, // Intralox / 220 Plantation
+  { cx: -100, cz:  -27, sx: 75,  sz: 160, color: '#4a5f72' }, // Intralox / 301 Plantation Rd complex
   { cx:  -95, cz: -105, sx: 70,  sz:  40, color: '#4a5f72' }, // 5307 Toler
   { cx:   18, cz: -100, sx: 12,  sz:  28, color: '#4a5f72' }, // 301 FO
   { cx:   36, cz: -100, sx: 20,  sz:  32, color: '#4a5f72' }, // 301A Assembly
@@ -59,7 +59,7 @@ const ROOMS = [
 
 // Zone text labels drawn only in the expanded view.
 const ZONES = [
-  { wx: -100, wz:  -27, text: 'INTRALOX\n220 PLANTATION' },
+  { wx: -100, wz:  -27, text: 'INTRALOX\n301 PLANTATION' },
   { wx:  -95, wz: -105, text: '5307\nTOLER' },
   { wx:   40, wz: -100, text: '301\nASSEMBLY' },
   { wx:   40, wz:  -15, text: 'LAITRAM\nMACHINERY' },
@@ -74,6 +74,18 @@ const ZONES = [
   { wx:  140, wz:   46, text: '211\nLAITRAM LN' },
   { wx:  140, wz:   88, text: '116\nLAITRAM LN' },
   { wx:   96, wz:   80, text: '5040\nSTOREY' },
+];
+
+// Street-name labels (Phase 14): drawn along their road in the expanded
+// view. rot = canvas rotation in radians (vertical roads read bottom-up).
+const STREETS = [
+  { wx:   62, wz:  -55, text: 'TOLER ST', rot: 0 },
+  { wx:  -60, wz:   66, text: 'STOREY ST', rot: 0 },
+  { wx:  -60, wz:  125, text: 'RIVER ROAD', rot: 0 },
+  { wx:    0, wz:    8, text: 'PLANTATION RD', rot: -Math.PI / 2 },
+  { wx:    0, wz: -125, text: 'PLANTATION RD', rot: -Math.PI / 2 },
+  { wx:  158, wz:   30, text: 'LAITRAM LN', rot: -Math.PI / 2 },
+  { wx: -160, wz:  -60, text: 'PLANTATION DR', rot: -Math.PI / 2 },
 ];
 
 export class Minimap {
@@ -165,6 +177,12 @@ export class Minimap {
     ctx.fillStyle = '#1a2c1a';
     ctx.fillRect(0, 0, cw, ch);
 
+    // Mississippi River levee: the berm sits just past the mapped south
+    // boundary (world z > 145), so draw it as a band along the bottom edge.
+    const leveeH = Math.max(3, ch * 0.03);
+    ctx.fillStyle = '#2f4a26';
+    ctx.fillRect(0, ch - leveeH, cw, leveeH);
+
     // Roads / truck aprons
     ctx.fillStyle = '#2d3338';
     for (const [rcx, rcz, rsx, rsz] of ROADS) {
@@ -248,6 +266,28 @@ export class Minimap {
           ctx.fillText(lines[i], x, ly);
         }
       }
+
+      // Street-name labels along the roads
+      const sfs = Math.max(7, Math.round(cw / 52));
+      ctx.font = `${sfs}px 'Segoe UI',Arial,sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (const s of STREETS) {
+        const { x, y } = p(s.wx, s.wz);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(s.rot);
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillText(s.text, 1, 1);
+        ctx.fillStyle = '#8fa8b8';
+        ctx.fillText(s.text, 0, 0);
+        ctx.restore();
+      }
+
+      // Levee label along the bottom band
+      ctx.font = `${sfs}px 'Segoe UI',Arial,sans-serif`;
+      ctx.fillStyle = '#7a9a6a';
+      ctx.fillText('MISSISSIPPI RIVER LEVEE', cw / 2, ch - leveeH / 2 - sfs * 0.9);
 
       // North indicator badge (top-left corner)
       const ni = Math.max(16, Math.round(cw / 32));

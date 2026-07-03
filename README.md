@@ -6,6 +6,10 @@ exterior of the Laitram/Intralox property area in Harahan/Elmwood,
 Louisiana. Walk the campus, talk to twelve shrimp coworkers, and complete
 two missions.
 
+> **Disclaimer:** This is an unofficial fan project. It is not affiliated
+> with or endorsed by Laitram, L.L.C. or any of its divisions; all
+> characters and events are fictional.
+
 Everything is static HTML/CSS/JS. No backend, no database, no login, no
 runtime API calls, no API keys, no paid assets. Node.js is only needed to
 develop and build, not to play the deployed game.
@@ -103,8 +107,9 @@ touch controls on in a desktop browser (useful for testing).
   manufacturing plant, distribution warehouse with a west dock, machinery
   building, guard shack, break pavilion, roads, sidewalks, parking lots
   with cars, semi trucks at loading docks, forklift, pallets, crates,
-  barrels, perimeter fence, drainage canal, live oaks and palms, and
-  campus signage
+  barrels, perimeter fence, drainage canal, live oaks and palms, campus
+  signage with street-name blades and wayfinding arrows, and the
+  Mississippi River levee berm south of River Road
 - Third-person player character (shrimp worker) with walk/jog, mouse-orbit
   camera, and idle/walk animation bob
 - Collision with buildings, props, fences, and map boundaries; the player

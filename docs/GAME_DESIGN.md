@@ -10,25 +10,35 @@ shrimp doing real workplace things, in a real-ish place, with light comedy and w
 
 ## Setting
 
-The map is loosely based on the actual Laitram LLC / Intralox campus on Plantation Road, Harahan, Louisiana.
+The map is loosely based on the public exterior of the Laitram LLC / Intralox campus on
+Plantation Road, Harahan, Louisiana. It is **not survey-accurate**: building shapes, sizes and
+placement are simplified, and only some addresses are publicly verifiable. Each landmark below is
+marked **verified** (matches a published address) or **stylized** (plausible internal-style
+numbering invented for the game). See `docs/LAITRAM_ACCURACY.md` for the full audit.
 
-Key landmarks modeled in-game (addresses follow the real campus map):
-- **Intralox Plant (220 Plantation)** — large manufacturing building on the west side, shipping dock
-- **5307 Toler** — Intralox building in the north strip, west of Plantation Road
-- **301 complex** — 301 FO / 301A Assembly / 301B Shipping / 301C ILOX VNA, north strip row
-- **Laitram Machinery (220 Laitram Ln)** — center building with receiving bay and walkable interior
-- **201 Laitram Ln** — office building on the east side
-- **Lapeyre Stair (5117 Toler)** — northeast building, east end of the north strip
-- **5211 Storey** — production building in the south block
-- **5123 River Rd** — small building, southeast block
-- **Distribution Warehouse (5000 River Road)** — southwest warehouse with roll-up doors
-- **200 Plantation** — small building, far southwest corner
-- **Guard shack** — campus entrance gate
-- **Break pavilion** — outdoor break area with benches and vending
-- **Drainage canal** — east side, impassable
+Key landmarks modeled in-game:
 
-Roads (per the real map): Toler Street (north E-W), Plantation Road (N-S through campus),
-Storey Street (center E-W), Laitram Lane (east N-S), River Road (south), Plantation Drive (west edge).
+| Landmark | Description | Accuracy |
+|---|---|---|
+| **Intralox Plant (301 Plantation Rd complex)** | large manufacturing building on the west side, shipping dock | verified (301 Plantation Rd is the published HQ address; relabeled from "220 Plantation" in Phase 14) |
+| **5307 Toler** | Intralox building in the north strip, west of Plantation Road | stylized |
+| **301 complex** | 301 FO / 301A Assembly / 301B Shipping / 301C ILOX VNA, north strip row | verified (301 Plantation Rd); sub-building letters stylized |
+| **Laitram Machinery (220 Laitram Ln)** | center building with receiving bay and walkable interior | verified |
+| **201 Laitram Ln** | office building on the east side | stylized |
+| **Lapeyre Stair (5117 Toler)** | northeast building, east end of the north strip | verified |
+| **5211 Storey** | production building in the south block | stylized |
+| **5123 River Rd** | small building, southeast block | stylized |
+| **Distribution Warehouse (5000 River Road)** | southwest warehouse with roll-up doors | stylized |
+| **200 Plantation** | small building, far southwest corner | stylized |
+| **Guard shack** | campus entrance gate | stylized |
+| **Break pavilion** | outdoor break area with benches and vending | stylized |
+| **Drainage canal** | east side, impassable | plausible (area canals exist; unnamed) |
+| **Mississippi River levee** | grass berm south of River Road, outside the fence (cosmetic) | verified (River Road runs along the river levee) |
+
+Roads: Toler Street (north E-W), Plantation Road (N-S through campus), Laitram Lane (east N-S)
+and River Road (south) are real Harahan streets (verified); Storey Street (center E-W) and
+Plantation Drive (west edge) are stylized. Street-name blades and campus wayfinding arrows
+(Shipping / Receiving / Visitor Parking) mark the intersections in-game.
 
 Note: Hammond West / East Expansion / ASRS on the reference map are the separate Hammond, LA
 site (20157 Intralox Drive) and are intentionally not part of this campus.
