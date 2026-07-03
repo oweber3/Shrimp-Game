@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { makeCollider } from '../collision.js';
-import { createMaterials, createBuilders } from '../utils/geometry.js';
+import { createMaterials, createBuilders, createDecalBatch } from '../utils/geometry.js';
+import { applyWorldUVs } from '../utils/surfaceTextures.js';
 import { addBuildings } from './buildings.js';
 import { addCampusDetail } from './campusDetail.js';
 import { addProps } from './props.js';
@@ -62,6 +63,7 @@ export function buildWorld(scene, loadingManager) {
 }
 
 function addTerrain({ world, colliders, M, box, flat }) {
+  const wear = createDecalBatch(world, 'tireWear');
   // ---- Ground ----
   flat(380, 305, M.grass, 0, 0, 0);
   // Extra grass apron south of the fence so the levee doesn't float in void.
@@ -107,6 +109,26 @@ function addTerrain({ world, colliders, M, box, flat }) {
   for (let x = -172; x < 160; x += 14) flat(6, 0.5, M.roadLine, x, 125, 0.06);
   for (let z = -46; z < 122; z += 14) flat(0.5, 6, M.roadLine, 158, z, 0.06);
 
+  // ---- Tire wear along the drive lanes (Phase 9 weathering) ----
+  // Soft wheel-path darkening on each lane of the busiest roads and the
+  // truck aprons; one merged mesh, one draw call.
+  for (const laneX of [-2.6, 2.6]) {
+    wear.addGround(laneX, 35, 4.6, 176, 0, 0.052, 12); // Plantation Rd lanes
+  }
+  for (const laneZ of [122.4, 127.6]) {
+    wear.addGround(-7.5, laneZ, 4.6, 330, Math.PI / 2, 0.052, 22); // River Road
+  }
+  for (const laneZ of [-52.5, -57.5]) {
+    wear.addGround(62.5, laneZ, 4.4, 195, Math.PI / 2, 0.052, 13); // Toler St
+  }
+  for (const laneZ of [63.8, 68.2]) {
+    wear.addGround(2, laneZ, 4, 305, Math.PI / 2, 0.052, 20); // Storey St
+  }
+  wear.addGround(-32, -2, 6, 38, 0, 0.052, 3); // Intralox shipping apron
+  wear.addGround(94, -14, 6, 40, 0, 0.052, 3); // LM east truck court
+  wear.addGround(-150.5, 90, 5, 36, 0, 0.052, 2.5); // warehouse west dock
+  wear.commit();
+
   // ---- Sidewalks ----
   flat(3, 180, M.sidewalk, -7, 35, 0.05); // main drive west side
   flat(3, 180, M.sidewalk, 7, 35, 0.05); // main drive east side
@@ -151,6 +173,10 @@ function addLevee(world, M, flat) {
   ]);
   geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
   geo.computeVertexNormals();
+  // The grass material is textured (Phase 9): give the berm world-space UVs
+  // (positions are already in world coordinates, so no offset). texScale is
+  // absent on the flat-material fallback path — no UVs needed there.
+  if (M.grass.userData.texScale) applyWorldUVs(geo, M.grass.userData.texScale);
   const berm = new THREE.Mesh(geo, M.grass);
   berm.receiveShadow = true;
   world.add(berm);

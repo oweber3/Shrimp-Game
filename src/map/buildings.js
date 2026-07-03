@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { makeCollider } from '../collision.js';
-import { mat, textTexture } from '../utils/geometry.js';
+import { mat, textTexture, createDecalBatch } from '../utils/geometry.js';
 
 // All campus building geometry: shells, docks, doors, rooftop/exterior
 // equipment, the break pavilion, and every sign on campus.
@@ -30,34 +30,37 @@ export function addBuildings(ctx) {
   // Matches the real campus map: 5307 Toler west of Plantation Road, the
   // 301 production row east of it, with 5117 Toler (Lapeyre Stair) at the
   // east end of the strip.
-  box(70, 15, 40, M.whiteWall, -95, 7.5, -105, { collide: true }); // 5307 Toler
+  box(70, 15, 40, M.whiteWallB, -95, 7.5, -105, { collide: true }); // 5307 Toler
   box(71, 1.3, 41, M.roof, -95, 15.65, -105, { castShadow: false });
   box(70.3, 2, 40.3, M.blueTrim, -95, 12.6, -105, { castShadow: false });
   for (const rx of [-115, -95, -75]) {
     box(7, 2.6, 5, M.roof, rx, 17.3, -105);
   }
+  // Per-building hue jitter (Phase 9): the 301 row cycles the concrete tint
+  // variants so the strip doesn't read as one repeated panel.
+  const wallVariants = [M.whiteWall, M.whiteWallB, M.whiteWallC];
   const n301 = [
     { x: 18, sx: 12, sz: 28, h: 10 }, // 301 FO
     { x: 36, sx: 20, sz: 32, h: 13 }, // 301A Assembly
     { x: 52, sx: 8, sz: 28, h: 10 }, // 301B Shipping
     { x: 62, sx: 8, sz: 28, h: 10 } // 301C ILOX VNA
   ];
-  for (const b of n301) {
-    box(b.sx, b.h, b.sz, M.whiteWall, b.x, b.h / 2, -100, { collide: true });
+  n301.forEach((b, i) => {
+    box(b.sx, b.h, b.sz, wallVariants[i % 3], b.x, b.h / 2, -100, { collide: true });
     box(b.sx + 1, 1.1, b.sz + 1, M.roof, b.x, b.h + 0.55, -100, { castShadow: false });
     box(b.sx + 0.3, 1.6, b.sz + 0.3, M.blueTrim, b.x, b.h - 1.6, -100, { castShadow: false });
-  }
+  });
   box(6, 2.4, 5, M.roof, 36, 14.4, -104); // 301A rooftop unit
   // 301B shipping roll-up door facing Toler St.
   box(5, 4.5, 0.4, M.dockDoor, 52, 2.5, -85.7, { castShadow: false });
 
   // ---- South block: 5211 Storey and 5123 River Rd (south of Storey St) ----
-  box(50, 11, 28, M.whiteWall, 60, 5.5, 92, { collide: true }); // 5211 Storey
+  box(50, 11, 28, M.whiteWallC, 60, 5.5, 92, { collide: true }); // 5211 Storey
   box(51, 1.2, 29, M.roof, 60, 11.6, 92, { castShadow: false });
   box(50.3, 1.8, 28.3, M.blueTrim, 60, 9.2, 92, { castShadow: false });
   box(8, 6, 0.4, M.dockDoor, 48, 3.2, 78.2, { castShadow: false });
   box(8, 6, 0.4, M.dockDoor, 72, 3.2, 78.2, { castShadow: false });
-  box(16, 8, 18, M.officeWall, 120, 4, 95, { collide: true }); // 5123 River Rd
+  box(16, 8, 18, M.brick, 120, 4, 95, { collide: true }); // 5123 River Rd (brick)
   box(17, 0.9, 19, M.roof, 120, 8.45, 95, { castShadow: false });
 
   // ---- Laitram Machinery complex (center, most detail) ----
@@ -179,7 +182,7 @@ export function addBuildings(ctx) {
   }
 
   // ---- Lapeyre Stair (northeast, across Laitram Ln) ----
-  box(70, 12, 45, M.whiteWall, 105, 6, -100, { collide: true });
+  box(70, 12, 45, M.whiteWallC, 105, 6, -100, { collide: true });
   box(71, 1.2, 46, M.roof, 105, 12.6, -100, { castShadow: false });
   box(70.3, 1.8, 45.3, M.blueTrim, 105, 10, -100, { castShadow: false });
   // Display staircase by the entrance.
@@ -190,7 +193,7 @@ export function addBuildings(ctx) {
 
   // ---- Distribution warehouse (southwest) ----
   const wh = { x: -100, z: 95, sx: 80, sz: 44 };
-  box(wh.sx, 13, wh.sz, M.whiteWall, wh.x, 6.5, wh.z, { collide: true });
+  box(wh.sx, 13, wh.sz, M.whiteWallB, wh.x, 6.5, wh.z, { collide: true });
   box(wh.sx + 1, 1.2, wh.sz + 1, M.roof, wh.x, 13.6, wh.z, { castShadow: false });
   box(wh.sx + 0.3, 2, wh.sz + 0.3, M.yellow, wh.x, 10.8, wh.z, { castShadow: false });
   // West dock platform and doors.
@@ -206,7 +209,7 @@ export function addBuildings(ctx) {
   box(5, 1.8, 4, M.hvac, -75, 15.1, 98);
 
   // ---- Laitram Pharmacy (far southwest corner) ----
-  box(14, 5, 18, M.officeWall, -171, 2.5, 40, { collide: true });
+  box(14, 5, 18, M.brick, -171, 2.5, 40, { collide: true });
   box(15, 0.7, 19, M.roof, -171, 5.35, 40, { castShadow: false });
   box(2, 1, 1.5, M.hvac, -174, 6.2, 44); // rooftop AC
 
@@ -215,7 +218,27 @@ export function addBuildings(ctx) {
   box(6.5, 0.5, 6.5, M.roof, 8, 3.85, 112, { castShadow: false });
   box(0.3, 1.2, 2.2, M.glass, 5.6, 2.2, 112, { castShadow: false });
 
+  addWeathering(ctx);
   addSigns(ctx, { lm, hqB, wh });
+}
+
+// Phase 9 weathering: rain-drip grime streaks under the trim/roof edges of
+// the big industrial faces. All quads merge into one transparent mesh (one
+// draw call), placed just proud of the trim so drips read as running off it.
+function addWeathering({ world }) {
+  const drips = createDecalBatch(world, 'streaks');
+  // Intralox plant, east and west long faces (below the blue trim band).
+  drips.addWall(-62.3, 10.2, -27, Math.PI / 2, 148, 4.4, 12);
+  drips.addWall(-137.7, 10.2, -27, -Math.PI / 2, 148, 4.4, 12);
+  // Laitram Machinery north face, off Laitram Ln.
+  drips.addWall(40, 8.6, -40.5, Math.PI, 56, 3.6, 6);
+  // Distribution warehouse front (north) face, below the yellow trim.
+  drips.addWall(-100, 7.6, 72.7, Math.PI, 76, 3.4, 8);
+  // 5307 Toler south face (behind the wall signs).
+  drips.addWall(-95, 9.6, -84.85, 0, 66, 3.2, 7);
+  // Lapeyre Stair south face.
+  drips.addWall(105, 7.6, -77.3, 0, 66, 3, 7);
+  drips.commit();
 }
 
 function addSigns({ world, colliders, M, box, loadingManager }, { lm, hqB, wh }) {
