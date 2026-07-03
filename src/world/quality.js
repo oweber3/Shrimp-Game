@@ -66,7 +66,11 @@ export function setQuality(next, persist = true) {
   if (tier === next) return;
   tier = next;
   userOverridden = persist;
+  // A manual choice (Q key) wins outright - cancel any in-flight boot probe
+  // so its delayed downgrade can't silently override what the player just
+  // picked a moment later.
   if (persist) {
+    probing = false;
     try { localStorage.setItem(STORAGE_KEY, next); } catch (err) {}
   }
   console.log(`[quality] switched to ${next}`);
