@@ -25,7 +25,7 @@ without breaking browser performance or requiring a full rewrite.
 | 11 | Lighting, Shadows & Post | Shadow rig fix (1024→2048, tight follow frustum), SSAO, upgraded night lighting, quality auto-toggle | M | Planned |
 | 12 | Water, Vegetation & Weather | Real canal water, alpha-cutout foliage, rain/haze/overcast weather states, billboard cloud deck | M–L | Planned |
 | 13 | Character Animation & Faces | Planted-foot gait, secondary motion, blinks/eye tracking/talk flap (Tier 1) or original skinned .glb characters (Tier 2) | L | Planned |
-| 14 | Campus Geography & Signage Accuracy | Fix flagged addresses (220 vs 301 Plantation), levee berm, street/wayfinding signs, fan-project disclaimer | S | Planned |
+| 14 | Campus Geography & Signage Accuracy | Fix flagged addresses (220 vs 301 Plantation), levee berm, street/wayfinding signs, fan-project disclaimer | S | Done |
 | 15 | Company Heritage & Product Grounding | 1949 peeler / 1971 belt / 1981 stair heritage exhibit, division-true props and signage, Heritage Tour collectibles | M | Planned |
 | 16 | Workplace Realism: PPE, Safety & Org | PPE zones, ANSI-style generic signage, forklift/pedestrian striping, plausible org roles, make-and-ship mission | M | Planned |
 

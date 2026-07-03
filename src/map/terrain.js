@@ -61,9 +61,20 @@ export function buildWorld(scene, loadingManager) {
   return { colliders, bounds: WORLD_BOUNDS, update };
 }
 
-function addTerrain({ colliders, M, box, flat }) {
+function addTerrain({ world, colliders, M, box, flat }) {
   // ---- Ground ----
   flat(380, 305, M.grass, 0, 0, 0);
+  // Extra grass apron south of the fence so the levee doesn't float in void.
+  // Starts exactly where the main ground plane ends (z = 152.5) to avoid
+  // coplanar overlap.
+  flat(380, 45, M.grass, 0, 175, 0);
+
+  // ---- Mississippi River levee (Phase 14) ----
+  // The real campus sits just north of the river levee that River Road runs
+  // along — its strongest geographic feature. A long grass berm south of
+  // River Road, outside the perimeter fence and world bounds, so it is
+  // purely cosmetic (no colliders, no pathing changes).
+  addLevee(world, M, flat);
 
   // ---- Roads (named per the real campus map) ----
   // River Road along the south edge.
@@ -116,4 +127,34 @@ function addTerrain({ colliders, M, box, flat }) {
   // South fence with an entrance gap at the gate.
   fenceRun((B.minX - 10) / 2, B.maxZ, -10 - B.minX, 0.4);
   fenceRun((B.maxX + 22) / 2, B.maxZ, B.maxX - 22, 0.4);
+}
+
+// Triangular grass berm running east-west beyond the south fence, with a
+// gravel crown path along the crest.
+function addLevee(world, M, flat) {
+  const length = 380; // full map width along X
+  const halfW = 13; // berm half-width in Z
+  const crest = 6; // crest height
+  const zC = 161; // crest line (fence is at z=145)
+
+  const geo = new THREE.BufferGeometry();
+  // Cross-section: north toe -> crest -> south toe, extruded along X.
+  const x0 = -length / 2;
+  const x1 = length / 2;
+  const verts = new Float32Array([
+    // north slope
+    x0, 0, zC - halfW, x1, 0, zC - halfW, x1, crest, zC,
+    x0, 0, zC - halfW, x1, crest, zC, x0, crest, zC,
+    // south slope
+    x0, crest, zC, x1, crest, zC, x1, 0, zC + halfW,
+    x0, crest, zC, x1, 0, zC + halfW, x0, 0, zC + halfW
+  ]);
+  geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+  geo.computeVertexNormals();
+  const berm = new THREE.Mesh(geo, M.grass);
+  berm.receiveShadow = true;
+  world.add(berm);
+
+  // Crown path along the crest.
+  flat(length, 2.6, M.sidewalk, 0, zC, crest + 0.02);
 }

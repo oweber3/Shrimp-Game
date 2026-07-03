@@ -73,6 +73,7 @@ export class UI {
         <span class="key">[ ]</span> time of day &nbsp;&nbsp; <span class="key">R</span> reset position
       </div>
       <div class="click">Click to clock in</div>
+      <div class="disclaimer">An unofficial fan project — not affiliated with or endorsed by Laitram, L.L.C.</div>
     `;
     document.body.appendChild(this.overlay);
   }

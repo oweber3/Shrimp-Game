@@ -661,6 +661,14 @@ body.touch-device #mission-log .log-entry {
   padding: 10px 26px;
 }
 
+#start-overlay .disclaimer {
+  margin-top: 22px;
+  font-size: 11px;
+  color: #7d8f98;
+  max-width: 480px;
+  line-height: 1.5;
+}
+
 /* ---- Loading screen (Phase 7) ---- */
 #loading-screen {
   position: fixed;

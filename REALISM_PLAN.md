@@ -251,6 +251,8 @@ after every one.
    corroborated (public sources put Intralox/Laitram HQ at 301 Plantation
    Rd). Relabel the big plant as part of the 301 complex, or keep the
    current label as internal-style numbering? (LAITRAM_ACCURACY.md §Audit.)
+   → **Resolved in Phase 14:** relabeled to "301 Plantation Rd" (the
+   verifiable published address).
 7. **Weather scope (Phase 12):** rain-only, or the full clear/hazy/overcast/
    rain state machine (+~30% of that phase's effort)?
 8. **Performance floor:** must Tier 2 effects hold 30 fps on mobile/touch

@@ -50,4 +50,73 @@ export function addCampusDetail(ctx) {
   // ---- 5210 Storey — small central building off the front lot ----
   building(76, 48, 14, 12, 8);
   wallSign('5210 STOREY', 76, 5.8, 41.8, Math.PI, 11, 1.4);    // faces the front lot (north)
+
+  addStreetAndWayfinding(ctx);
+}
+
+// ---- Phase 14: intersection street blades + campus wayfinding ----
+// Every sign here is cosmetic (thin posts, no colliders) and placed on grass
+// or sidewalk verges checked against buildings, lots, patrol paths and POIs.
+function addStreetAndWayfinding(ctx) {
+  const { world, M, box } = ctx;
+
+  const blade = (text, x, y, z, rotY, w = 5, h = 0.8, bg = '#2e7d32') => {
+    const s = new THREE.Mesh(
+      new THREE.PlaneGeometry(w, h),
+      new THREE.MeshBasicMaterial({ map: textTexture(text, { bg }), side: THREE.DoubleSide })
+    );
+    s.position.set(x, y, z);
+    s.rotation.y = rotY;
+    world.add(s);
+  };
+
+  // Crossed street blades on one post — the classic two-name corner sign.
+  const crossSign = (x, z, textA, rotA, textB, rotB) => {
+    box(0.25, 3.8, 0.25, M.signPost, x, 1.9, z);
+    blade(textA, x, 3.5, z, rotA);
+    blade(textB, x, 2.7, z, rotB);
+  };
+
+  // Corners not already covered by the Phase 8 single-blade signs.
+  crossSign(9, -47, 'TOLER ST', 0, 'PLANTATION RD', Math.PI / 2); // Plantation Rd x Toler St
+  crossSign(-16, 118, 'RIVER ROAD', 0, 'PLANTATION RD', Math.PI / 2); // gate corner
+  crossSign(151, 73, 'STOREY ST', 0, 'LAITRAM LN', Math.PI / 2); // Laitram Ln x Storey St
+  crossSign(166, -48, 'TOLER ST', 0, 'LAITRAM LN', Math.PI / 2); // Laitram Ln x Toler St
+  crossSign(-153, 59, 'STOREY ST', 0, 'PLANTATION DR', Math.PI / 2); // west edge
+  crossSign(-153, 118, 'RIVER ROAD', 0, 'PLANTATION DR', Math.PI / 2); // southwest corner
+
+  // Wayfinding: stacked arrow blades on a twin-post board. Posts are offset
+  // along the board's width axis (the plane's local X after yaw).
+  const wayfinding = (x, z, rotY, entries) => {
+    const topY = 3.2;
+    const postH = topY + 0.6;
+    const ox = Math.cos(rotY) * 2.2;
+    const oz = -Math.sin(rotY) * 2.2;
+    box(0.22, postH, 0.22, M.signPost, x - ox, postH / 2, z - oz);
+    box(0.22, postH, 0.22, M.signPost, x + ox, postH / 2, z + oz);
+    entries.forEach((e, i) => {
+      blade(e, x, topY - i * 0.85, z, rotY, 5.6, 0.75, '#1f5fa8');
+    });
+  };
+
+  // Main gate approach: faces south, read while walking north up
+  // Plantation Rd (viewer faces north: left = west, right = east).
+  wayfinding(9.5, 96, 0, [
+    '← SHIPPING',
+    'RECEIVING →',
+    'VISITOR PARKING →'
+  ]);
+  // Plantation Rd x Storey St: faces east toward the road (viewer faces
+  // west: left = south/ahead-left along Storey, right = north).
+  wayfinding(-11, 79, Math.PI / 2, [
+    '← WEST DOCK',
+    '← DISTRIBUTION',
+    'VISITOR PARKING →'
+  ]);
+  // Toler St by the 301 row: faces south toward the street (viewer faces
+  // north: left = west, right = east).
+  wayfinding(14, -63, 0, [
+    '301B SHIPPING →',
+    '← INTRALOX 5307'
+  ]);
 }

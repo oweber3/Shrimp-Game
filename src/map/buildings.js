@@ -247,10 +247,16 @@ function addSigns({ world, colliders, M, box, loadingManager }, { lm, hqB, wh })
     world.add(s);
   };
   wallSign('INTRALOX', -62.2, 12, -40, Math.PI / 2, 30, 4);
-  wallSign('220 PLANTATION', -62.15, 9.4, -40, Math.PI / 2, 13, 1.3);
+  // Phase 14 accuracy fix: the plant is signed as part of the 301 Plantation
+  // Road complex (the published campus address); "220 Plantation" was not
+  // publicly corroborated (see docs/LAITRAM_ACCURACY.md §2).
+  wallSign('301 PLANTATION RD', -62.15, 9.4, -40, Math.PI / 2, 13, 1.3);
   wallSign('SHIPPING', -62.15, 7.2, -4, Math.PI / 2, 12, 1.6, '#b8651f');
   wallSign('LAITRAM MACHINERY', lm.x, 12.4, -40.45, Math.PI, 26, 2.6);
   wallSign('LAITRAM MACHINERY, INC', 35, 6.9, 19.5, 0, 20, 1.8);
+  // Door numbers over the main entrances (Phase 14 wayfinding).
+  wallSign('220', 35, 5.3, 19.55, 0, 2.2, 1, '#2b3a45');
+  wallSign('201', hqB.x, 4.75, -1.65, 0, 2.2, 1, '#2b3a45');
   wallSign('RECEIVING', 70.3, 7.2, -20, Math.PI / 2, 12, 1.6, '#b8651f');
   wallSign('220 LAITRAM LN', 70.3, 5.4, -20, Math.PI / 2, 9, 1.1);
   wallSign('SAFETY FIRST: 412 DAYS SINCE A SHELL INCIDENT', 70.3, 9.6, -20, Math.PI / 2, 22, 1.4, '#2e7d32');

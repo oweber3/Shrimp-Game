@@ -752,7 +752,16 @@ src/characters/gltfCharacter.js  — GLTFLoader + AnimationMixer wrapper exposin
 
 ## Phase 14: Campus Geography & Signage Accuracy (Track B)
 
-**Status**: Planned
+**Status**: Done — Intralox plant relabeled from "220 Plantation" to "301 Plantation Rd"
+(the published address; open question #6 resolved toward the 301 complex) in the wall sign,
+minimap and docs; door-number signs added over the LM lobby (220) and office (201) entrances;
+Mississippi levee berm (triangular grass prism + gravel crown path) added south of River Road,
+outside the fence, cosmetic-only; six cross-blade street signs added at previously unsigned
+intersections and three stacked wayfinding boards (Shipping / Receiving / Visitor Parking /
+West Dock / Distribution / 301B) placed at the gate approach, Storey corner and Toler St;
+minimap expanded view gained street-name labels and a levee band; GAME_DESIGN landmark list
+converted to a table with verified/stylized markers; fan-project disclaimer added to README
+and the title overlay. No collider, NPC, POI or zone changes.
 **Goal**: Fix the flagged geography items from LAITRAM_ACCURACY.md §2 and make the campus
 legible: correct addresses, the missing Mississippi-levee anchor, street/wayfinding signs,
 and honest docs.
