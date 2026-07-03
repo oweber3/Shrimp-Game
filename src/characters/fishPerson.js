@@ -36,7 +36,12 @@ export function createFishPerson() {
   const add = (parent, mesh) => { mesh.castShadow = true; parent.add(mesh); return mesh; };
 
   // ---- Legs: dress-pant cylinders + dress shoes ----
+  // Two-bone chains (hip -> knee -> shin/shoe) so the Phase 13 gait engine can
+  // plant the feet. The hip Group stays exposed as legL/legR.
   const legs = {};
+  const knees = {};
+  const L1 = 0.34;
+  const L2 = 0.36;
   for (const side of [-1, 1]) {
     const leg = new THREE.Group();
     leg.position.set(side * 0.15, 0.7, 0);
@@ -44,19 +49,24 @@ export function createFishPerson() {
     const thigh = add(leg, new THREE.Mesh(new THREE.CylinderGeometry(0.088, 0.095, 0.33, 14), suit));
     thigh.position.y = -0.06;
 
-    const shin = add(leg, new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.082, 0.33, 14), suit));
-    shin.position.y = -0.37;
+    const knee = new THREE.Group();
+    knee.position.set(0, -L1, 0);
+    leg.add(knee);
+
+    const shin = add(knee, new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.082, 0.33, 14), suit));
+    shin.position.y = -0.03;
 
     // Dress shoe: low flat box with a rounded toe cap
-    const shoe = add(leg, new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.11, 0.38), suit));
-    shoe.position.set(side * 0.01, -0.615, 0.05);
+    const shoe = add(knee, new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.11, 0.38), suit));
+    shoe.position.set(side * 0.01, -0.275, 0.05);
 
-    const toe = add(leg, new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 8), suit));
+    const toe = add(knee, new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 8), suit));
     toe.scale.set(1.0, 0.55, 1.1);
-    toe.position.set(side * 0.01, -0.635, 0.22);
+    toe.position.set(side * 0.01, -0.295, 0.22);
 
     root.add(leg);
     legs[side] = leg;
+    knees[side] = knee;
   }
 
   // ---- Torso: suit jacket body ----
@@ -160,6 +170,7 @@ export function createFishPerson() {
   skull.scale.set(1.18, 0.65, 1.02);
 
   // Side-facing eye bumps (fish eyes sit on the sides, not the front)
+  const faceEyes = [];
   for (const side of [-1, 1]) {
     const eyeBump = add(head, new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 8), scales));
     eyeBump.scale.set(0.55, 1.0, 0.55);
@@ -167,11 +178,17 @@ export function createFishPerson() {
 
     const pupil = add(head, new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), eyeM));
     pupil.position.set(side * 0.305, 0.04, 0.0);
+    // No eyelid rig on the fish, so the face system slides the pupil to gaze;
+    // remember its rest offset.
+    faceEyes.push({ pupil, pupilBase: pupil.position.clone(), side });
   }
 
-  // Subtle down-turned mouth (he is not happy)
-  const mouthL = add(head, new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.022, 0.035), scaleD));
-  mouthL.position.set(0, -0.1, 0.22);
+  // Subtle down-turned mouth (he is not happy) — the face system flaps it
+  // during dialogue.
+  const mouth = new THREE.Group();
+  mouth.position.set(0, -0.1, 0.22);
+  head.add(mouth);
+  const mouthL = add(mouth, new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.022, 0.035), scaleD));
   mouthL.rotation.z = 0.08; // very slight frown
 
   // Gill slits: thin dark marks on each side
@@ -195,6 +212,22 @@ export function createFishPerson() {
     legL: legs[-1],
     legR: legs[1],
     carryAnchor
+  };
+
+  // Phase 13 rig hooks (Gerald mostly idles, so no antennae; face flaps his
+  // frown and slides the pupils when he tracks the player).
+  root.userData.rig = {
+    L1,
+    L2,
+    hip: { [-1]: legs[-1], [1]: legs[1] },
+    knee: { [-1]: knees[-1], [1]: knees[1] },
+    arm: { [-1]: arms[-1], [1]: arms[1] },
+    torso,
+    head,
+    tail,
+    baseTailX: tail.rotation.x,
+    antennae: [],
+    face: { eyes: faceEyes, mouth, mouthRestX: mouth.rotation.x }
   };
 
   return root;

@@ -186,10 +186,10 @@ export class NPCManager {
     return this.npcs.find((n) => n.def.id === id);
   }
 
-  update(dt, time, playerPos) {
+  update(dt, time, playerPos, dialogueOpen = false) {
     for (const npc of this.npcs) {
-      if (npc.special) updateGiant(npc, dt, time, playerPos);
-      else updateNPC(npc, dt, time, playerPos);
+      if (npc.special) updateGiant(npc, dt, time, playerPos, dialogueOpen);
+      else updateNPC(npc, dt, time, playerPos, dialogueOpen);
     }
   }
 }

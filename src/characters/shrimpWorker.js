@@ -20,6 +20,11 @@ import {
 //
 // Stable API (used by player.js, npc.js and missions.js):
 //   root.userData.parts = { torso, head, armL, armR, legL, legR, tail, carryAnchor }
+//
+// Phase 13 also publishes root.userData.rig with the extra hooks the gait/face
+// engines need (knee joints, bone lengths, antenna pivots, eyelid/pupil/mouth
+// nodes). It is additive — `parts` is unchanged, so missions/combat/cart that
+// only read `parts` keep working untouched.
 
 // Plain dielectric helper for the non-shell odds and ends (pant fabric, etc.).
 function mat(color, roughness = 0.5, metalness = 0.05) {
@@ -65,34 +70,42 @@ function eyeMaterial() {
 // self-contained group so it can be dropped onto the head at the stalk tip.
 function makeEye(side, shell) {
   const eye = new THREE.Group();
+  // The eyeball parts live in an inner `ball` group so the face system can
+  // blink (squash ball.scale.y) and track the player (rotate the ball) without
+  // moving the brow ridge, which stays fixed on the head.
+  const ball = new THREE.Group();
+  eye.add(ball);
   const sclera = new THREE.Mesh(new THREE.SphereGeometry(0.058, 14, 12), eyeMaterial());
   sclera.castShadow = true;
-  eye.add(sclera);
+  ball.add(sclera);
   const iris = new THREE.Mesh(
     new THREE.CircleGeometry(0.034, 16),
     new THREE.MeshStandardMaterial({ color: 0x3a1d12, roughness: 0.3, metalness: 0.0 })
   );
   iris.position.set(0, 0, 0.052);
-  eye.add(iris);
+  ball.add(iris);
   const pupil = new THREE.Mesh(
     new THREE.CircleGeometry(0.016, 12),
     new THREE.MeshStandardMaterial({ color: 0x05060a, roughness: 0.2, metalness: 0.0 })
   );
   pupil.position.set(0, 0, 0.055);
-  eye.add(pupil);
+  ball.add(pupil);
   const spec = new THREE.Mesh(
     new THREE.CircleGeometry(0.011, 8),
     new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.7, roughness: 0.1 })
   );
   spec.position.set(-0.018, 0.018, 0.058);
-  eye.add(spec);
-  // Brow ridge: a flattened shell dome arching over the eye.
+  ball.add(spec);
+  // Brow ridge: a flattened shell dome arching over the eye (stays outside the
+  // ball group so blinks don't move it).
   const lid = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 6), shell);
   lid.scale.set(1.35, 0.4, 0.85);
   lid.position.set(0, 0.045, 0.0);
   lid.castShadow = true;
   eye.add(lid);
   eye.userData.side = side;
+  eye.userData.ball = ball;
+  eye.userData.pupil = pupil;
   return eye;
 }
 
@@ -183,21 +196,35 @@ export function createShrimpWorker(opts = {}) {
     normalMap: createLeatherNormalMap()
   });
   bootMat.normalScale = new THREE.Vector2(0.5, 0.5);
+  // Legs are two-bone chains so the Phase 13 gait engine can plant the feet:
+  //   leg (hip pivot)  ->  thigh mesh
+  //                    ->  knee (knee pivot) -> shin + boot + toe
+  // The hip Group is still exposed as legL/legR (unchanged parts contract);
+  // the knee Groups + bone lengths are published on userData.rig for the IK.
   const legs = {};
+  const knees = {};
+  const L1 = 0.34; // hip -> knee
+  const L2 = 0.36; // knee -> foot
   for (const side of [-1, 1]) {
     const leg = new THREE.Group();
     leg.position.set(side * 0.15, 0.7, 0);
     const thigh = add(leg, new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.095, 0.32, 12), pants));
     thigh.position.set(0, -0.06, 0.01);
     thigh.rotation.x = 0.08;
-    const shin = add(leg, new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.08, 0.34, 12), pants));
-    shin.position.set(side * 0.01, -0.34, 0);
-    const boot = add(leg, new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.17, 0.4), bootMat));
-    boot.position.set(side * 0.01, -0.615, 0.06);
-    const toe = add(leg, new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.12), bootMat));
-    toe.position.set(side * 0.01, -0.65, 0.27);
+    // Knee pivot at the thigh's lower end; the shin/boot/toe hang beneath it so
+    // bending the knee folds the lower leg, and it stays planted under IK.
+    const knee = new THREE.Group();
+    knee.position.set(0, -L1, 0);
+    leg.add(knee);
+    const shin = add(knee, new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.08, 0.34, 12), pants));
+    shin.position.set(side * 0.01, 0, 0);
+    const boot = add(knee, new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.17, 0.4), bootMat));
+    boot.position.set(side * 0.01, -0.275, 0.06);
+    const toe = add(knee, new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.12), bootMat));
+    toe.position.set(side * 0.01, -0.31, 0.27);
     root.add(leg);
     legs[side] = leg;
+    knees[side] = knee;
   }
 
   // ---- Torso: curved, segmented shrimp shell ----
@@ -323,6 +350,8 @@ export function createShrimpWorker(opts = {}) {
   const rostrum = add(head, new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.32, 10), shellDark));
   rostrum.position.set(0, 0.03, 0.32);
   rostrum.rotation.x = Math.PI / 2 + 0.15;
+  const faceEyes = [];
+  const antennae = [];
   for (const side of [-1, 1]) {
     // Eyes on short stalks, peeking out from under the hat brim.
     const stalk = add(head, new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.025, 0.14, 8), shellDark));
@@ -334,7 +363,13 @@ export function createShrimpWorker(opts = {}) {
     eye.position.set(side * 0.155, 0.12, 0.21);
     eye.rotation.y = side * 0.25;
     head.add(eye);
-    // Long antenna: one smooth tapered curve sweeping up, out and back.
+    faceEyes.push({ ball: eye.userData.ball, pupil: eye.userData.pupil, side });
+    // Long antenna, wrapped in a pivot Group so the gait engine's springs can
+    // sway it. The tube points are head-local; the pivot sits at the head
+    // origin so a small rotation swings the whole antenna naturally.
+    const antenna = new THREE.Group();
+    antenna.userData.side = side;
+    head.add(antenna);
     const antennaGeo = taperedTube(
       [
         new THREE.Vector3(side * 0.16, 0.08, 0.1),
@@ -345,13 +380,21 @@ export function createShrimpWorker(opts = {}) {
       [0.016, 0.013, 0.01, 0.005],
       18, 8
     );
-    add(head, new THREE.Mesh(antennaGeo, shellDark));
+    add(antenna, new THREE.Mesh(antennaGeo, shellDark));
+    antennae.push(antenna);
     // Short antennule pointing forward.
     const ule = add(head, new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.012, 0.2, 6), shellDark));
     ule.position.set(side * 0.06, 0.06, 0.32);
     ule.rotation.x = 1.0;
     ule.rotation.z = side * 0.2;
   }
+  // Mouth plate under the rostrum — a small jaw Group the face system flaps
+  // while dialogue advances.
+  const mouth = new THREE.Group();
+  mouth.position.set(0, -0.09, 0.18);
+  head.add(mouth);
+  const jaw = add(mouth, new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.035, 0.09), shellDark));
+  jaw.position.set(0, -0.02, 0.04);
   addHardHat(head, hatColor);
 
   // ---- Accessory ----
@@ -372,6 +415,22 @@ export function createShrimpWorker(opts = {}) {
     legL: legs[-1],
     legR: legs[1],
     carryAnchor
+  };
+
+  // Phase 13 rig hooks: everything the gait/face systems need, kept separate
+  // from the stable `parts` contract so missions/combat are unaffected.
+  root.userData.rig = {
+    L1,
+    L2,
+    hip: { [-1]: legs[-1], [1]: legs[1] },
+    knee: { [-1]: knees[-1], [1]: knees[1] },
+    arm: { [-1]: arms[-1], [1]: arms[1] },
+    torso,
+    head,
+    tail,
+    baseTailX: tail.rotation.x,
+    antennae,
+    face: { eyes: faceEyes, mouth, mouthRestX: mouth.rotation.x }
   };
   return root;
 }
