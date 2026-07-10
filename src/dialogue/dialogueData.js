@@ -124,15 +124,15 @@ export const MISSION_LINES = {
   m2Complete: [
     'The sprocket kit. You magnificent crustacean.',
     'Line is back up before lunch. That is warehouse poetry.',
-    'One more thing: Marge, the office manager, called. Her coffee pot died mid-quarterly. Fresh pot is in the LAITRAM MACHINERY break room. Go in through the front LOBBY.'
+    'One more thing: Marge, the office manager, called. Her coffee pot died mid-quarterly. Fresh pot is in the LAITRAM MACHINERY kitchen. Go in through the front LOBBY.'
   ],
   m3Start: [
     'You must be the new hire. Gus says nice things. Mostly.',
     'The quarterly review starts in ten minutes and my coffee pot just died a dramatic death.',
-    'There is a fresh pot in the BREAK ROOM, across the office floor. Bring it back and you will have a friend in management.'
+    'There is a fresh pot in the KITCHEN, in the northwest corner of the office floor. Bring it back and you will have a friend in management.'
   ],
   m3Reminder: [
-    'The BREAK ROOM is across the floor, past the cubicles. The pot. Please. The quarter depends on it.'
+    'The KITCHEN is across the floor, past the cubicles. The pot. Please. The quarter depends on it.'
   ],
   m3Complete: [
     'Sweet industrial-strength salvation. Thank you.',

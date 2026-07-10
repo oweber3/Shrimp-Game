@@ -39,7 +39,7 @@ export class Missions {
     this.partsBox.position.set(POI.partsBox.x, 0.5, POI.partsBox.z);
     scene.add(this.partsBox);
 
-    // Fresh coffee pot on the breakroom counter (Mission 3).
+    // Fresh coffee pot on the kitchen counter (Mission 3).
     this.coffeePot = buildCoffeePot();
     this.coffeePot.position.set(POI.coffeePot.x, 1.16, POI.coffeePot.z);
     scene.add(this.coffeePot);
@@ -57,7 +57,7 @@ export class Missions {
 
     // Pot marker sits in front of the counter so the ring is reachable.
     this.potMarker = buildMarker(0xd9a05b);
-    this.potMarker.position.set(66.8, 0.1, POI.coffeePot.z);
+    this.potMarker.position.set(POI.coffeePot.x, 0.1, POI.coffeePot.z + 1.4);
     this.potMarker.visible = false;
     scene.add(this.potMarker);
 
@@ -197,7 +197,7 @@ export class Missions {
       }
     });
 
-    // --- Coffee pot pickup (breakroom counter) ---
+    // --- Coffee pot pickup (kitchen counter) ---
     list.push({
       id: 'coffeePot',
       getPos: () => this.coffeePot.position,
@@ -243,8 +243,8 @@ export class Missions {
       M2_PICKUP: 'Mission 2 (1/3): Pick up the conveyor parts box at the RECEIVING dock.',
       M2_DELIVER: 'Mission 2 (2/3): Deliver the parts box to Dot at the WAREHOUSE.',
       M3_TALK: 'Mission 3: Coffee Run - Find Marge, the manager, inside LAITRAM MACHINERY. Enter through the front LOBBY.',
-      M3_FETCH: 'Mission 3 (1/3): Pick up the fresh coffee pot in the BREAK ROOM.',
-      M3_RETURN: 'Mission 3 (2/3): Bring the pot back to Marge in the manager\'s office.',
+      M3_FETCH: 'Mission 3 (1/3): Pick up the fresh coffee pot in the KITCHEN.',
+      M3_RETURN: 'Mission 3 (2/3): Bring the pot back to Marge in her office.',
       DONE: 'Shift complete. Explore Laitram Town freely. Press R if you get stuck.'
     };
     this.ui.setObjective(O[state]);
@@ -269,8 +269,8 @@ export class Missions {
       case 'M2_PICKUP': return { pos: this.partsBox.position, label: 'Parts Box' };
       case 'M2_DELIVER': return { pos: dot, label: 'Dot / Warehouse' };
       case 'M3_TALK': return { pos: marge, label: 'Marge / LM Office' };
-      case 'M3_FETCH': return { pos: this.coffeePot.position, label: 'Coffee Pot / Break Room' };
-      case 'M3_RETURN': return { pos: marge, label: 'Marge / Manager Office' };
+      case 'M3_FETCH': return { pos: this.coffeePot.position, label: 'Coffee Pot / Kitchen' };
+      case 'M3_RETURN': return { pos: marge, label: 'Marge / Office' };
       default: return null;
     }
   }

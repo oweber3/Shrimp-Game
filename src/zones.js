@@ -10,11 +10,12 @@ export const INTERIOR_LAYER = 2; // LM interior geometry + indoor lights
 
 // Indoor zone AABBs (world XZ). Together they cover every walkable square
 // of the interior; everywhere else is 'outdoor'.
+// Specific rooms come first; office_floor is the catch-all for the block.
 const INDOOR_ZONES = [
   { name: 'lobby', minX: 15, maxX: 55, minZ: 10, maxZ: 19 },
-  { name: 'office_floor', minX: 10.6, maxX: 52, minZ: -19.7, maxZ: 10 },
-  { name: 'manager_office', minX: 52, maxX: 69.4, minZ: -19.7, maxZ: -8.1 },
-  { name: 'breakroom', minX: 52, maxX: 69.4, minZ: -8.1, maxZ: 10 }
+  { name: 'kitchen', minX: 10.6, maxX: 22, minZ: -19.7, maxZ: -12 },
+  { name: 'conference', minX: 48, maxX: 60, minZ: -16, maxZ: -2 },
+  { name: 'office_floor', minX: 10.6, maxX: 69.4, minZ: -19.7, maxZ: 10 }
 ];
 
 // Hysteresis: the player must be this far inside a zone to enter it and

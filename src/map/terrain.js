@@ -28,8 +28,8 @@ export const POI = {
   wrench: new THREE.Vector3(-146, 0, 90),
   // Receiving pad on the east side of Laitram Machinery.
   partsBox: new THREE.Vector3(78, 0, -20),
-  // Breakroom counter inside Laitram Machinery (Mission 3).
-  coffeePot: new THREE.Vector3(68.35, 0, 3.45)
+  // Kitchen 1078A counter inside Laitram Machinery (Mission 3).
+  coffeePot: new THREE.Vector3(14.5, 0, -18.55)
 };
 
 export function buildWorld(scene, loadingManager) {

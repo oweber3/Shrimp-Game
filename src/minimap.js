@@ -51,9 +51,11 @@ const BUILDINGS = [
 const INDOOR_REGION = { minX: 2, maxX: 78, minZ: -41, maxZ: 19.2 };
 const ROOMS = [
   { x0: 10, x1: 70, z0: -40, z1: -20, label: 'PRODUCTION', dark: true },
-  { x0: 10.6, x1: 52, z0: -19.7, z1: 10, label: 'OFFICE' },
-  { x0: 52, x1: 69.4, z0: -19.7, z1: -8.1, label: 'MANAGER' },
-  { x0: 52, x1: 69.4, z0: -8.1, z1: 10, label: 'BREAK\nROOM' },
+  { x0: 10.6, x1: 63, z0: -19.7, z1: 10, label: 'OFFICE' },
+  { x0: 10.6, x1: 22, z0: -19.7, z1: -12, label: 'KITCHEN' },
+  { x0: 30, x1: 38, z0: -15, z1: -3, label: 'STORAGE', dark: true },
+  { x0: 48, x1: 60, z0: -16, z1: -2, label: 'CONF\n1019' },
+  { x0: 63, x1: 69.4, z0: -19.7, z1: 10, label: 'OFFICES' },
   { x0: 15, x1: 55, z0: 10, z1: 19, label: 'LOBBY' }
 ];
 

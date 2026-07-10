@@ -4,10 +4,8 @@ Reference images for making the Laitram Machinery interior accurate to the
 real building. The plan that consumes these is
 [../../MACHINERY_INTERIOR_ACCURACY.md](../../MACHINERY_INTERIOR_ACCURACY.md).
 
-**Drop the three attached screenshots into this folder with these exact
-names** (the chat attachments could not be exported to the repo
-automatically — the transcriptions below capture their content in the
-meantime):
+The three screenshots live in this folder (transcriptions below capture
+their content for text search):
 
 | File | Content |
 |------|---------|
