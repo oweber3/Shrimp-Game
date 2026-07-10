@@ -1,7 +1,7 @@
 # Laitram Machinery Interior — Real 1st-Floor Layout (Owen / Kearney / Douglas corner)
 
-**Status: Phases A–C DONE (reference assets + interior rework + special NPCs); Phase
-D remaining.** Plan to make the inside of the Laitram Machinery
+**Status: Phases A–D DONE (reference assets + interior rework + special NPCs +
+polish).** Plan to make the inside of the Laitram Machinery
 building (220 Laitram Lane, `src/map/interior.js`) accurate to the real
 B220L 1st-floor plan — at minimum the corner where Owen Weber, Kearney
 Nieset and Douglas Katz sit — and to add the three of them as special NPCs.
@@ -126,7 +126,7 @@ cubicle field, Marge → office 1022-equivalent, Benny → kitchen 1078A.
 entries + dialogue + minimap colors. Pet head registered like Shrimply
 (`special: true`) or driven from Owen's NPC update.
 
-### Phase D — Polish (S)
+### Phase D — Polish (S) — DONE
 Room signs with real room numbers (B220L.xxxx), conference-room glass wall,
 door props on closed rooms, guardrail-exception note in LAITRAM_ACCURACY.md.
 

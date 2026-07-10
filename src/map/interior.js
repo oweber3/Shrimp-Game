@@ -44,7 +44,8 @@ export function addInterior(scene, colliders) {
     counter: mat(0xd9d4c8),
     white: mat(0xf4f4f0),
     appliance: mat(0xdfe3e6),
-    glass: mat(0x7fb6cf)
+    glass: mat(0x7fb6cf),
+    frame: mat(0x263746)
   };
   const ceilMat = mat(0xf2f2ee);
   const panelMat = new THREE.MeshBasicMaterial({ color: 0xfdfdf2 });
@@ -71,6 +72,15 @@ export function addInterior(scene, colliders) {
     s.position.set(x, y, z);
     s.rotation.y = rotY;
     g.add(s);
+  };
+  const roomSign = (label, room, x, y, z, rotY, w = 2.6) => {
+    sign(label, x, y + 0.18, z, rotY, w, 0.38, '#4a5560');
+    sign(room, x, y - 0.18, z, rotY, Math.min(w, 2.2), 0.3, '#2f3a44');
+  };
+  const glassPanel = (x, z, sx, sz, rotY = 0) => {
+    box(sx, 2.15, sz, M.glass, x, 1.42, z, { collide: true });
+    box(sx + (rotY ? 0 : 0.12), 0.08, sz + (rotY ? 0.12 : 0), M.frame, x, 0.35, z);
+    box(sx + (rotY ? 0 : 0.12), 0.08, sz + (rotY ? 0.12 : 0), M.frame, x, 2.5, z);
   };
   const chair = (x, z, rotY = 0) => {
     const c = new THREE.Group();
@@ -186,11 +196,11 @@ export function addInterior(scene, colliders) {
   box(4.5, 3.2, 0.5, M.wall, 19.75, 1.6, -12, { collide: true });
   box(2, 0.5, 0.5, M.wall, 16.5, 2.95, -12); // header over the doorway
   box(0.5, 3.2, 7.7, M.wall, 22, 1.6, -15.85, { collide: true });
-  sign('KITCHEN 1078A', 16.5, 2.5, -11.7, 0, 3, 0.55, '#2e7d32');
+  roomSign('KITCHEN', 'B220L.1078A', 16.5, 2.5, -11.7, 0, 2.5);
   // Restroom RR1039 sits just west of the kitchen on the real plan —
   // door prop only, non-enterable.
   doorProp(12.6, -11.93);
-  sign('RESTROOM RR1039', 12.6, 2.5, -11.7, 0, 2.4, 0.45, '#4a5560');
+  roomSign('RESTROOM', 'B220L.RR1039', 12.6, 2.5, -11.7, 0, 2.2);
   // Counter along the north wall with coffee machine and microwave.
   box(6, 0.95, 1.0, M.counter, 16, 0.48, -18.9, { collide: true });
   box(6.2, 0.06, 1.2, M.appliance, 16, 1.0, -18.9);
@@ -251,9 +261,9 @@ export function addInterior(scene, colliders) {
   box(8.5, 3.2, 0.5, M.wall, 34, 1.6, -15, { collide: true });
   box(8.5, 3.2, 0.5, M.wall, 34, 1.6, -3, { collide: true });
   doorProp(33, -2.93);
-  sign('STORAGE CL1007', 33, 2.5, -2.7, 0, 2.4, 0.45, '#4a5560');
+  roomSign('STORAGE', 'B220L.CL1007', 33, 2.5, -2.7, 0, 2.2);
   doorProp(29.93, -8, Math.PI / 2);
-  sign('STORAGE CL1013C', 29.7, 2.5, -8, -Math.PI / 2, 2.4, 0.45, '#4a5560');
+  roomSign('STORAGE', 'B220L.CL1013C', 29.7, 2.5, -8, -Math.PI / 2, 2.2);
 
   // ================= Stairwell ST1001 + Copy 1093 (north side) =================
   // Stairwell is closed (no 2nd floor); the copy alcove is open.
@@ -261,11 +271,11 @@ export function addInterior(scene, colliders) {
   box(0.5, 3.2, 4.7, M.wall, 43, 1.6, -17.35, { collide: true });
   box(3.5, 3.2, 0.5, M.wall, 41.5, 1.6, -15, { collide: true });
   doorProp(41.5, -14.93);
-  sign('STAIRWELL ST1001', 41.5, 2.5, -14.7, 0, 2.6, 0.45, '#4a5560');
+  roomSign('STAIRWELL', 'B220L.ST1001', 41.5, 2.5, -14.7, 0, 2.4);
   // Copier in the open alcove east of the stairwell.
   box(1.0, 1.05, 0.75, M.appliance, 44.8, 0.53, -18.9, { collide: true });
   box(0.7, 0.06, 0.5, M.dark, 44.8, 1.09, -18.9); // control panel / lid
-  sign('COPY 1093', 44.8, 2.5, -19.3, 0, 1.8, 0.45, '#4a5560');
+  roomSign('COPY', 'B220L.1093', 44.8, 2.5, -19.3, 0, 1.7);
 
   // ================= Machinery Eng Conference Room 1019 =================
   // Glass-front room; the Owen/Kearney/Douglas workstation strip backs onto
@@ -273,9 +283,21 @@ export function addInterior(scene, colliders) {
   box(0.5, 3.2, 14.5, M.wall, 48, 1.6, -9, { collide: true }); // west wall
   box(12.5, 3.2, 0.5, M.wall, 54, 1.6, -16, { collide: true }); // north wall
   box(12.5, 3.2, 0.5, M.wall, 54, 1.6, -2, { collide: true }); // south wall
-  // East glass front on the corridor, door gap z -4.6..-3.
-  box(0.15, 2.6, 11.4, M.glass, 60, 1.3, -10.3, { collide: true });
-  box(0.15, 2.6, 1.0, M.glass, 60, 1.3, -2.5, { collide: true });
+  // East glass front on the corridor, door gap z -4.6..-3. Mullions and a
+  // framed glass door make the conference room read as a real office room.
+  glassPanel(60, -13.2, 0.15, 5.6);
+  glassPanel(60, -7.4, 0.15, 4.6);
+  glassPanel(60, -2.5, 0.15, 1.0);
+  box(0.1, 2.4, 0.08, M.frame, 60, 1.35, -15.95);
+  box(0.1, 2.4, 0.08, M.frame, 60, 1.35, -10.3);
+  box(0.1, 2.4, 0.08, M.frame, 60, 1.35, -4.6);
+  box(0.1, 2.4, 0.08, M.frame, 60, 1.35, -3.0);
+  box(0.08, 2.2, 1.45, M.glass, 60.05, 1.28, -3.8);
+  box(0.08, 2.3, 0.08, M.frame, 60.08, 1.3, -4.5);
+  box(0.08, 2.3, 0.08, M.frame, 60.08, 1.3, -3.1);
+  box(0.08, 0.08, 1.45, M.frame, 60.08, 2.42, -3.8);
+  box(0.08, 0.08, 1.45, M.frame, 60.08, 0.18, -3.8);
+  box(0.08, 0.12, 0.08, M.dark, 59.93, 1.2, -3.55);
   box(0.5, 0.6, 14.5, M.wall, 60, 2.9, -9); // header band above the glass
   sign('USNO-220 MACHINERY ENG CONFERENCE ROOM', 60.3, 2.45, -9, Math.PI / 2, 7, 0.6, '#1f5fa8');
   sign('B220L.1019', 60.3, 1.9, -3.8, Math.PI / 2, 1.4, 0.4, '#4a5560');
@@ -313,7 +335,7 @@ export function addInterior(scene, colliders) {
   // Electrical closet CL1023, immediately south of Douglas's seat.
   box(1.3, 3.2, 1.4, M.wall, 47.6, 1.6, -3.2, { collide: true });
   doorProp(46.9, -3.2, Math.PI / 2, mat(0xd9b23a)); // yellow door
-  sign('ELECTRICAL CL1023', 46.86, 2.5, -3.2, -Math.PI / 2, 2.2, 0.42, '#8a6d1f');
+  roomSign('ELECTRICAL', 'B220L.CL1023', 46.86, 2.5, -3.2, -Math.PI / 2, 2.1);
   lightPanel(45, -10);
   lightPanel(45, -3);
 
@@ -332,12 +354,12 @@ export function addInterior(scene, colliders) {
   zWall(-7, -4.8); zWall(-3.2, -1); // Marge's office (1022-equivalent)
   zWall(-1, 3.7); zWall(5.3, 10.2); // video conference 1090
   doorProp(63, -16.4, Math.PI / 2);
-  sign('OFFICE', 62.7, 2.5, -16.4, -Math.PI / 2, 1.6, 0.45, '#4a5560');
+  roomSign('OFFICE', 'B220L.1012', 62.7, 2.5, -16.4, -Math.PI / 2, 1.7);
   doorProp(63, -10, Math.PI / 2);
-  sign('OFFICE', 62.7, 2.5, -10, -Math.PI / 2, 1.6, 0.45, '#4a5560');
-  sign('MANAGER', 62.7, 2.5, -4, -Math.PI / 2, 2.2, 0.5, '#1f5fa8'); // Marge's door stays open
+  roomSign('OFFICE', 'B220L.1014', 62.7, 2.5, -10, -Math.PI / 2, 1.7);
+  roomSign('MANAGER', 'B220L.1022', 62.7, 2.5, -4, -Math.PI / 2, 2.0); // Marge's door stays open
   doorProp(63, 4.5, Math.PI / 2);
-  sign('USNO-220 VIDEO CONFERENCE 1090', 62.7, 2.5, 4.5, -Math.PI / 2, 4.2, 0.5, '#5a3a8c');
+  roomSign('USNO-220 VIDEO CONFERENCE', 'B220L.1090', 62.7, 2.5, 4.5, -Math.PI / 2, 4.0);
   // Marge's office furnishings (1022-equivalent, mission 3 giver).
   flat(2.2, 3.2, M.accent, 65.8, -4, 0.07); // rug
   box(1.3, 0.12, 2.8, M.deskTop, 66.5, 0.8, -4);
