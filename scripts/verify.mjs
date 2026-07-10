@@ -270,6 +270,50 @@ const dismounted = await page.evaluate(
 );
 check('E dismounts and player reappears', dismounted);
 
+// --- Ramp jumps & stunt scoring ---
+// Line the cart up 20m south of the apron kicker, facing north, and floor it.
+await page.evaluate(() => {
+  const g = window.__game;
+  g.cart.group.position.set(-32, 0, 10);
+  g.cart.state.yaw = Math.PI;
+  g.cart.state.speed = 0;
+  g.player.position.set(-32, 0, 10);
+  g.cart.mount();
+});
+// Generous polling: on slow software-GL machines the sim runs well below
+// real time, so give the 20m approach plenty of wall-clock room.
+await page.keyboard.down('KeyW');
+let sawAir = false;
+for (let i = 0; i < 300; i++) {
+  await sleep(50);
+  if (await page.evaluate(() => window.__game.cart.state.airborne)) {
+    sawAir = true;
+    break;
+  }
+}
+await page.keyboard.up('KeyW'); // hands off mid-air: land flat
+check('ramp launches the cart airborne', sawAir);
+
+let landed = false;
+for (let i = 0; i < 200; i++) {
+  await sleep(50);
+  if (await page.evaluate(() => !window.__game.cart.state.airborne)) {
+    landed = true;
+    break;
+  }
+}
+const cartY = await page.evaluate(() => window.__game.cart.group.position.y);
+check('cart lands back on the ground', landed && cartY < 0.5, `y=${cartY.toFixed(2)}`);
+
+const stuntScore = await page.evaluate(() => window.__game.stunts.score);
+check('landing awards stunt points', stuntScore > 0, `score ${stuntScore}`);
+
+const hudVisible = await page.$eval('#stunt-hud', (el) => el.style.display === 'block');
+check('stunt HUD shows while driving', hudVisible);
+
+await page.keyboard.press('KeyE'); // hop off for the remaining checks
+await sleep(200);
+
 // --- Golden Shrimp collectibles ---
 const collectedBefore = await page.evaluate(() => window.__game.collectibles.collected);
 await teleport(85, 22); // a Golden Shrimp sits at the break pavilion

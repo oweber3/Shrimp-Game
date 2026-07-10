@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { makeCollider } from '../collision.js';
 import { mat } from '../utils/geometry.js';
-import { stepVehicle } from './vehiclePhysics.js';
+import { stepVehicle, initVerticalState } from './vehiclePhysics.js';
+import { groundHeightAt } from '../map/ramps.js';
 
 // Driveable golf cart (Phase 6). Parked on the Intralox shipping apron.
 // Mount with E within range; W/S drive, A/D steer, E again to hop off.
@@ -17,9 +18,12 @@ export class GolfCart {
   constructor(scene, colliders) {
     this.mounted = false;
     this.state = { yaw: PARK.yaw, speed: 0 };
+    initVerticalState(this.state);
+    this.onLanding = null; // fired with the touchdown summary (stunt scorer)
     this.group = buildCartMesh();
     this.wheels = this.group.wheels;
     this.group.position.set(PARK.x, 0, PARK.z);
+    this.group.rotation.order = 'YXZ'; // yaw, then pitch, then roll
     this.group.rotation.y = PARK.yaw;
     scene.add(this.group);
 
@@ -29,6 +33,11 @@ export class GolfCart {
 
   canMount(playerPos) {
     return !this.mounted && playerPos.distanceTo(this.group.position) < MOUNT_RANGE;
+  }
+
+  // No hopping off mid-air or mid-spin-out.
+  canDismount() {
+    return this.mounted && !this.state.airborne && this.state.crashTimer <= 0;
   }
 
   mount() {
@@ -43,23 +52,31 @@ export class GolfCart {
     const p = this.group.position;
     setColliderBox(this.collider, p.x, p.z, 3, 3);
     // Step off to the cart's left side.
-    return new THREE.Vector3(
-      p.x + Math.sin(this.state.yaw + Math.PI / 2) * 2,
-      0,
-      p.z + Math.cos(this.state.yaw + Math.PI / 2) * 2
-    );
+    const sx = p.x + Math.sin(this.state.yaw + Math.PI / 2) * 2;
+    const sz = p.z + Math.cos(this.state.yaw + Math.PI / 2) * 2;
+    return new THREE.Vector3(sx, groundHeightAt(sx, sz), sz);
   }
 
-  // `input` is a { forward, back, left, right } booleans object (see
+  // `input` is a { forward, back, left, right, trick } booleans object (see
   // Player.getMoveInput), so the cart drives identically from the keyboard or
   // the mobile joystick without knowing which one is active.
   update(dt, input, colliders, bounds) {
-    if (!this.mounted) return;
+    // An unmounted cart still finishes a flight or spin-out in progress
+    // (dismount is blocked during both, but stay safe against edge cases).
+    if (!this.mounted && !this.state.airborne && this.state.crashTimer <= 0) return;
     stepVehicle(this.state, this.group.position, input, dt, colliders, bounds);
+    this.group.position.y = this.state.y;
     this.group.rotation.y = this.state.yaw;
-    // Spin the wheels with travel.
+    this.group.rotation.x = -this.state.pitch; // +pitch = nose up
+    this.group.rotation.z = this.state.roll;
+    // Spin the wheels with travel (freewheel while airborne).
     const roll = this.state.speed * dt / 0.32;
     for (const w of this.wheels) w.rotation.x += roll;
+    // Touchdown event for the stunt scorer.
+    if (this.state.landing) {
+      if (this.onLanding) this.onLanding(this.state.landing);
+      this.state.landing = null;
+    }
   }
 }
 

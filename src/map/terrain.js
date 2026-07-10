@@ -7,6 +7,7 @@ import { addCampusDetail } from './campusDetail.js';
 import { addProps } from './props.js';
 import { addLandscaping } from './landscaping.js';
 import { addInterior } from './interior.js';
+import { addRamps } from './ramps.js';
 import { EXTERIOR_LAYER, INTERIOR_LAYER } from '../zones.js';
 
 // Low-poly approximation of the Laitram campus in Harahan/Elmwood, Louisiana,
@@ -44,6 +45,7 @@ export function buildWorld(scene, loadingManager) {
   const ctx = { world, colliders, M, box, flat, updaters, loadingManager };
 
   addTerrain(ctx);
+  addRamps(ctx); // stunt ramps & dirt jumps for the golf cart
   addBuildings(ctx);
   addCampusDetail(ctx);
   addProps(ctx);

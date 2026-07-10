@@ -32,7 +32,9 @@ export class UI {
         <span class="key">Shift</span> jog &nbsp; <span class="key">E</span> interact / drive &nbsp;
         <span class="key">F</span> punch &nbsp; <span class="key">Tab</span> log &nbsp;
         <span class="key">M</span> map &nbsp; <span class="key">[ ]</span> time &nbsp;
-        <span class="key">R</span> reset position
+        <span class="key">R</span> reset position<br>
+        Cart airborne: <span class="key">A/D</span> spin &nbsp; <span class="key">W/S</span> flip &nbsp;
+        <span class="key">Shift+A/D</span> barrel roll — land flat!
       </div>
       <div id="completion" class="panel">
         <h1>Shift Complete</h1>
@@ -70,7 +72,8 @@ export class UI {
         <span class="key">WASD / Arrows</span> move &nbsp;&nbsp; <span class="key">Mouse</span> look<br>
         <span class="key">Shift</span> jog &nbsp;&nbsp; <span class="key">E</span> interact / drive &nbsp;&nbsp;
         <span class="key">F</span> punch &nbsp;&nbsp; <span class="key">M</span> map<br>
-        <span class="key">[ ]</span> time of day &nbsp;&nbsp; <span class="key">R</span> reset position
+        <span class="key">[ ]</span> time of day &nbsp;&nbsp; <span class="key">R</span> reset position<br>
+        Drive the golf cart at the ramps — steer mid-air for tricks and points
       </div>
       <div class="click">Click to clock in</div>
       <div class="disclaimer">An unofficial fan project — not affiliated with or endorsed by Laitram, L.L.C.</div>

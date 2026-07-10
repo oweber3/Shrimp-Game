@@ -15,6 +15,8 @@ import { Atmosphere } from './world/sky.js';
 import { createPostFX } from './world/postfx.js';
 import { addStreetlights } from './world/streetlights.js';
 import { Collectibles } from './mechanics/collectibles.js';
+import { Stunts } from './mechanics/stunts.js';
+import { StuntHud } from './ui/stuntHud.js';
 import { MobileControls } from './ui/mobileControls.js';
 import { initQuality, getQuality, onQualityChange, startBootProbe, sampleFrame } from './world/quality.js';
 
@@ -99,6 +101,9 @@ const npcs = new NPCManager(scene);
 const missions = new Missions(scene, ui, npcs, player, missionLog);
 const zones = new ZoneSystem(camera, scene, { ambient, hemi, sun }, atmosphere);
 const cart = new GolfCart(scene, colliders);
+const stuntHud = new StuntHud();
+const stunts = new Stunts(stuntHud);
+cart.onLanding = (evt) => stunts.onLanding(evt);
 const punch = new PunchSystem(player, npcs);
 const collectibles = new Collectibles(scene, audio, ui);
 const postfx = createPostFX(renderer, scene, camera);
@@ -127,7 +132,8 @@ ui.onStart(() => {
 // Debug/testing handle.
 window.__game = {
   player, missions, npcs, ui, zones, cart, punch, audio, minimap, missionLog,
-  renderer, atmosphere, postfx, streetlights, collectibles, mobileControls
+  renderer, atmosphere, postfx, streetlights, collectibles, mobileControls,
+  stunts, stuntHud
 };
 
 // Interaction: E talks/picks up/advances dialogue, or mounts/dismounts the
@@ -142,8 +148,13 @@ window.addEventListener('keydown', (e) => {
   if (ui.isDialogueOpen()) {
     ui.advanceDialogue();
   } else if (cart.mounted) {
-    const spot = cart.dismount();
-    player.position.copy(spot);
+    if (cart.canDismount()) {
+      const spot = cart.dismount();
+      player.position.copy(spot);
+      // Clear any seat tilt copied from the cart's orientation.
+      player.mesh.rotation.x = 0;
+      player.mesh.rotation.z = 0;
+    }
   } else if (currentInteractable) {
     currentInteractable.action();
   } else if (cart.canMount(player.position)) {
@@ -187,26 +198,30 @@ renderer.setAnimationLoop(() => {
 
   physicsAcc += frameDelta;
   let steps = 0;
+  const cartInput = player.getMoveInput();
+  cartInput.trick = player.isJogging(); // Shift + steer = barrel roll in the air
   while (physicsAcc >= FIXED_DT && steps < MAX_SUBSTEPS) {
     player.update(FIXED_DT, colliders, bounds);
     punch.update(FIXED_DT); // after player.update so the swing overrides arm pose
-    cart.update(FIXED_DT, player.getMoveInput(), colliders, bounds);
+    cart.update(FIXED_DT, cartInput, colliders, bounds);
     if (cart.mounted) player.position.copy(cart.group.position);
     physicsAcc -= FIXED_DT;
     steps++;
   }
   if (steps === MAX_SUBSTEPS) physicsAcc = 0; // shed backlog instead of spiralling
 
+  stuntHud.setDriving(cart.mounted);
+
   if (cart.mounted) {
     // The shrimp stays visible, seated on the bench with legs forward and
-    // claws on the wheel; pose follows the final cart state this frame.
-    const cartYaw = cart.state.yaw;
-    player.mesh.position.set(
-      player.position.x - Math.sin(cartYaw) * 0.55,
-      0.34,
-      player.position.z - Math.cos(cartYaw) * 0.55
-    );
-    player.mesh.rotation.y = cartYaw;
+    // claws on the wheel. The seat offset goes through the cart's full
+    // orientation so the rider stays glued to the bench through flips and
+    // barrel rolls.
+    player.mesh.position
+      .set(0, 0.34, -0.55)
+      .applyQuaternion(cart.group.quaternion)
+      .add(cart.group.position);
+    player.mesh.quaternion.copy(cart.group.quaternion);
     player.parts.legL.rotation.x = -1.35;
     player.parts.legR.rotation.x = -1.35;
     player.parts.armL.rotation.x = -0.9;
@@ -273,7 +288,8 @@ renderer.setAnimationLoop(() => {
   if (currentInteractable) {
     ui.showPrompt(currentInteractable.prompt());
   } else if (cart.mounted) {
-    ui.showPrompt('Hop off the cart');
+    if (cart.canDismount()) ui.showPrompt('Hop off the cart');
+    else ui.hidePrompt(); // mid-air / spinning out
   } else if (!ui.isDialogueOpen() && cart.canMount(player.position)) {
     ui.showPrompt('Drive the cart');
   } else {

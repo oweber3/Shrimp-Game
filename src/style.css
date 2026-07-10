@@ -744,3 +744,82 @@ body.touch-device #mission-log .log-entry {
 #mission-log .log-entry.current {
   color: #ffd9a8;
 }
+
+/* ── Stunt HUD (golf cart jumps) ─────────────────────────────────── */
+/* Score panel under the objective tracker; only visible while driving
+   (stuntHud.js toggles display). */
+#stunt-hud {
+  position: fixed;
+  top: 120px;
+  left: 16px;
+  min-width: 170px;
+  display: none;
+  color: #eef3f5;
+  z-index: 6;
+  pointer-events: none;
+  user-select: none;
+}
+
+#stunt-hud h2 {
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #ff9e5e;
+  margin-bottom: 4px;
+}
+
+#stunt-hud .score-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+#stunt-hud #stunt-score {
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+#stunt-hud #stunt-mult {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffd94d;
+}
+
+#stunt-hud .best {
+  font-size: 11px;
+  color: #ffd9a8;
+  margin-top: 4px;
+}
+
+/* Big center-screen trick callout on landing. */
+#trick-popup {
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%) scale(0.85);
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #ffd94d;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.65);
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  z-index: 7;
+  white-space: nowrap;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+#trick-popup.show {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+#trick-popup.sketchy {
+  color: #ffa64d;
+}
+
+#trick-popup.crash {
+  color: #ff5e5e;
+}
