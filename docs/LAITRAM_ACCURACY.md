@@ -115,6 +115,14 @@ accuracy for the unverified building numbers (Phase 14 updates the wording).
    shrimp peeler," "alternating-tread stair" are fine (descriptive/historic);
    don't reproduce catalog part numbers, and never imply endorsement.
 
+**Exception:** The Laitram Machinery interior accuracy work deliberately uses
+one small, repo-owner-requested slice of a real B220L first-floor plan and the
+three named colleague NPCs documented in
+[MACHINERY_INTERIOR_ACCURACY.md](./MACHINERY_INTERIOR_ACCURACY.md). Treat that
+document as the only approved exception to Guardrails 1 and 3; do not extend
+the exception to any additional real employees, rooms, processes, or non-public
+details.
+
 ---
 
 ## 4. Phased content changes
