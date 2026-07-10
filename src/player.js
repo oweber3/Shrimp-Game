@@ -3,6 +3,7 @@ import { createShrimpWorker } from './characters/shrimpWorker.js';
 import { createGait, updateGait } from './characters/animation.js';
 import { createFace, updateFace } from './characters/face.js';
 import { resolveCollisions, clampToBounds } from './collision.js';
+import { groundHeightAt } from './map/ramps.js';
 
 const _anchorWorld = new THREE.Vector3();
 
@@ -136,11 +137,14 @@ export class Player {
 
     resolveCollisions(this.position, PLAYER_RADIUS, colliders);
     clampToBounds(this.position, bounds, PLAYER_RADIUS + 0.2);
-    this.position.y = 0; // never fall through the world
+    // Feet ride the stunt-ramp surfaces; flat campus ground is 0. While the
+    // cart is mounted the main loop overwrites y with the cart's height (the
+    // cart can be airborne) right after this update.
+    this.position.y = groundHeightAt(this.position.x, this.position.z);
 
     // Mesh follows position (feet stay grounded; the gait bobs the torso) and
     // rotates toward the travel direction.
-    this.mesh.position.set(this.position.x, 0, this.position.z);
+    this.mesh.position.set(this.position.x, this.position.y, this.position.z);
     const prevYaw = this._prevMeshYaw ?? this.mesh.rotation.y;
     if (moving) {
       this.mesh.rotation.y = lerpAngle(this.mesh.rotation.y, this.heading, dt * 10);
@@ -163,14 +167,15 @@ export class Player {
       this.carrying.rotation.y = this.mesh.rotation.y;
     }
 
-    // Third-person camera orbit.
+    // Third-person camera orbit; tracks the player's height so ramp rides
+    // and cart jumps keep the subject framed.
     const camDist = 7.5;
-    const camHeight = 2 + Math.sin(this.pitch) * camDist;
+    const camHeight = this.position.y + 2 + Math.sin(this.pitch) * camDist;
     const horiz = Math.cos(this.pitch) * camDist;
     const cx = this.position.x - Math.sin(this.yaw) * horiz;
     const cz = this.position.z - Math.cos(this.yaw) * horiz;
     this.camera.position.lerp(new THREE.Vector3(cx, camHeight, cz), Math.min(1, dt * 12));
-    this.camera.lookAt(this.position.x, 1.8, this.position.z);
+    this.camera.lookAt(this.position.x, this.position.y + 1.8, this.position.z);
   }
 }
 
