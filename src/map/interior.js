@@ -89,6 +89,23 @@ export function addInterior(scene, colliders) {
     c.rotation.y = rotY;
     g.add(c);
   };
+
+  const beerStack = (x, z) => {
+    const labelMat = new THREE.MeshBasicMaterial({ map: textTexture('SOUTHERN PECAN', { bg: '#ead6a2', fg: '#4b2d18', size: 48 }) });
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 4 - row; col++) {
+        const can = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.22, 12), mat(0x6b3f22));
+        can.position.set(x + (col - (3 - row) / 2) * 0.18, 0.9 + row * 0.22, z + row * 0.02);
+        can.castShadow = true;
+        g.add(can);
+        const label = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.07), labelMat);
+        label.position.set(can.position.x, can.position.y, can.position.z + 0.078);
+        g.add(label);
+      }
+    }
+    sign('FICTIONAL DESK SODA', x, 1.78, z + 0.25, 0, 1.5, 0.26, '#6b3f22');
+  };
+
   const monitor = (x, z, rotY) => {
     const m = new THREE.Group();
     const stand = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.26, 0.06), M.dark);
@@ -291,6 +308,7 @@ export function addInterior(scene, colliders) {
   };
   wallSeat(-14, 'OWEN WEBER', 'B220L.1025.03');
   wallSeat(-10, 'KEARNEY NIESET', 'B220L.1025.02');
+  beerStack(47.05, -9.25);
   wallSeat(-6, 'DOUGLAS KATZ', 'B220L.1025.01');
   // Electrical closet CL1023, immediately south of Douglas's seat.
   box(1.3, 3.2, 1.4, M.wall, 47.6, 1.6, -3.2, { collide: true });
