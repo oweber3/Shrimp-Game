@@ -2,6 +2,8 @@ import { createShrimpWorker } from './characters/shrimpWorker.js';
 import { initBehavior, updateNPC } from './characters/npcBehaviors.js';
 import { createShrimplyGigantic, initGiant, updateGiant, SHRIMPLY } from './characters/giantShrimp.js';
 import { createFishPerson, GERALD } from './characters/fishPerson.js';
+import { createDogPerson, DOUGLAS } from './characters/dogPerson.js';
+import { createRoboHead, updateRoboHead } from './characters/roboHead.js';
 
 // NPC definitions and the per-frame NPC manager. The shrimp builder lives
 // in src/characters/shrimpWorker.js, per-frame behavior in
@@ -103,6 +105,22 @@ export const NPC_DEFS = [
     role: 'mission'
   },
   {
+    id: 'owen', name: 'Owen Weber (Shrimp Eng)', pos: [46.3, -14], rotY: Math.PI / 2,
+    colors: { shellColor: 0xd98754, vestColor: 0x2f75bb, hatColor: 0xffffff },
+    accessory: 'clipboard',
+    behavior: 'sit',
+    role: 'special',
+    mapColor: '#5ee9ff'
+  },
+  {
+    id: 'kearney', name: 'Kearney Nieset (Shrimp Eng)', pos: [46.3, -10], rotY: Math.PI / 2,
+    colors: { shellColor: 0xe0905f, vestColor: 0x2f75bb, hatColor: 0xffffff },
+    accessory: 'toolbelt',
+    behavior: 'sit',
+    role: 'special',
+    mapColor: '#d6a04b'
+  },
+  {
     id: 'benny', name: 'Benny (Kitchen)', pos: [18, -17.3], rotY: Math.PI,
     colors: { shellColor: 0xe8a05f, vestColor: 0xf2c12e },
     accessory: 'toolbelt' // loiters by the kitchen 1078A counter
@@ -140,6 +158,11 @@ export class NPCManager {
     // Gerald: a stationary fish person in a business suit who does not belong
     // here and is aware of it. Driven by the standard idle behavior.
     this.addGerald(scene);
+
+    // Phase C interior specials: Douglas is a dog in a suit, while Owen's
+    // hovering robotic-head pet is tracked as a non-dialogue minimap special.
+    this.addDouglas(scene);
+    this.addOwenRoboHead(scene);
   }
 
   // Shrimply Gigantic: one large, angry, detail-rich shrimp that patrols the
@@ -182,13 +205,48 @@ export class NPCManager {
     this.npcs.push(npc);
   }
 
+
+  addDouglas(scene) {
+    const group = createDogPerson();
+    group.position.set(DOUGLAS.pos[0], 0, DOUGLAS.pos[1]);
+    group.rotation.y = DOUGLAS.rotY;
+    scene.add(group);
+    const i = this.npcs.length;
+    const npc = {
+      def: { id: DOUGLAS.id, name: DOUGLAS.name, behavior: 'sit', mapColor: DOUGLAS.mapColor, role: 'special' },
+      group,
+      parts: group.userData.parts,
+      baseRotY: DOUGLAS.rotY,
+      pathIndex: 0,
+      bobPhase: i * 1.7,
+      bobFreq: 1.7 + ((i * 0.37) % 1) * 0.9
+    };
+    initBehavior(npc);
+    this.npcs.push(npc);
+  }
+
+  addOwenRoboHead(scene) {
+    const group = createRoboHead();
+    group.userData.anchor.set(45.5, 0, -14.8);
+    group.position.copy(group.userData.anchor);
+    scene.add(group);
+    this.npcs.push({
+      def: { id: 'owenRoboHead', name: 'Owen\'s Robo-Head', mapColor: '#7ff7ff' },
+      group,
+      parts: {},
+      roboHead: true,
+      special: true
+    });
+  }
+
   get(id) {
     return this.npcs.find((n) => n.def.id === id);
   }
 
   update(dt, time, playerPos, dialogueOpen = false) {
     for (const npc of this.npcs) {
-      if (npc.special) updateGiant(npc, dt, time, playerPos, dialogueOpen);
+      if (npc.roboHead) updateRoboHead(npc.group, dt, time, playerPos);
+      else if (npc.special) updateGiant(npc, dt, time, playerPos, dialogueOpen);
       else updateNPC(npc, dt, time, playerPos, dialogueOpen);
     }
   }

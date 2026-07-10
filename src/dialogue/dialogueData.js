@@ -72,6 +72,18 @@ export const FLAVOR = {
     'The microwave and I have an understanding: thirty seconds, and absolutely no fish.',
     'Somebody put decaf in the orange pot. We are investigating. There will be findings.'
   ],
+  owen: [
+    'That hovering head is with me. It reviews code and judges my cable management.',
+    'The conference-room wall is exactly where I need it: close enough for specs, far enough for meetings.'
+  ],
+  kearney: [
+    'That Southern Pecan stack is load-tested. Emotionally, mostly.',
+    'If the cans form a pyramid, it counts as structural engineering.'
+  ],
+  douglas: [
+    'Yes, I am a dog in a suit. No, it has not affected my sprint velocity.',
+    'Gerald says he is foreign material. I say he just needs a badge and a better chair.'
+  ],
   // Gerald: a fish person who ended up here and cannot explain how.
   // Lines cycle one at a time on repeated E interactions.
   gerald: [

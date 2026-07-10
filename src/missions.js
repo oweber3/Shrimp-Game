@@ -213,7 +213,7 @@ export class Missions {
 
     // --- Flavor NPCs ---
     for (const npc of this.npcs.npcs) {
-      if (['gus', 'sal', 'dot', 'marge'].includes(npc.def.id)) continue;
+      if (['gus', 'sal', 'dot', 'marge'].includes(npc.def.id) || !FLAVOR[npc.def.id]) continue;
       list.push({
         id: npc.def.id,
         getPos: () => npc.group.position,
