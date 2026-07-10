@@ -84,28 +84,28 @@ export const NPC_DEFS = [
     behavior: 'sit' // reception desk chair in the lobby
   },
   {
-    id: 'nina', name: 'Nina (Intern)', pos: [28.5, -14.5], rotY: Math.PI,
+    id: 'nina', name: 'Nina (Intern)', pos: [22.5, -6.5], rotY: Math.PI,
     colors: { shellColor: 0xf2a08a, vestColor: 0x7bc47f },
     accessory: 'clipboard',
-    behavior: 'sit' // cubicle row A, center pod
+    behavior: 'sit' // cubicle field row A, center pod
   },
   {
-    id: 'theo', name: 'Theo (Intern)', pos: [36.5, -3.5], rotY: 0,
+    id: 'theo', name: 'Theo (Intern)', pos: [28.5, 3.5], rotY: 0,
     colors: { shellColor: 0xd98a5f, vestColor: 0x7bc47f },
     accessory: 'none',
-    behavior: 'sit' // cubicle row B, east pod
+    behavior: 'sit' // cubicle field row B, east pod
   },
   {
-    id: 'marge', name: 'Marge (Manager)', pos: [61, -17], rotY: 0,
+    id: 'marge', name: 'Marge (Manager)', pos: [67.7, -4], rotY: -Math.PI / 2,
     colors: { shellColor: 0xc97a4f, vestColor: 0x3a5a8c, hatColor: 0x2f3338 },
     accessory: 'clipboard',
-    behavior: 'sit', // executive chair behind the desk
+    behavior: 'sit', // executive chair in her east-row office (1022-equivalent)
     role: 'mission'
   },
   {
-    id: 'benny', name: 'Benny (Breakroom)', pos: [66, 6.5], rotY: Math.PI / 2,
+    id: 'benny', name: 'Benny (Kitchen)', pos: [18, -17.3], rotY: Math.PI,
     colors: { shellColor: 0xe8a05f, vestColor: 0xf2c12e },
-    accessory: 'toolbelt'
+    accessory: 'toolbelt' // loiters by the kitchen 1078A counter
   }
 ];
 

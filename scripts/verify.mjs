@@ -152,17 +152,17 @@ await interactAndFinishDialogue();
 check('mission 2 complete, coffee run unlocked', (await state()) === 'M3_TALK', await state());
 
 // --- Mission 3: Coffee Run (indoors) ---
-await teleport(61, -14.1); // Marge's office, in front of the desk
+await teleport(65.6, -4); // Marge's office (east row), in front of the desk
 await interactAndFinishDialogue();
 check('talking to Marge starts coffee run', (await state()) === 'M3_FETCH', await state());
 
-await teleport(67, 3.2); // breakroom counter
+await teleport(14.5, -17.4); // kitchen counter
 await sleep(350);
 await page.keyboard.press('KeyE');
 await sleep(200);
 check('coffee pot picked up', (await state()) === 'M3_RETURN', await state());
 
-await teleport(61, -14.1); // back to Marge
+await teleport(65.6, -4); // back to Marge
 await interactAndFinishDialogue();
 check('mission 3 complete', (await state()) === 'DONE', await state());
 
@@ -176,6 +176,16 @@ check('flavor NPC dialogue works', true);
 
 // --- Interior zone transitions (Phase 4) ---
 const zone = () => page.evaluate(() => window.__game.zones.zone);
+// Zone detection runs in the sim loop, which ticks slowly under software
+// rendering; poll for the expected zone instead of relying on one frame.
+const waitZone = async (want, ms = 4000) => {
+  const t0 = Date.now();
+  while (Date.now() - t0 < ms) {
+    if ((await zone()) === want) return true;
+    await sleep(150);
+  }
+  return false;
+};
 
 await teleport(35, 24); // on the walk outside the LM office front door
 await sleep(300);
@@ -186,17 +196,14 @@ await sleep(1600);
 await page.keyboard.up('KeyW');
 check('walking through front door enters lobby', (await zone()) === 'lobby', await zone());
 
-await teleport(28, -8); // cubicle aisle
-await sleep(300);
-check('office floor zone detected', (await zone()) === 'office_floor', await zone());
+await teleport(25, -1.5); // cubicle field center aisle
+check('office floor zone detected', await waitZone('office_floor'), await zone());
 
-await teleport(60, -12); // manager office
-await sleep(300);
-check('manager office zone detected', (await zone()) === 'manager_office', await zone());
+await teleport(51, -13); // conference room 1019, clear of the table
+check('conference room zone detected', await waitZone('conference'), await zone());
 
-await teleport(62, 4); // breakroom
-await sleep(300);
-check('breakroom zone detected', (await zone()) === 'breakroom', await zone());
+await teleport(18.5, -15.5); // kitchen 1078A, clear of the table
+check('kitchen zone detected', await waitZone('kitchen'), await zone());
 check(
   'minimap switches to floor plan indoors',
   await page.evaluate(() => window.__game.minimap.isIndoorMode())
