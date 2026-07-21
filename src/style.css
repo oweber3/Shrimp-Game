@@ -63,6 +63,26 @@ body {
   max-width: 380px;
 }
 
+/* The header doubles as a collapse toggle. It resets all button chrome so on
+   desktop it reads exactly like the old <h2>; pointer-events stay off there
+   (the whole HUD is non-interactive), so it's inert until re-enabled on touch. */
+.obj-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: none;
+}
+
 #objective h2 {
   font-size: 13px;
   letter-spacing: 1.5px;
@@ -71,9 +91,30 @@ body {
   margin-bottom: 4px;
 }
 
+.obj-toggle h2 {
+  margin-bottom: 0;
+}
+
+.obj-caret {
+  display: none;
+  color: #ff9e5e;
+  font-size: 12px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+#objective.collapsed .obj-caret {
+  transform: rotate(-90deg);
+}
+
 #objective p {
   font-size: 15px;
   line-height: 1.35;
+  margin-top: 4px;
+}
+
+#objective.collapsed #objective-text {
+  display: none;
 }
 
 #compass {
@@ -433,9 +474,20 @@ body.touch-device #help {
    are short vertically, so text tracks vmin (≈ viewport height in landscape)
    and clamp() keeps it legible without blowing up on tablets. */
 
-/* Nudge the compass down so the top-edge time buttons never overlap it. */
+/* On touch the compass is a compact badge tucked to the LEFT of the minimap in
+   the top-right corner, rather than a wide bar across the top edge. This clears
+   the centre for the time buttons and keeps the navigation aids grouped. The
+   right offset = minimap width + its edge inset + a small gap. */
 body.touch-device #compass {
-  top: calc(env(safe-area-inset-top, 0px) + clamp(66px, 17vmin, 88px));
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  left: auto;
+  right: calc(env(safe-area-inset-right, 0px) + 10px + clamp(118px, 30vmin, 200px) + 8px);
+  transform: none;
+  min-width: 0;
+  width: max-content;
+  max-width: 34vw;
+  padding: 5px 8px;
+  text-align: center;
 }
 
 body.touch-device #objective {
@@ -447,16 +499,44 @@ body.touch-device #objective h2 {
 body.touch-device #objective p {
   font-size: clamp(13px, 3.6vmin, 17px);
 }
+/* On touch the header becomes a real tap target so the player can fold the
+   objective away, and the caret appears to advertise it. */
+body.touch-device .obj-toggle {
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+body.touch-device .obj-caret {
+  display: inline-block;
+}
 
 body.touch-device #compass .dir {
-  font-size: clamp(15px, 4.4vmin, 20px);
+  font-size: clamp(12px, 3.2vmin, 15px);
+  letter-spacing: 1px;
 }
 body.touch-device #compass .target,
 body.touch-device #compass .clock {
-  font-size: clamp(11px, 2.9vmin, 14px);
+  font-size: clamp(8px, 2.1vmin, 10px);
+}
+body.touch-device #compass .target {
+  margin-top: 1px;
+  line-height: 1.2;
+}
+body.touch-device #compass .clock {
+  margin-top: 2px;
 }
 body.touch-device #compass .arrow {
-  font-size: clamp(18px, 5vmin, 24px);
+  margin-top: 1px;
+}
+/* Shrink the fixed-size arrow SVG to match the compact badge. */
+body.touch-device #compass .arrow svg {
+  width: 14px;
+  height: 14px;
+}
+/* The seven-tap easter egg lives on the clock, so keep its tap padding modest
+   here now that the whole compass is small. */
+body.touch-device #compass .clock {
+  padding: 2px 6px;
+  margin: 2px auto -1px;
 }
 
 body.touch-device #prompt {
