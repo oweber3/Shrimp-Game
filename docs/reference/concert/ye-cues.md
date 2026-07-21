@@ -63,18 +63,22 @@ between deliberate accents rather than looping constantly.
 
 ## Earth stage placement
 
-North is `-Z` and east is `+X`. The live map now places the 5140 Storey
-building across the plan's old `x: -100, z: 0` sketch anchor, so the prop uses
-the nearest clear west-side pocket at `x: -123.8, z: -43.64`. Its roughened
-base stays inside a verified 34-unit-radius envelope (approximately 68 units
-across) and is 34 units tall. This slight width adaptation clears the 5140 and
-Distribution buildings, River Road, and fixed map dressing; the top plateau
-remains wide enough for the performer and his spawn ring.
+North is `-Z` and east is `+X`. The Ye set now headlines the same stage the
+Sicko rappers use: it is centered on top of Laitram Machinery at `x: 51,
+z: 44` — the midpoint of the Drake/Travis lead formation (see `SICKO_ANCHORS`
+in `src/concert/concertShow.js`). The center is derived from the shared
+machinery layout in `earthStagePlacement.js`, so the two shows stay locked to
+the exact same spot. Its roughened base stays inside a 34-unit-radius envelope
+(approximately 68 units across) and is 34 units tall, so the mound rises up
+over the machinery building as a concert-only takeover of that venue; the top
+plateau remains wide enough for the performer and his spawn ring.
 
 The mound begins fully below grade, rises over four seconds while the show is
-`arming`, remains a non-terrain concert prop for the song, then sinks during
-the four-second `teardown`. Forced stops restore it immediately. Beam columns,
-warm practical lights, and haze belong to the prop and leave with it.
+`arming`, towers over the machinery as a non-terrain concert prop for the song,
+then sinks during the four-second `teardown`, restoring the normal building and
+yard beneath it. Forced stops restore it immediately. Beam columns, warm
+practical lights, haze, and the firework launch ring belong to the prop and
+leave with it.
 
 ## Activation and coexistence contract
 
