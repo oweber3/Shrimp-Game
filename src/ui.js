@@ -7,7 +7,10 @@ export class UI {
     hud.id = 'hud';
     hud.innerHTML = `
       <div id="objective" class="panel">
-        <h2>Objective</h2>
+        <button type="button" id="objective-toggle" class="obj-toggle" aria-expanded="true" aria-controls="objective-text">
+          <h2>Objective</h2>
+          <span class="obj-caret" aria-hidden="true">&#9662;</span>
+        </button>
         <p id="objective-text">Report to the campus.</p>
       </div>
       <div id="compass" class="panel">
@@ -44,7 +47,19 @@ export class UI {
     `;
     document.body.appendChild(hud);
 
+    this.objectivePanel = hud.querySelector('#objective');
+    this.objectiveToggle = hud.querySelector('#objective-toggle');
     this.objectiveText = hud.querySelector('#objective-text');
+    // Drive off pointerdown (not click): the touch controls preventDefault the
+    // synthesized click on rapid taps to kill double-tap zoom, which would
+    // otherwise swallow a quick collapse→expand. Pointer-events stay off on
+    // desktop, so this is inert there. Suppress the trailing click too.
+    this.objectiveToggle.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.toggleObjective();
+    });
+    this.objectiveToggle.addEventListener('click', (e) => e.preventDefault());
     this.compassDir = hud.querySelector('#compass-dir');
     this.compassArrow = hud.querySelector('#compass-arrow');
     this.compassTarget = hud.querySelector('#compass-target');
@@ -99,6 +114,20 @@ export class UI {
 
   setObjective(text) {
     this.objectiveText.textContent = text;
+    // A new objective is worth reading — expand the panel if the player had
+    // it collapsed so the update isn't hidden behind the caret.
+    this.toggleObjective(false);
+  }
+
+  // Collapse/expand the objective panel (mobile lets the player fold it away to
+  // reclaim screen space). Pass `collapse` explicitly, or omit to flip.
+  toggleObjective(collapse) {
+    const next =
+      collapse === undefined
+        ? !this.objectivePanel.classList.contains('collapsed')
+        : collapse;
+    this.objectivePanel.classList.toggle('collapsed', next);
+    this.objectiveToggle.setAttribute('aria-expanded', String(!next));
   }
 
   setClock(text) {
