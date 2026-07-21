@@ -5,6 +5,7 @@ import { createFireworkAudio } from './fireworkAudio.js';
 import { createFireworks } from './fireworks.js';
 import { createPerformer } from './performers/index.js';
 import { createConcertStaging, createEarthConcertStaging } from './staging.js';
+import { createConcertCrowd } from './crowd.js';
 import {
   EARTH_STAGE_CENTER,
   EARTH_STAGE_FOOTPRINT_RADIUS,
@@ -227,6 +228,10 @@ export function createConcertShow({
     audio: fireworkAudio,
     onBurst: (burst) => activeStaging?.flash?.(burst.intensity, burst),
   });
+  // A grounded field of dancing shrimp people serves both shows. Built once at
+  // construction (like the stagings) so it is present in the scene when the
+  // structural baseline is snapshotted, and only toggled visible per run.
+  const crowd = createConcertCrowd({ scene, quality });
   const stagings = Object.freeze({
     sky: createConcertStaging({ scene, camera, atmosphere, streetlights, postfx, quality }),
     earth: createEarthConcertStaging({
@@ -311,6 +316,7 @@ export function createConcertShow({
 
   function clearVisuals() {
     activeStaging?.stop?.();
+    crowd.stop();
     atmosphere?.setConcertDaylight?.(false);
     removeStageCollision();
     for (const record of [...performers]) removePerformer(record);
@@ -491,6 +497,7 @@ export function createConcertShow({
     atmosphere?.setConcertDaylight?.(true);
     installStageCollision();
     activeStaging?.start?.();
+    crowd.start();
     runId += 1;
     emitLifecycle('start');
     return director;
@@ -545,6 +552,8 @@ export function createConcertShow({
       teardownProgress: director.state === 'teardown' ? director.teardownProgress : null,
     });
 
+    crowd.update({ elapsed: director.time, beatPhase });
+
     for (const record of [...performers]) {
       if (activeShow.id === 'ye' && Number.isFinite(activeStaging?.performerY)) {
         record.performer.root.position.y = activeStaging.performerY;
@@ -574,6 +583,7 @@ export function createConcertShow({
       atmosphere?.setConcertDaylight?.(true);
       installStageCollision();
       activeStaging?.start?.();
+      crowd.start();
     }
     return spawn(id);
   };
@@ -615,6 +625,7 @@ export function createConcertShow({
     emitLifecycle('dispose');
     lifecycleListeners.clear();
     for (const staging of Object.values(stagings)) staging.dispose();
+    crowd.dispose();
     fireworks.dispose();
     fireworkAudio.dispose();
     directorDispose();
