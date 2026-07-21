@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { createSkinTexture } from '../utils/geometry.js';
+import { EXTERIOR_NPC_BY_ID } from '../map/placementData.js';
 
 // Gerald: a fish person in a business suit. He does not belong here and he
 // knows it. Built from the same BoxGeometry/CylinderGeometry/SphereGeometry
@@ -9,7 +10,7 @@ import { createSkinTexture } from '../utils/geometry.js';
 export const GERALD = {
   id: 'gerald',
   name: 'Gerald',
-  pos: [-30, 55],   // [x, z] → placed near the drainage canal / perimeter fence
+  pos: [EXTERIOR_NPC_BY_ID.gerald.x, EXTERIOR_NPC_BY_ID.gerald.z],
   rotY: 2.4,        // facing slightly away from the main campus, toward the canal
   mapColor: '#4A90D9' // distinct blue dot on the minimap
 };

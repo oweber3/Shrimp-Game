@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { EXTERIOR_LAYER } from '../zones.js';
+import { BREAK_AREA_CENTER } from '../map/layoutData.js';
 
 // Golden Shrimp hunt: collectible tokens scattered across the campus. Walk
 // into one to bag it — no key press. A HUD badge tracks the count and the
@@ -10,18 +11,18 @@ import { EXTERIOR_LAYER } from '../zones.js';
 // reward exploration of corners the missions never send you to.
 
 const SPOTS = [
-  [85, 22],      // break pavilion
+  [BREAK_AREA_CENTER.x, BREAK_AREA_CENTER.z], // LM break pavilion
   [161, -2],     // by the drainage canal
-  [-146, 78],    // warehouse west dock backlog
-  [-33, 41],     // Intralox employee lot
-  [9, 100],      // main gate / guard shack
-  [105, -66],    // Lapeyre Stair lot
-  [15, -45],     // LM north service strip
+  [-145, -94],   // River Road side of the Distribution yard
+  [-33, 41],     // Storey Street cluster courtyard
+  [-26, 119],    // main gate / guard shack
+  [105, -66],    // Toler Street verge
+  [30, 20],      // LM north service strip
   [12, 95],      // oaks on the main drive
-  [126, 30],     // Laitram office lawn
-  [60, 80],      // 5211 Storey frontage
-  [-165, 42],    // pharmacy corner
-  [96, -30]      // LM east truck court
+  [86, 88],      // Laitram Machinery office lawn
+  [-24, -32],    // 5211 Storey / Machine Shop frontage
+  [-165, 42],    // River Road verge
+  [96, -30]      // Toler Street / Machine Shop gap
 ];
 
 const PICKUP_RADIUS = 2.0;

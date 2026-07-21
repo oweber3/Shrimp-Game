@@ -2,53 +2,28 @@
 // Press M or tap the panel to expand. Press M again, tap backdrop, or
 // click "Close" to collapse. Player dot updates live every frame.
 
-const WORLD = { minX: -180, maxX: 180, minZ: -140, maxZ: 145 };
+import {
+  WORLD_BOUNDS as WORLD,
+  ROADS,
+  BUILDINGS,
+  ZONES,
+  STREET_LABELS,
+  LAITRAM_MACHINERY_OFFSET,
+} from './map/layoutData.js';
+
 const WW = WORLD.maxX - WORLD.minX; // 360
 const WH = WORLD.maxZ - WORLD.minZ; // 285
 // North = -Z = top of map, South = +Z = bottom.
 
-// Road rectangles [centerX, centerZ, sizeX, sizeZ].
-const ROADS = [
-  [0,      35,   10, 180], // Plantation Road
-  [0,     -97,   10,  78], // Plantation Road north extension
-  [62.5,  -55,  205,  12], // Toler Street
-  [2,      66,  320,  10], // Storey Street
-  [-7.5,  125,  345,  12], // River Road
-  [158,   37.5,  10, 185], // Laitram Lane
-  [-160,    9,    9, 232], // Plantation Drive
-  [-32,    -2,   48,  40], // Intralox shipping apron
-  [94,    -14,   36,  44], // LM east truck court
-];
-
-// Buildings [centerX, centerZ, sizeX, sizeZ, fill].
-const BUILDINGS = [
-  { cx: -100, cz:  -27, sx: 75,  sz: 160, color: '#4a5f72' }, // Intralox / 301 Plantation Rd complex
-  { cx:  -95, cz: -105, sx: 70,  sz:  40, color: '#4a5f72' }, // 5307 Toler
-  { cx:   18, cz: -100, sx: 12,  sz:  28, color: '#4a5f72' }, // 301 FO
-  { cx:   36, cz: -100, sx: 20,  sz:  32, color: '#4a5f72' }, // 301A Assembly
-  { cx:   52, cz: -100, sx:  8,  sz:  28, color: '#4a5f72' }, // 301B Shipping
-  { cx:   62, cz: -100, sx:  8,  sz:  28, color: '#4a5f72' }, // 301C ILOX VNA
-  { cx:   40, cz:  -15, sx: 60,  sz:  50, color: '#4a5f72' }, // Laitram Machinery / 220 Laitram Ln
-  { cx:   35, cz: 14.5, sx: 40,  sz:   9, color: '#3d5465' }, // LM office annex
-  { cx:  130, cz:  -20, sx: 36,  sz:  36, color: '#4a5f72' }, // 201 Laitram Ln
-  { cx:  105, cz: -100, sx: 70,  sz:  45, color: '#4a5f72' }, // Lapeyre Stair / 5117 Toler
-  { cx:   60, cz:   92, sx: 50,  sz:  28, color: '#4a5f72' }, // 5211 Storey
-  { cx:  120, cz:   95, sx: 16,  sz:  18, color: '#3d5465' }, // 5123 River Rd
-  { cx: -100, cz:   95, sx: 80,  sz:  44, color: '#4a5f72' }, // Distribution / 5000 River Road
-  { cx: -171, cz:   40, sx: 14,  sz:  18, color: '#3d5465' }, // 200 Plantation
-  { cx:    8, cz:  112, sx:  5,  sz:   5, color: '#3d5465' }, // Guard Shack
-  // Phase 9 (map accuracy): additional named campus buildings.
-  { cx:  -30, cz:  -92, sx: 30,  sz:  24, color: '#4a5f72' }, // 5306 Toler / ILOX IMF
-  { cx:  140, cz:   46, sx: 16,  sz:  16, color: '#4a5f72' }, // 211 Laitram Ln
-  { cx:  140, cz:   88, sx: 18,  sz:  22, color: '#3d5465' }, // 116 Laitram Ln
-  { cx:   96, cz:   80, sx: 18,  sz:  16, color: '#3d5465' }, // 5040 Storey
-  { cx:   76, cz:   48, sx: 14,  sz:  12, color: '#3d5465' }, // 5210 Storey
-];
-
 // Indoor floor plan (Phase 7): shown instead of the campus overhead while
 // the player is inside Laitram Machinery. Region matches the campus map's
 // aspect ratio so the canvas size logic is shared.
-const INDOOR_REGION = { minX: 2, maxX: 78, minZ: -41, maxZ: 19.2 };
+const INDOOR_REGION = {
+  minX: 2 + LAITRAM_MACHINERY_OFFSET.x,
+  maxX: 78 + LAITRAM_MACHINERY_OFFSET.x,
+  minZ: -41 + LAITRAM_MACHINERY_OFFSET.z,
+  maxZ: 19.2 + LAITRAM_MACHINERY_OFFSET.z,
+};
 const ROOMS = [
   { x0: 10, x1: 70, z0: -40, z1: -20, label: 'PRODUCTION', dark: true },
   { x0: 10.6, x1: 63, z0: -19.7, z1: 10, label: 'OFFICE' },
@@ -57,38 +32,13 @@ const ROOMS = [
   { x0: 48, x1: 60, z0: -16, z1: -2, label: 'CONF\n1019' },
   { x0: 63, x1: 69.4, z0: -19.7, z1: 10, label: 'OFFICES' },
   { x0: 15, x1: 55, z0: 10, z1: 19, label: 'LOBBY' }
-];
-
-// Zone text labels drawn only in the expanded view.
-const ZONES = [
-  { wx: -100, wz:  -27, text: 'INTRALOX\n301 PLANTATION' },
-  { wx:  -95, wz: -105, text: '5307\nTOLER' },
-  { wx:   40, wz: -100, text: '301\nASSEMBLY' },
-  { wx:   40, wz:  -15, text: 'LAITRAM\nMACHINERY' },
-  { wx:  130, wz:  -20, text: '201\nLAITRAM LN' },
-  { wx:  105, wz: -100, text: 'LAPEYRE\nSTAIR' },
-  { wx:   60, wz:   92, text: '5211\nSTOREY' },
-  { wx: -100, wz:   95, text: '5000 RIVER RD\nDISTRIBUTION' },
-  { wx: -171, wz:   40, text: '200\nPLANTATION' },
-  { wx:    8, wz:  112, text: 'GUARD\nSHACK' },
-  { wx:   85, wz:   30, text: 'BREAK\nAREA' },
-  { wx:  -30, wz:  -92, text: '5306\nTOLER' },
-  { wx:  140, wz:   46, text: '211\nLAITRAM LN' },
-  { wx:  140, wz:   88, text: '116\nLAITRAM LN' },
-  { wx:   96, wz:   80, text: '5040\nSTOREY' },
-];
-
-// Street-name labels (Phase 14): drawn along their road in the expanded
-// view. rot = canvas rotation in radians (vertical roads read bottom-up).
-const STREETS = [
-  { wx:   62, wz:  -55, text: 'TOLER ST', rot: 0 },
-  { wx:  -60, wz:   66, text: 'STOREY ST', rot: 0 },
-  { wx:  -60, wz:  125, text: 'RIVER ROAD', rot: 0 },
-  { wx:    0, wz:    8, text: 'PLANTATION RD', rot: -Math.PI / 2 },
-  { wx:    0, wz: -125, text: 'PLANTATION RD', rot: -Math.PI / 2 },
-  { wx:  158, wz:   30, text: 'LAITRAM LN', rot: -Math.PI / 2 },
-  { wx: -160, wz:  -60, text: 'PLANTATION DR', rot: -Math.PI / 2 },
-];
+].map((room) => ({
+  ...room,
+  x0: room.x0 + LAITRAM_MACHINERY_OFFSET.x,
+  x1: room.x1 + LAITRAM_MACHINERY_OFFSET.x,
+  z0: room.z0 + LAITRAM_MACHINERY_OFFSET.z,
+  z1: room.z1 + LAITRAM_MACHINERY_OFFSET.z,
+}));
 
 export class Minimap {
   constructor() {
@@ -179,15 +129,16 @@ export class Minimap {
     ctx.fillStyle = '#1a2c1a';
     ctx.fillRect(0, 0, cw, ch);
 
-    // Mississippi River levee: the berm sits just past the mapped south
-    // boundary (world z > 145), so draw it as a band along the bottom edge.
-    const leveeH = Math.max(3, ch * 0.03);
+    // Mississippi River levee: the berm sits just past the mapped west
+    // boundary (world x < -180), so draw it as a band along the left edge.
+    const leveeW = Math.max(3, cw * 0.025);
     ctx.fillStyle = '#2f4a26';
-    ctx.fillRect(0, ch - leveeH, cw, leveeH);
+    ctx.fillRect(0, 0, leveeW, ch);
 
     // Roads / truck aprons
     ctx.fillStyle = '#2d3338';
-    for (const [rcx, rcz, rsx, rsz] of ROADS) {
+    for (const { cx: rcx, cz: rcz, sx: rsx, sz: rsz, minimap } of ROADS) {
+      if (minimap === false) continue;
       const a = p(rcx - rsx / 2, rcz - rsz / 2);
       const b = p(rcx + rsx / 2, rcz + rsz / 2);
       ctx.fillRect(a.x, a.y, b.x - a.x, b.y - a.y);
@@ -251,7 +202,9 @@ export class Minimap {
 
     // Zone labels (expanded only)
     if (expanded) {
-      const fs = Math.max(8, Math.round(cw / 40));
+      // The real sheet has a dense Storey Street cluster. Keep the expanded
+      // map type compact enough that adjacent numbered shells remain readable.
+      const fs = Math.max(8, Math.round(cw / 46));
       const lh = fs * 1.3;
       ctx.font = `${fs}px 'Segoe UI',Arial,sans-serif`;
       ctx.textAlign = 'center';
@@ -274,7 +227,7 @@ export class Minimap {
       ctx.font = `${sfs}px 'Segoe UI',Arial,sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      for (const s of STREETS) {
+      for (const s of STREET_LABELS) {
         const { x, y } = p(s.wx, s.wz);
         ctx.save();
         ctx.translate(x, y);
@@ -286,10 +239,14 @@ export class Minimap {
         ctx.restore();
       }
 
-      // Levee label along the bottom band
+      // Levee label along the west band (rotated to read bottom-up)
       ctx.font = `${sfs}px 'Segoe UI',Arial,sans-serif`;
       ctx.fillStyle = '#7a9a6a';
-      ctx.fillText('MISSISSIPPI RIVER LEVEE', cw / 2, ch - leveeH / 2 - sfs * 0.9);
+      ctx.save();
+      ctx.translate(leveeW + sfs * 0.9, ch / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('MISSISSIPPI RIVER LEVEE', 0, 0);
+      ctx.restore();
 
       // North indicator badge (top-left corner)
       const ni = Math.max(16, Math.round(cw / 32));

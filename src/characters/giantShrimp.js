@@ -3,6 +3,7 @@ import { createShrimpWorker } from './shrimpWorker.js';
 import { lerpAngle } from './npcBehaviors.js';
 import { createGait, updateGait } from './animation.js';
 import { createFace, updateFace } from './face.js';
+import { SHRIMPLY_PLACEMENT } from '../map/placementData.js';
 
 const _giantGaze = new THREE.Vector3();
 
@@ -33,23 +34,17 @@ function mat(color, roughness = 0.5) {
 }
 
 // ---- Patrol definition --------------------------------------------------
-// Rectangular loop confined to the open east truck-court lane. Every segment
-// (and the body sweep around it) is clear of the receiving dock, the parked
-// truck, the forklift, the pallet/crate clutter, and the Laitram office wall,
-// so he never clips a building. To move/resize/re-route him, edit START and
-// PATH below (and SCALE above for his size).
+// Rectangular loop around the striped parking lot directly in front of
+// Laitram Machinery. The north edge stays south of the modeled office facade
+// at z=84.5, and the eight-unit body sweep stays clear of the building,
+// Laitram Lane, and fixed props. Placement data is shared with verification.
 export const SHRIMPLY = {
   id: 'shrimply',
   name: 'Shrimply Gigantic',
   title: 'Angry Giant Shrimp Inspector', // optional subtitle for future use
-  start: [104, -10],
-  rotY: Math.PI,
-  path: [
-    [101, -22],
-    [107, -22],
-    [107, 2],
-    [101, 2]
-  ]
+  start: [SHRIMPLY_PLACEMENT.x, SHRIMPLY_PLACEMENT.z],
+  rotY: SHRIMPLY_PLACEMENT.rotY,
+  path: SHRIMPLY_PLACEMENT.path,
 };
 
 export function createShrimplyGigantic() {

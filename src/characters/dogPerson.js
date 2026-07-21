@@ -1,11 +1,18 @@
 import * as THREE from 'three';
 import { createFishPerson } from './fishPerson.js';
+import { INTERIOR_NPC_BY_ID } from '../map/placementData.js';
 
 function mat(color, roughness = 0.55, metalness = 0.04) {
   return new THREE.MeshStandardMaterial({ color, roughness, metalness });
 }
 
-export const DOUGLAS = { id: 'douglas', name: 'Douglas Katz', pos: [46.3, -6], rotY: Math.PI / 2, mapColor: '#9b6b3d' };
+export const DOUGLAS = {
+  id: 'douglas',
+  name: 'Douglas Katz',
+  pos: [INTERIOR_NPC_BY_ID.douglas.x, INTERIOR_NPC_BY_ID.douglas.z],
+  rotY: Math.PI / 2,
+  mapColor: '#9b6b3d'
+};
 
 export function createDogPerson() {
   const root = createFishPerson();

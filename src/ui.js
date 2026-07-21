@@ -21,6 +21,7 @@ export class UI {
         <div class="clock" id="clock"></div>
       </div>
       <div id="toast" class="panel"></div>
+      <div id="concert-flight-hint" class="panel" role="status"></div>
       <div id="prompt" class="panel"><span class="key">E</span><span id="prompt-text"></span></div>
       <div id="dialogue" class="panel">
         <div class="speaker" id="dialogue-speaker"></div>
@@ -54,6 +55,7 @@ export class UI {
     this.dialogueSpeaker = hud.querySelector('#dialogue-speaker');
     this.dialogueText = hud.querySelector('#dialogue-text');
     this.toast = hud.querySelector('#toast');
+    this.concertFlightHint = hud.querySelector('#concert-flight-hint');
     this.completion = hud.querySelector('#completion');
     this.completionText = hud.querySelector('#completion-text');
 
@@ -101,6 +103,19 @@ export class UI {
 
   setClock(text) {
     if (this.clock) this.clock.textContent = text;
+  }
+
+  setConcertFlightHint(visible, touch = false, mounted = false) {
+    if (!this.concertFlightHint) return;
+    this.concertFlightHint.style.display = visible ? 'block' : 'none';
+    if (!visible) return;
+    if (mounted) {
+      this.concertFlightHint.textContent = 'CONCERT FLIGHT — Dismount to fly';
+    } else if (touch) {
+      this.concertFlightHint.textContent = 'CONCERT FLIGHT — RISE / DOWN buttons';
+    } else {
+      this.concertFlightHint.textContent = 'CONCERT FLIGHT — Space rise · Ctrl/C descend';
+    }
   }
 
   showPrompt(text) {

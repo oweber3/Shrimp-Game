@@ -91,6 +91,18 @@ move and press the action buttons at the same time. Pinch-zoom and page
 scrolling are suppressed during play. Add `?mobile=1` to the URL to force the
 touch controls on in a desktop browser (useful for testing).
 
+### Secret sky concert
+
+Typing `SICKO` during normal play launches the hidden sky concert. On touch
+devices, tap the HUD clock seven times quickly instead. The show is pure
+spectacle: walking, missions, dialogue, the expanded map, indoor exploration,
+and golf-cart driving all continue while it runs; entering Laitram Machinery
+muffles the concert audio without pausing its cue clock.
+
+The checked-in track at `public/concert/sickomode.mp4` is the project owner's
+original parody recording. The original commercial recording and lyrics are
+not included. `?concert=1` starts the show after the start overlay for testing.
+
 ## Features implemented
 
 - **Director's Cut visuals**: ACES-filmic tone mapping and PBR (physically
@@ -125,13 +137,14 @@ touch controls on in a desktop browser (useful for testing).
   interaction prompt, dialogue box, toast notifications, controls help
 - Headless end-to-end test (`node scripts/verify.mjs` after a build)
   that boots the game and completes both missions
+- A secret, cue-driven sky concert with four colossal aquatic performers,
+  beat-reactive venue lighting, pooled fireworks, mobile activation, and
+  restart-safe teardown
 
 ## Known limitations
 
 - The campus is an approximation from public exterior knowledge, not a
   survey-accurate map; building shapes and placement are simplified
-- Building interiors are intentionally not modeled
-- No sound or music
 - No save game; refresh restarts the shift
 - Touch devices get an on-screen joystick and action buttons, but there is no
   on-screen camera-look control yet, so movement is relative to a fixed

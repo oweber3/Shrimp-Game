@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { mat } from '../utils/geometry.js';
+import { RAMP_PLACEMENTS } from './placementData.js';
 
 // Stunt ramps & dirt mounds (golf cart jump upgrade).
 //
@@ -39,16 +40,12 @@ export function addRamps({ world }) {
   wood.side = THREE.DoubleSide;
   woodSide.side = THREE.DoubleSide;
 
-  // Intralox shipping apron: kicker by the cart's parking spot, launching
-  // north up the open apron lane (the parked semis sit west at x=-48).
-  addWedge(world, wood, woodSide, { x: -32, z: -10, yaw: Math.PI, w: 4.5, l: 6, h: 2.2 });
-  // LM east truck court: kicker facing south into the open court.
-  addWedge(world, wood, woodSide, { x: 102, z: -20, yaw: 0, w: 4.5, l: 6, h: 2.0 });
-  // River Road speed jump: long shallow kicker facing west down the straight.
-  addWedge(world, wood, woodSide, { x: 48, z: 125, yaw: -Math.PI / 2, w: 5, l: 8, h: 2.4 });
-  // Dirt mounds on the open grass — hit them fast and the crest throws you.
-  addMound(world, dirt, { x: -40, z: 96, r: 8, h: 3.0 });
-  addMound(world, dirt, { x: 120, z: 40, r: 10, h: 3.2 });
+  // Three former road/building kickers now use long, validator-checked open
+  // approach corridors. The two dirt mounds keep their already-clear lawns.
+  for (const def of RAMP_PLACEMENTS) {
+    if (def.type === 'wedge') addWedge(world, wood, woodSide, def);
+    else addMound(world, dirt, def);
+  }
 }
 
 // ---------------------------------------------------------------------------

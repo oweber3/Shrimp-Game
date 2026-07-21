@@ -10,16 +10,17 @@ import { EXTERIOR_LAYER } from '../zones.js';
 // mistake was a live PointLight per fixture, which doesn't scale).
 
 const POSITIONS = [
-  // Main drive, both sides (sidewalks sit at x = +/-7).
-  [-9, 42], [9, 42], [-9, 18], [9, 18], [-9, -6], [9, -6], [-9, -30], [9, -30],
+  // Storey Street spine, both sides (sidewalks sit at x = -37 / -23).
+  [-39, -78], [-21, -78], [-39, -26], [-23, -26],
+  [-39, 26], [-21, 26], [-39, 78], [15, 78],
   // LM front parking lot.
-  [22, 30], [58, 30],
-  // Toler St / north service strip.
-  [-12, -48], [30, -48], [70, -48],
-  // Warehouse front + east office.
-  [-100, 74], [148, 6], [148, 55],
-  // River Road gate approach.
-  [16, 100]
+  [38, 90], [74, 90],
+  // Toler St west side (sidewalk at x = 94).
+  [94, -70], [94, 30], [94, 95],
+  // Warehouse front + Plantation Rd south side.
+  [-76, -122], [-50, -124], [40, -124],
+  // Laitram St main gate approach.
+  [-40, 122]
 ];
 
 const H = 7.5;

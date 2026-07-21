@@ -41,6 +41,8 @@ export function detectTouch(force = false) {
 const ACTIONS = {
   // button id -> the keyboard event it emulates
   jump: { code: 'Space', key: ' ' },
+  flightRise: { code: 'Space', key: ' ' },
+  flightDescend: { code: 'KeyC', key: 'c' },
   interact: { code: 'KeyE', key: 'e' },
   // Time-of-day advance/rewind. These emulate the [ and ] keys so sky.js's
   // existing keydown handler fires untouched — no time logic is re-implemented.
@@ -80,6 +82,10 @@ export class MobileControls {
         <button type="button" class="action-btn interact" data-action="interact" aria-label="Interact">E</button>
         <button type="button" class="action-btn jump" data-action="jump" aria-label="Jump">JUMP</button>
       </div>
+      <div id="flight-buttons" aria-label="Concert flight controls">
+        <button type="button" class="flight-btn descend" data-action="flightDescend" aria-label="Fly down">DOWN</button>
+        <button type="button" class="flight-btn rise" data-action="flightRise" aria-label="Fly up">RISE</button>
+      </div>
       <div id="time-buttons">
         <button type="button" class="time-btn time-back" data-action="timeBack" aria-label="Rewind time of day">&laquo;</button>
         <button type="button" class="time-btn time-forward" data-action="timeForward" aria-label="Advance time of day">&raquo;</button>
@@ -96,9 +102,22 @@ export class MobileControls {
 
     // Action buttons (jump/interact) and time buttons share the same
     // press → dispatchKey → release lifecycle.
-    for (const btn of root.querySelectorAll('.action-btn, .time-btn')) {
+    for (const btn of root.querySelectorAll('.action-btn, .flight-btn, .time-btn')) {
       this._initButton(btn);
     }
+  }
+
+  setConcertFlightAvailable(available) {
+    if (!this.root) return;
+    if (!available && this.root.classList.contains('concert-flight')) {
+      // A concert can end/restart while a finger is still captured by a
+      // flight button. Release its synthetic key so the next run cannot
+      // inherit a hidden held input.
+      dispatchKey('keyup', ACTIONS.flightRise.code, ACTIONS.flightRise.key);
+      dispatchKey('keyup', ACTIONS.flightDescend.code, ACTIONS.flightDescend.key);
+      for (const btn of this.root.querySelectorAll('.flight-btn')) btn.classList.remove('pressed');
+    }
+    this.root.classList.toggle('concert-flight', Boolean(available));
   }
 
   // ---- joystick -------------------------------------------------------------

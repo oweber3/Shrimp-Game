@@ -22,6 +22,7 @@ import { EXTERIOR_LAYER } from '../zones.js';
 const MAX_ELEV = 1.18;        // ~68° peak sun elevation
 const DAY_LENGTH = 1260;       // seconds for one full in-game day
 const START_TIME = 0.70;      // start in warm late-afternoon golden hour
+const CONCERT_DAY_TIME = 0.5; // noon lighting beneath the concert's own sky
 const ENV_STEP = 0.05;        // re-bake when the sun moves ~2.9°
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
@@ -37,6 +38,7 @@ export class Atmosphere {
 
     this.time = START_TIME;
     this.autoRun = true;
+    this._concertTime = null;
     this.nightFactor = 0;
     this.timeLabel = '';
     this.skyTexture = null;   // baked cube; zones uses it as outdoor background
@@ -140,13 +142,32 @@ export class Atmosphere {
   }
 
   update(dt, followX = 0, followZ = 0) {
-    if (this.autoRun) this.time = (this.time + dt / DAY_LENGTH) % 1;
+    if (this._concertTime != null) this.time = CONCERT_DAY_TIME;
+    else if (this.autoRun) this.time = (this.time + dt / DAY_LENGTH) % 1;
     for (const puff of this.clouds.children) {
       puff.position.x += puff.userData.speed * dt;
       if (puff.position.x > 720) puff.position.x = -720;
     }
     this._followPoint.set(followX, 0, followZ);
     this._apply(false);
+  }
+
+  // The concert supplies its own dark sky and colored stage lighting. Keep
+  // the underlying world rig at a stable daytime baseline so the ordinary
+  // day/night clock cannot make the campus progressively darker underneath
+  // it. Restoring the saved time also means the show does not consume five
+  // minutes of the normal world day.
+  setConcertDaylight(active) {
+    if (active) {
+      if (this._concertTime != null) return;
+      this._concertTime = this.time;
+      this.time = CONCERT_DAY_TIME;
+    } else {
+      if (this._concertTime == null) return;
+      this.time = this._concertTime;
+      this._concertTime = null;
+    }
+    this._apply(true);
   }
 
   _apply(force) {

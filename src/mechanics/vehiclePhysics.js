@@ -25,7 +25,7 @@ const MAX_FORWARD = 12; // docs budget: ~12 units/s top speed
 const MAX_REVERSE = 5;
 const FRICTION = 0.92; // per-60Hz-frame velocity retention
 const STEER_RATE = 2.1; // rad/s at full speed
-const BODY_RADIUS = 1.2; // collision circle, larger than the player's 0.55
+export const VEHICLE_BODY_RADIUS = 1.2; // collision circle, larger than the player's 0.55
 
 const GRAVITY = 20; // gamey: a touch floaty for readable jumps
 const MAX_CLIMB = 0.9; // per-step ground rise treated as a wall, not a slope
@@ -94,8 +94,8 @@ export function stepVehicle(state, pos, input, dt, colliders, bounds) {
   // scrub off speed when we scrape something.
   const px = pos.x;
   const pz = pos.z;
-  resolveCollisions(pos, BODY_RADIUS, colliders);
-  clampToBounds(pos, bounds, BODY_RADIUS + 0.2);
+  resolveCollisions(pos, VEHICLE_BODY_RADIUS, colliders);
+  clampToBounds(pos, bounds, VEHICLE_BODY_RADIUS + 0.2);
   if (Math.hypot(pos.x - px, pos.z - pz) > 0.001) state.speed *= 0.5;
 
   // Vertical: follow the ground unless momentum carries us off it. The
@@ -132,8 +132,8 @@ function stepAirborne(state, pos, input, dt, colliders, bounds) {
   pos.z += state.velZ * dt;
   const px = pos.x;
   const pz = pos.z;
-  resolveCollisions(pos, BODY_RADIUS, colliders);
-  clampToBounds(pos, bounds, BODY_RADIUS + 0.2);
+  resolveCollisions(pos, VEHICLE_BODY_RADIUS, colliders);
+  clampToBounds(pos, bounds, VEHICLE_BODY_RADIUS + 0.2);
   if (Math.hypot(pos.x - px, pos.z - pz) > 0.001) {
     // Glanced off something mid-air: kill most of the horizontal carry.
     state.velX *= 0.3;

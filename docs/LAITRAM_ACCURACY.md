@@ -71,27 +71,53 @@ crating, staging, loading trucks.
 
 ---
 
-## 2. Campus geography audit (game vs. public record)
+## 2. Campus geography and map-layout accuracy
 
-Cross-check of GAME_DESIGN.md's landmark list against public information
-about the Plantation Road / Elmwood–Harahan site:
+**Map-layout rework status: verified.** The canonical normalization and
+coordinate tables live in
+[reference/laitram-maps/layout.md](./reference/laitram-maps/layout.md), derived
+from the supplied campus overview. `src/map/layoutData.js` is the single live
+source for the 3D campus and minimap.
 
-| Game landmark | Public record | Verdict |
+| Reference-sheet feature | Implemented game layout | Result |
 |---|---|---|
-| Laitram Machinery (220 Laitram Ln) | Laitram Machinery lists **220 Laitram Lane, Harahan, LA 70123** | ✅ Accurate |
-| Lapeyre Stair (5117 Toler) | Lapeyre Stair lists **5117 Toler Street, Harahan, LA 70123** | ✅ Accurate |
-| 301 complex (301 FO / 301A Assembly / 301B Shipping / 301C ILOX VNA) | **301 Plantation Road** is the published Laitram L.L.C. (and Intralox) HQ address | ✅ Consistent — the 301 complex being the corporate/Intralox heart of campus matches reality |
-| Intralox Plant "(220 Plantation)" | Public sources put Intralox at **301 Plantation Rd**; "220 Plantation" is not publicly corroborated | ✅ **Resolved (Phase 14)** — plant relabeled "301 Plantation Rd" as part of the 301 complex (sign, minimap, docs) |
-| 5307 Toler, 201 Laitram Ln, 5211 Storey, 5123 River Rd, 5000 River Road, 200 Plantation | Not publicly verifiable building-by-building | ➖ Plausible internal-style numbering; keep, but mark "stylized" in docs rather than claiming accuracy |
-| Streets: Toler St, Plantation Rd, Laitram Ln, River Rd | All real Harahan streets; **River Road runs along the Mississippi River levee** just south of the site | ✅ Accurate — and an easy missed anchor: add the **levee berm** as a visible grass ridge south of River Road (Phase 14). The riverside location is the campus's strongest real geographic feature |
-| Streets: Storey St, Plantation Dr | Not confirmed in public sources | ➖ Keep, mark stylized |
-| Drainage canal, east side | Elmwood drainage canals exist in the area | ➖ Plausible; keep unnamed (don't claim a specific canal) |
-| Hammond West / East Expansion / ASRS excluded (separate Hammond, LA site, 20157 Intralox Drive) | Correct — that is a different Intralox site | ✅ Correct exclusion, keep the note |
+| Plantation Road runs east–west along the north edge | Full-width E–W road at z = −130 | ✅ Match |
+| River Road runs north–south along the west edge | N–S road at x = −170; levee treatment is west of it | ✅ Match |
+| Laitram Street runs east–west along the south edge | Full-width E–W road at z = +130 with the main gate on the Storey axis | ✅ Match |
+| Storey Street is the central north–south spine | N–S road at x = −30 | ✅ Match |
+| Toler Street separates 5200A/B from the 301 row | N–S road at x = +100 | ✅ Match |
+| Laitram Lane is the short internal east–west lane | E–W road at z = +100 serving 220/220R/200 | ✅ Match |
+| 301FO/A/B/C form the east-edge row | Four north-to-south shells east of Toler Street | ✅ Match |
+| Machine Shop and the 5115–5140 cluster straddle Storey Street | 5211/220R plus all seven numbered shells are present | ✅ Match |
+| Tuna Building, 5200A/B, 220 Machinery, 200 HR, and 116 Laitram occupy the center/south blocks | All named shells use the canonical centers and footprints | ✅ Match |
 
-**Known inaccuracy to fix in docs:** README/GAME_DESIGN say "Harahan/Elmwood"
-loosely; the campus straddles the Elmwood industrial district with a Harahan
-mailing address — fine as-is, but the docs should stop implying survey
-accuracy for the unverified building numbers (Phase 14 updates the wording).
+Phase 6 verification covers the expanded minimap, canonical road/building
+tables, all three missions, LM interior entry/exit, indoor/outdoor minimap
+switching, all collectibles' placement rules, a golf-cart traversal of every
+named road, and every perimeter-fence run plus the main-gate opening.
+
+### Intentional deviations from the reference sheet
+
+- **Laitram Machinery** keeps a game-adapted 76 × 60 campus-map envelope and
+  its established walkable 60 × 50 production shell/office cluster. The whole
+  exterior, interior, colliders, NPCs, and mission content move together by
+  the canonical (+16, +65) translation.
+- The sheet's **unlabeled northwest building** carries the fictional
+  **Distribution Warehouse / 5000 River Rd** identity because it is required
+  by Missions 1 and 2.
+- The small **guard shack** remains as a gameplay landmark at the Laitram
+  Street main gate.
+- Stunt ramps, Golden Shrimp, the break area, parked vehicles, and decorative
+  campus furniture are fictional gameplay dressing rather than surveyed site
+  features.
+- Buildings absent from this sheet are not forced into the mapped area:
+  Lapeyre Stair/5117 Toler, 5307/5306 Toler, 201/211 Laitram, the fictional
+  5040/5210 Storey stand-ins, and 5123 River Road were removed. Their removal
+  is not a claim that the real businesses or addresses do not exist elsewhere.
+
+The setting remains described as Harahan/Elmwood with a Harahan mailing
+address; neither the simplified footprints nor unverified internal-style
+labels should be presented as survey-grade public data.
 
 ---
 

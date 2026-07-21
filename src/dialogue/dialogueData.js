@@ -94,8 +94,8 @@ export const FLAVOR = {
     'They\'ll find me eventually and remove me. That\'s correct procedure.',
     'I don\'t blame the process. The process is sound.'
   ],
-  // Shrimply Gigantic: the angry giant inspector who roams the east truck
-  // court. Lines cycle one at a time, same as every other flavor NPC.
+  // Shrimply Gigantic: the angry giant inspector who roams the open west
+  // inspection lawn. Lines cycle one at a time, same as every other flavor NPC.
   shrimply: [
     'WHO MOVED MY WRENCH?',
     'Careful, small fry. I inspect the BIG machinery.',
@@ -117,10 +117,10 @@ export const MISSION_LINES = {
   m1Complete: [
     'There it is. The prodigal 10 mm returns.',
     'Line three will sing the good hum tonight. Mission one complete.',
-    'Next up: Sal at RECEIVING on the east side of Laitram Machinery has a parts box that needs legs. Yours, specifically.'
+    'Next up: Sal at the north RECEIVING apron at Laitram Machinery has a parts box that needs legs. Yours, specifically.'
   ],
   m2Start: [
-    'Gus sent you? Good. Parts delivery is backed up by the west dock and I am one shrimp with two arms.',
+    'Gus sent you? Good. Parts delivery is backed up on this north receiving apron and I am one shrimp with two arms.',
     'That blue box right there is a conveyor sprocket kit. Dot at the WAREHOUSE has a line waiting on it.',
     'Grab it and jog it over. Shift plus legs equals logistics.'
   ],
@@ -131,7 +131,7 @@ export const MISSION_LINES = {
     'Other way, rookie. Dot. Warehouse. West side of campus.'
   ],
   m2ReminderDot: [
-    'Sal has the box at RECEIVING, east side of Laitram Machinery. I will be right here.'
+    'Sal has the box at the north RECEIVING apron at Laitram Machinery. I will be right here.'
   ],
   m2Complete: [
     'The sprocket kit. You magnificent crustacean.',

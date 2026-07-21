@@ -1,8 +1,20 @@
 import * as THREE from 'three';
 import { makeCollider } from '../collision.js';
+import { warnIfOverlapping } from './layoutData.js';
 
 // Landscaping: live oaks, palms, grass patches, and the drainage canal
 // with raised concrete banks and slowly drifting water.
+
+// Conservative canopy footprint for the one tree close enough to constrain
+// the Earth Stage pocket. Verification consumes the same placement as render.
+export const WEST_TREE_LINE_OAK = Object.freeze({
+  id: 'west-tree-line-oak',
+  x: -147,
+  z: -5,
+  scale: 1.2,
+  sx: 13.2,
+  sz: 13.2,
+});
 
 // Deterministic per-position jitter in [0, 1) so the campus looks identical
 // on every load (no Math.random — same trick the parking lots use).
@@ -15,16 +27,17 @@ export function addLandscaping(ctx) {
 
   // ---- Grass patches (slightly different green, under tree clusters) ----
   const patch = (x, z, sx, sz) => flat(sx, sz, M.grassPatch, x, z, 0.012);
-  patch(-15, 82, 22, 36); // west of the main drive oaks
-  patch(16, 82, 14, 36); // east of the main drive oaks
-  patch(25, -66, 80, 10); // north berm along Laitram Ln
-  patch(125, 30, 30, 14); // Laitram office lawn
-  patch(-54, 78, 14, 10); // warehouse front oak
+  patch(-55, 86, 20, 28); // lawn west of Storey St, under the dirt mound oaks
+  patch(20, 114, 12, 20); // lawn between HR and the overflow lot
+  patch(10, -66, 50, 10); // berm between the Machine Shop and Plantation Rd
+  patch(15, -90, 30, 14); // lawn west of the Tuna Building
+  patch(-54, 78, 14, 10); // 5118 front oak
   patch(-147, -10, 12, 70); // west street tree line
 
   // ---- Live oaks (varied canopy, rotation and tint per tree) ----
   const oakLeafMats = [M.oakLeaf, M.oakLeafDark];
   const oak = (x, z, s = 1) => {
+    warnIfOverlapping('oak', x, z, 2, 2);
     const j = jitter(x, z);
     const scale = s * (0.9 + 0.25 * j);
     const g = new THREE.Group();
@@ -56,6 +69,7 @@ export function addLandscaping(ctx) {
 
   // ---- Palms (varied height and frond spread) ----
   const palm = (x, z) => {
+    warnIfOverlapping('palm', x, z, 1.2, 1.2);
     const j = jitter(x, z);
     const h = 6.2 + j * 2; // trunk height 6.2–8.2
     const g = new THREE.Group();
@@ -77,36 +91,40 @@ export function addLandscaping(ctx) {
     colliders.push(makeCollider(x, z, 1, 1));
   };
 
-  // Oaks along the main drive and streets (clear of the Storey St roadbed).
-  oak(-12, 78, 1.1);
-  oak(12, 78, 1);
-  oak(-12, 95, 1.2);
-  oak(12, 95, 1.1);
-  oak(-40, 112, 1.2);
-  oak(60, 112, 1);
-  oak(120, 112, 1.1);
+  // Oaks along the streets (clear of the Storey St and Toler St roadbeds).
+  oak(-42, 78, 1.1);
+  oak(16, 84, 1);
+  oak(-42, 95, 1.2);
+  oak(-70, 112, 1.2);
+  // Keeper for the old (25, 112) street oak: the Phase 6 break pavilion pad
+  // now occupies that spot, so this tree shades the overflow-lot corner
+  // instead of growing through the pavilion roof.
+  oak(80, 118, 1);
+  oak(90, 112, 1.1);
   oak(-10, -66, 1);
   oak(30, -66, 1.1);
-  oak(60, -66, 1);
-  oak(-147, -40, 1.2);
+  oak(20, -66, 1);
+  // Shifted within the same west tree-line patch so the temporary Earth
+  // Stage can rise in the only building/road-safe pocket near its old anchor.
+  oak(WEST_TREE_LINE_OAK.x, WEST_TREE_LINE_OAK.z, WEST_TREE_LINE_OAK.scale);
   oak(-147, 20, 1);
-  oak(135, 28, 1.1);
-  oak(115, 32, 0.9);
+  oak(90, 88, 1.1);
+  oak(90, -14, 0.9);
   oak(-54, 78, 1.2);
-  // New in Phase 2: fill out the east and south edges.
-  oak(150, 60, 1);
-  oak(148, 5, 1.1);
-  oak(-30, -70, 0.9);
-  oak(90, 112, 1);
-  // Palms at the LM office entry, the east court, and the gate.
-  palm(26, 23);
-  palm(44, 23);
+  // Fill out the open field and south edge.
+  oak(-60, 25, 1);
+  oak(-45, 20, 1.1);
+  oak(-58, -64, 0.9); // clear of the Distribution-side ramp landing lane
+  oak(107.5, 120, 1);
+  // Palms at the LM office entry, the Toler St verge, and the gate.
+  palm(26, 12.5);
+  palm(44, 12.5);
   palm(108, 4);
   palm(108, -32);
-  palm(-14, 120);
+  palm(-46, 120);
   palm(14, 120);
-  palm(150, 118);
-  palm(-165, 28);
+  palm(90, 118);
+  palm(-164, 28);
 
   addCanal(ctx);
 }

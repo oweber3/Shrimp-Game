@@ -1,16 +1,17 @@
 import * as THREE from 'three';
-import { makeCollider } from '../collision.js';
+import { clampToBounds, makeCollider, resolveCollisions } from '../collision.js';
 import { mat } from '../utils/geometry.js';
-import { stepVehicle, initVerticalState } from './vehiclePhysics.js';
+import { stepVehicle, initVerticalState, VEHICLE_BODY_RADIUS } from './vehiclePhysics.js';
 import { groundHeightAt } from '../map/ramps.js';
+import { GOLF_CART_PARK } from '../map/placementData.js';
 
-// Driveable golf cart (Phase 6). Parked on the Intralox shipping apron.
+// Driveable golf cart (Phase 6). Parked in the LM front lot.
 // Mount with E within range; W/S drive, A/D steer, E again to hop off.
 // The cart owns one mutable collider rectangle that follows it while
 // parked and is moved out of the world while driving (so the cart's own
 // collision circle doesn't fight it).
 
-const PARK = { x: -30, z: 14, yaw: Math.PI / 2 }; // facing the main drive
+const PARK = { x: GOLF_CART_PARK.x, z: GOLF_CART_PARK.z, yaw: GOLF_CART_PARK.rotY };
 const MOUNT_RANGE = 2.5;
 const FAR_AWAY = 1e6;
 
@@ -55,6 +56,19 @@ export class GolfCart {
     const sx = p.x + Math.sin(this.state.yaw + Math.PI / 2) * 2;
     const sz = p.z + Math.cos(this.state.yaw + Math.PI / 2) * 2;
     return new THREE.Vector3(sx, groundHeightAt(sx, sz), sz);
+  }
+
+  // Dynamic concert props can appear around an already parked cart. Resolve
+  // it once against every world collider except its own parked AABB, then
+  // refresh that AABB at the ejected position.
+  resolveOverlaps(colliders, bounds) {
+    const obstacles = (colliders || []).filter((collider) => collider !== this.collider);
+    resolveCollisions(this.group.position, VEHICLE_BODY_RADIUS, obstacles);
+    clampToBounds(this.group.position, bounds, VEHICLE_BODY_RADIUS + 0.2);
+    if (!this.mounted) {
+      setColliderBox(this.collider, this.group.position.x, this.group.position.z, 3, 3);
+    }
+    return this.group.position;
   }
 
   // `input` is a { forward, back, left, right, trick } booleans object (see

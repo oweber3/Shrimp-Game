@@ -31,6 +31,17 @@ Orientation convention stays the same: north = −Z (top of minimap), east = +X.
 
 ## Phase 0 — Canonical layout table (no code changes)
 
+**Status: done.** Deliverable:
+[reference/laitram-maps/layout.md](reference/laitram-maps/layout.md) —
+normalization anchors, street table, per-building coordinate table, and
+keep/cut decisions for every off-sheet building. Later phases implement
+that table verbatim. Notable Phase 0 decisions: Toler Street and the
+"east-edge street fronting the 301 row" are the same street on the sheet
+(N–S at x ≈ +100); the Laitram Machinery shell keeps its 76 × 60 game
+footprint (translation (+16, +65), Laitram Lane moves to its south face);
+the mission-critical Distribution Warehouse relocates into the sheet's
+unlabeled NW building.
+
 Derive one authoritative coordinate table from the reference image and record
 it in `docs/reference/laitram-maps/` next to the source images.
 
@@ -49,6 +60,13 @@ it in `docs/reference/laitram-maps/` next to the source images.
 
 ## Phase 1 — Single source of truth for layout data
 
+**Status: done.** `src/map/layoutData.js` now owns the live world bounds,
+road/paved-area rectangles, building centers and footprints, building labels
+and addresses, minimap zones, and street labels. The minimap, terrain road
+slabs, primary building shells, the 301 row, and campus-detail shells consume
+that shared data. Phase 1 retains the pre-rework coordinates so the street and
+building moves remain isolated to Phases 2 and 3.
+
 Today the layout exists twice: 3D world (`terrain.js`/`buildings.js`) and
 minimap (`ROADS`/`BUILDINGS`/`ZONES`/`STREETS` arrays in `minimap.js`). They
 drift independently.
@@ -64,6 +82,18 @@ drift independently.
   positions).
 
 ## Phase 2 — Street grid rework
+
+**Status: done.** `layoutData.js` `ROADS` now carries the Phase 0 street table
+verbatim (Plantation Rd north, River Rd west, Laitram St south, Storey St
+spine at x = −30, Toler St at x = +100, Laitram Ln at z = +100, plus a
+main-gate stub from Laitram St to the fence gap on the Storey axis). The
+levee berm/apron moved to the west edge in `terrain.js` and the minimap band
++ label moved with it; center lines, tire wear, sidewalks, the south fence
+gate gap, `STREET_LABELS`, and the streetlight runs all follow the new grid.
+Service aprons, building shells, POIs, and 3D street signage are untouched —
+several old shells (Lapeyre Stair, 5211 Storey, 200 Plantation, 5040 Storey,
+5306 Toler) temporarily overlap the new roads until Phase 3 moves or cuts
+them, and Phase 4/5 re-anchor signage and gameplay content.
 
 Re-lay the roads in `layoutData.js` / `terrain.js` to the real grid:
 
@@ -84,6 +114,19 @@ Re-lay the roads in `layoutData.js` / `terrain.js` to the real grid:
   gate still aligns with the entrance road.
 
 ## Phase 3 — Building repositioning
+
+**Status: done.** `layoutData.js` now matches the Phase 0 building table:
+the 301FO/A/B/C row occupies the east edge, 5211 Storey is the center-north
+Machine Shop, the seven-building Storey cluster plus Tuna/5200A/5200B shells
+are present, Human Resources and 116 Laitram Ln moved south, and Distribution
+plus the guard shack occupy their agreed keeper locations. All nine cut shells
+and their colliders are gone. Laitram Machinery's detailed 60 × 50 production
+shell, office annex, interior, perimeter/furniture colliders, indoor zones,
+minimap floor plan, interior NPCs, and mission anchors share the canonical
+`(+16, +65)` translation; its authoritative campus-map envelope remains
+76 × 60. Building-attached docks, rooftop gear, service pavement, sidewalks,
+and weathering moved with their shells. Final signage and the broad outdoor
+NPC/prop/collectible sweep remain isolated to Phases 4 and 5.
 
 Move buildings to the Phase 0 targets, in dependency order:
 
@@ -115,6 +158,8 @@ Move buildings to the Phase 0 targets, in dependency order:
 
 ## Phase 4 — Signage, labels, and minimap text
 
+**Status: done.**
+
 - Update `addSigns` in `buildings.js`: wall signs, monument signs, door
   numbers, and street signs to the new names/positions (e.g. "5211 STOREY —
   MACHINE SHOP", "5115 STOREY — WET TEST", "5123 STOREY — CORPORATE
@@ -129,6 +174,13 @@ Move buildings to the Phase 0 targets, in dependency order:
 
 ## Phase 5 — Dependent gameplay systems
 
+**Status: done.** Mission POIs and NPCs, all dialogue/patrol anchors, Golden
+Shrimp, props, vehicles, landscaping, campus details, streetlights, and ramps
+were swept against the canonical building/road rectangles. Dev-time overlap
+guards cover movable dressing. The Phase 6 end-to-end run completes all three
+missions and confirms the relocated mission items and characters are
+reachable.
+
 Sweep everything that hardcodes world positions against the new layout:
 
 - `POI` in `terrain.js` (spawn, wrench, partsBox, coffeePot) and
@@ -142,6 +194,18 @@ Sweep everything that hardcodes world positions against the new layout:
   reachable; NPCs not clipping.
 
 ## Phase 6 — Verification and docs
+
+**Status: done.** The expanded campus map was checked side-by-side with
+`reference/laitram-maps/01-campus-overview.png`; street directions, relative
+building placement, names, and addresses match the canonical table. Dense
+Storey-cluster minimap callouts were compacted after the visual check. The
+same pass moved the break pavilion out of the Toler/Laitram intersection and
+re-anchored five stale Golden Shrimp positions. The automated playtest now
+validates the canonical street/building tables, all missions, LM entry/exit
+and zone transitions, indoor/outdoor minimaps, live
+collision cleanup, all six named-road cart traversals, four fence runs plus
+the Storey-axis gate, collectibles, and browser console health. `npm run
+build && node scripts/verify.mjs` passes.
 
 - Side-by-side check: expanded in-game map vs. the reference site plan —
   every street direction and named building matches.

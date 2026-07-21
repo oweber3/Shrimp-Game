@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { makeCollider } from '../collision.js';
 import { mat, textTexture, createBuilders } from '../utils/geometry.js';
 import { surfaceMat } from '../utils/surfaceTextures.js';
+import { LAITRAM_MACHINERY_OFFSET } from './layoutData.js';
 
 // Laitram Machinery interior: lobby (inside the office front) plus an
 // office block modeled on the real B220L 1st-floor plan (see
@@ -17,7 +18,9 @@ import { surfaceMat } from '../utils/surfaceTextures.js';
 // facing DOWN: visible from inside, back-face-culled from above, so the
 // third-person camera can see into rooms from over the roofline.
 //
-// World-space layout (north is -Z):
+// Local layout (north is -Z). Phase 3 translates this whole group by the
+// shared LAITRAM_MACHINERY_OFFSET instead of rewriting hundreds of room
+// coordinates:
 //   lobby:            x 15..55,   z 10..19    (door to outside at x 32.5..37.5, z 19)
 //   office block:     x 10.6..69.4, z -19.7..10  (doorway to lobby at x 30..40)
 //     kitchen 1078A:  x 10.6..22, z -19.7..-12
@@ -27,6 +30,7 @@ import { surfaceMat } from '../utils/surfaceTextures.js';
 //     office row:     x 63..69.4, z -19.7..10 (corridor x 60..63)
 
 export function addInterior(scene, colliders) {
+  const firstInteriorCollider = colliders.length;
   const g = new THREE.Group();
   scene.add(g);
   const { box, flat } = createBuilders(g, colliders);
@@ -386,6 +390,18 @@ export function addInterior(scene, colliders) {
   addRoomLight(54, -9, 10);
   addRoomLight(63, -4, 10);
   addRoomLight(35, 14.5, 10, 0xfff4e0);
+
+  // THREE moves child meshes with the group, but collision AABBs are plain
+  // world-space objects. Translate every collider this function added by the
+  // same canonical offset so walls, furniture, and doorway stay aligned.
+  g.position.set(LAITRAM_MACHINERY_OFFSET.x, 0, LAITRAM_MACHINERY_OFFSET.z);
+  for (let i = firstInteriorCollider; i < colliders.length; i++) {
+    const c = colliders[i];
+    c.minX += LAITRAM_MACHINERY_OFFSET.x;
+    c.maxX += LAITRAM_MACHINERY_OFFSET.x;
+    c.minZ += LAITRAM_MACHINERY_OFFSET.z;
+    c.maxZ += LAITRAM_MACHINERY_OFFSET.z;
+  }
 
   return g;
 }

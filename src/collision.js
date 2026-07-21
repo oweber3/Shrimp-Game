@@ -1,5 +1,5 @@
-// Axis-aligned box collision on the XZ plane.
-// Colliders are { minX, maxX, minZ, maxZ } rectangles.
+// Cheap XZ collision. Most colliders are axis-aligned rectangles; temporary
+// set pieces may opt into an exact circle with { type: 'circle', x, z, radius }.
 
 export function makeCollider(centerX, centerZ, sizeX, sizeZ) {
   return {
@@ -15,6 +15,22 @@ export function makeCollider(centerX, centerZ, sizeX, sizeZ) {
 export function resolveCollisions(pos, radius, colliders) {
   for (let i = 0; i < colliders.length; i++) {
     const c = colliders[i];
+    if (c?.type === 'circle' && Number.isFinite(c.x) && Number.isFinite(c.z) &&
+        Number.isFinite(c.radius)) {
+      const dx = pos.x - c.x;
+      const dz = pos.z - c.z;
+      const minDistance = Math.max(0, c.radius) + radius;
+      const distSq = dx * dx + dz * dz;
+      if (distSq >= minDistance * minDistance) continue;
+      if (distSq > 1e-8) {
+        const scale = minDistance / Math.sqrt(distSq);
+        pos.x = c.x + dx * scale;
+        pos.z = c.z + dz * scale;
+      } else {
+        pos.x = c.x + minDistance;
+      }
+      continue;
+    }
     const nearestX = Math.max(c.minX, Math.min(pos.x, c.maxX));
     const nearestZ = Math.max(c.minZ, Math.min(pos.z, c.maxZ));
     const dx = pos.x - nearestX;

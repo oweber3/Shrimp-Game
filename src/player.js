@@ -4,6 +4,7 @@ import { createGait, updateGait } from './characters/animation.js';
 import { createFace, updateFace } from './characters/face.js';
 import { resolveCollisions, clampToBounds } from './collision.js';
 import { groundHeightAt } from './map/ramps.js';
+import { ConcertFlight, resolveFlightExclusions } from './mechanics/concertFlight.js';
 
 const _anchorWorld = new THREE.Vector3();
 
@@ -27,6 +28,8 @@ export class Player {
     // +z is forward, +x is right, magnitude 0..1. Stays {0,0} on desktop so
     // keyboard behaviour is completely unchanged.
     this.moveAxis = { x: 0, z: 0 };
+    this.concertFlight = new ConcertFlight();
+    this.flightExclusions = [];
     this.movementLocked = false;
     this.carrying = null;
     this.onStep = null; // fired once per footfall (audio hook)
@@ -69,8 +72,28 @@ export class Player {
 
   reset() {
     this.position.copy(this.spawn);
+    this.position.y = groundHeightAt(this.position.x, this.position.z);
+    this.concertFlight.resetMotion();
     this.yaw = Math.PI;
     this.pitch = 0.25;
+  }
+
+  // Main owns the concert/cart lifecycle; Player owns what that context means
+  // for movement. Ending flight lands immediately and clears every velocity.
+  setConcertFlightContext(concertActive, mounted, colliders, bounds) {
+    const changed = this.concertFlight.setContext(
+      concertActive,
+      mounted,
+      this.position,
+      colliders,
+      bounds,
+      PLAYER_RADIUS
+    );
+    if (changed && !this.concertFlight.active) {
+      this.position.y = groundHeightAt(this.position.x, this.position.z);
+      this.mesh.position.copy(this.position);
+    }
+    return changed;
   }
 
   carry(object3d) {
@@ -114,8 +137,8 @@ export class Player {
       mz += this.moveAxis.z;
     }
 
-    const moving = Math.hypot(mx, mz) > 1e-3;
-    if (moving) {
+    const hasMoveInput = Math.hypot(mx, mz) > 1e-3;
+    if (hasMoveInput) {
       // Clamp the input vector to unit length instead of always normalising:
       // a full keyboard press (len >= 1) is unchanged, while a partly-pushed
       // joystick (len < 1) keeps its magnitude for smooth, analog speed.
@@ -128,19 +151,47 @@ export class Player {
       // Move relative to camera yaw. Forward is -Z when yaw is PI.
       const sin = Math.sin(this.yaw);
       const cos = Math.cos(this.yaw);
-      const dx = (mz * sin - mx * cos) * speed * dt;
-      const dz = (mz * cos + mx * sin) * speed * dt;
+      const targetVX = (mz * sin - mx * cos) * speed;
+      const targetVZ = (mz * cos + mx * sin) * speed;
+      const velocity = this.concertFlight.active
+        ? this.concertFlight.updatePlanar(dt, targetVX, targetVZ)
+        : { x: targetVX, z: targetVZ };
+      const dx = velocity.x * dt;
+      const dz = velocity.z * dt;
       this.position.x += dx;
       this.position.z += dz;
       this.heading = Math.atan2(dx, dz);
+    } else if (this.concertFlight.active) {
+      // Airborne momentum eases out instead of stopping on a single frame.
+      const velocity = this.concertFlight.updatePlanar(dt, 0, 0);
+      this.position.x += velocity.x * dt;
+      this.position.z += velocity.z * dt;
     }
 
-    resolveCollisions(this.position, PLAYER_RADIUS, colliders);
+    if (!this.concertFlight.active) {
+      resolveCollisions(this.position, PLAYER_RADIUS, colliders);
+    } else {
+      resolveFlightExclusions(this.position, this.flightExclusions, PLAYER_RADIUS);
+    }
     clampToBounds(this.position, bounds, PLAYER_RADIUS + 0.2);
-    // Feet ride the stunt-ramp surfaces; flat campus ground is 0. While the
-    // cart is mounted the main loop overwrites y with the cart's height (the
-    // cart can be airborne) right after this update.
-    this.position.y = groundHeightAt(this.position.x, this.position.z);
+    const ground = groundHeightAt(this.position.x, this.position.z);
+    if (this.concertFlight.active) {
+      let verticalAxis = 0;
+      if (!this.movementLocked) {
+        if (this.keys.Space) verticalAxis += 1;
+        if (this.keys.ControlLeft || this.keys.ControlRight || this.keys.KeyC) verticalAxis -= 1;
+      }
+      this.concertFlight.updateVertical(dt, this.position, ground, verticalAxis);
+    } else {
+      // Feet ride the stunt-ramp surfaces; flat campus ground is 0. While the
+      // cart is mounted main overwrites y with the cart's airborne height.
+      this.position.y = ground;
+    }
+
+    const planarSpeed = this.concertFlight.active
+      ? Math.hypot(this.concertFlight.velocity.x, this.concertFlight.velocity.z)
+      : (hasMoveInput ? (this.isJogging() ? JOG_SPEED : WALK_SPEED) : 0);
+    const moving = planarSpeed > 1e-3;
 
     // Mesh follows position (feet stay grounded; the gait bobs the torso) and
     // rotates toward the travel direction.
@@ -152,7 +203,7 @@ export class Player {
     const turnRate = dt > 0 ? shortestAngle(this.mesh.rotation.y - prevYaw) / dt : 0;
     this._prevMeshYaw = this.mesh.rotation.y;
 
-    const speed = moving ? (this.isJogging() ? JOG_SPEED : WALK_SPEED) : 0;
+    const speed = moving ? planarSpeed : 0;
     updateGait(this.rig, this.gait, dt, {
       speed, moving, jogging: this.isJogging(), turnRate
     });

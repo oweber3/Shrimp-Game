@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { translateLaitramMachineryRect } from './map/layoutData.js';
 
 // Indoor/outdoor zone detection for the Laitram Machinery interior.
 // Toggles render-layer culling at the indoor/outdoor boundary and eases
@@ -16,7 +17,7 @@ const INDOOR_ZONES = [
   { name: 'kitchen', minX: 10.6, maxX: 22, minZ: -19.7, maxZ: -12 },
   { name: 'conference', minX: 48, maxX: 60, minZ: -16, maxZ: -2 },
   { name: 'office_floor', minX: 10.6, maxX: 69.4, minZ: -19.7, maxZ: 10 }
-];
+].map(translateLaitramMachineryRect);
 
 // Hysteresis: the player must be this far inside a zone to enter it and
 // this far outside to leave it, so standing on a door threshold can never

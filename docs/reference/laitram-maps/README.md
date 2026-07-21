@@ -9,7 +9,7 @@ their content for text search):
 
 | File | Content |
 |------|---------|
-| `01-campus-overview.png` | Whole Laitram campus site map (Plantation Rd / Storey St / Toler St / Laitram St) |
+| `01-campus-overview.png` | Whole Laitram campus site map (Plantation Rd / Storey St / Toler St / Laitram St) — canonical coordinates derived from it live in [layout.md](layout.md) |
 | `02-b220l-first-floor-south.png` | B220L 1st-floor plan, southern (office) half of the Machinery building |
 | `03-b220l-owen-kearney-douglas.png` | Zoom of the bottom-left office area: Owen / Kearney / Douglas workstations |
 

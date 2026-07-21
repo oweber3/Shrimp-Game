@@ -113,6 +113,14 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+body.touch-device #compass .clock {
+  pointer-events: auto;
+  touch-action: manipulation;
+  cursor: pointer;
+  padding: 3px 8px;
+  margin: 2px auto -3px;
+}
+
 #prompt {
   position: absolute;
   bottom: 130px;
@@ -204,6 +212,41 @@ body {
   font-size: 15px;
   color: #ffd9a8;
   display: none;
+}
+
+#concert-debug {
+  position: fixed;
+  left: 50%;
+  bottom: 92px;
+  transform: translateX(-50%);
+  z-index: 7;
+  display: none;
+  color: #d8c7ff;
+  border-color: rgba(164, 112, 255, 0.58);
+  background: rgba(18, 12, 34, 0.86);
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.65px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+#concert-flight-hint {
+  position: fixed;
+  left: 50%;
+  top: 94px;
+  transform: translateX(-50%);
+  z-index: 7;
+  display: none;
+  padding: 7px 11px;
+  color: #e5dcff;
+  border-color: rgba(164, 112, 255, 0.48);
+  background: rgba(18, 12, 34, 0.72);
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.55px;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 /* ── Minimap HUD panel (top-right) ────────────────────────────────── */
@@ -352,6 +395,7 @@ body {
   --jump-size: clamp(78px, 20vmin, 110px);
   --interact-size: clamp(60px, 15vmin, 84px);
   --time-size: clamp(46px, 12vmin, 66px);
+  --flight-height: clamp(48px, 12vmin, 64px);
   --edge-x: 22px;
   --edge-y: 26px;
 }
@@ -569,6 +613,52 @@ body.touch-device #mission-log .log-entry {
 
 .action-btn.interact.pressed {
   background: rgba(111, 211, 255, 0.72);
+}
+
+/* Concert-only vertical controls. Each button captures its own pointer, so
+   RISE/DOWN can be held while separate fingers own the joystick and look zone. */
+#flight-buttons {
+  position: absolute;
+  right: calc(env(safe-area-inset-right, 0px) + var(--edge-x));
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--edge-y) + var(--jump-size) + clamp(12px, 3vmin, 18px));
+  display: none;
+  gap: clamp(8px, 2vmin, 12px);
+  pointer-events: none;
+}
+
+#mobile-controls.concert-flight #flight-buttons {
+  display: flex;
+}
+
+.flight-btn {
+  pointer-events: auto;
+  touch-action: none;
+  min-width: clamp(68px, 17vmin, 92px);
+  height: var(--flight-height);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: clamp(11px, 3vmin, 15px);
+  letter-spacing: 1px;
+  color: #f2ecff;
+  background: rgba(67, 42, 111, 0.72);
+  border: 2px solid rgba(205, 181, 255, 0.62);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.42);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: transform 0.06s ease, background 0.06s ease;
+}
+
+.flight-btn.rise {
+  background: rgba(111, 76, 173, 0.78);
+}
+
+.flight-btn.pressed {
+  transform: scale(0.92);
+  background: rgba(164, 112, 255, 0.9);
 }
 
 /* Time-of-day buttons: a compact pair centred along the top edge, clear of the

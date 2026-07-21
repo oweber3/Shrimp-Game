@@ -19,6 +19,7 @@ import { Stunts } from './mechanics/stunts.js';
 import { StuntHud } from './ui/stuntHud.js';
 import { MobileControls } from './ui/mobileControls.js';
 import { initQuality, getQuality, onQualityChange, startBootProbe, sampleFrame } from './world/quality.js';
+import { createConcertShow } from './concert/concertShow.js';
 
 // Shrimp Shift: Laitram Town
 // Low-poly third-person walking game set on an industrial campus
@@ -107,6 +108,16 @@ cart.onLanding = (evt) => stunts.onLanding(evt);
 const punch = new PunchSystem(player, npcs);
 const collectibles = new Collectibles(scene, audio, ui);
 const postfx = createPostFX(renderer, scene, camera);
+const concert = createConcertShow({
+  scene,
+  camera,
+  atmosphere,
+  streetlights,
+  postfx,
+  audioManager: audio,
+  colliders,
+  quality: getQuality(),
+});
 
 // Touch controls: a virtual joystick (writes player.moveAxis) plus Jump/Interact
 // buttons (dispatch synthetic Space/E key events). Only built on touch devices;
@@ -114,11 +125,58 @@ const postfx = createPostFX(renderer, scene, camera);
 const mobileControls = new MobileControls(player, {
   force: new URLSearchParams(window.location.search).has('mobile'),
 });
+player.flightExclusions = concert.flightExclusions;
+
+const FLIGHT_CONCERT_STATES = new Set(['arming', 'running', 'finale']);
+function syncConcertFlight(forcedActive = null) {
+  const concertActive = forcedActive == null
+    ? FLIGHT_CONCERT_STATES.has(concert.state)
+    : Boolean(forcedActive);
+  player.setConcertFlightContext(concertActive, cart.mounted, colliders, bounds);
+  mobileControls.setConcertFlightAvailable(concertActive);
+  ui.setConcertFlightHint(concertActive, mobileControls.enabled, cart.mounted);
+}
+
+// Lifecycle events make teardown/restart/dispose synchronous. The per-frame
+// sync below still handles cart mount/dismount and direct test-harness state.
+concert.onLifecycle((event) => {
+  if (event.type === 'start' && event.showId === 'ye') {
+    cart.resolveOverlaps(colliders, bounds);
+  }
+  syncConcertFlight(event.type === 'start');
+});
+
+// Touch-only secret path: seven quick taps on the clock starts or restarts
+// the show. Keep the rolling window short so ordinary HUD exploration cannot
+// trigger it accidentally.
+const concertTapTimes = [];
+ui.clock?.addEventListener('pointerdown', (event) => {
+  if (!mobileControls.enabled) return;
+  const now = performance.now();
+  concertTapTimes.push(now);
+  while (concertTapTimes.length && now - concertTapTimes[0] > 2800) {
+    concertTapTimes.shift();
+  }
+  if (concertTapTimes.length >= 7) {
+    concertTapTimes.length = 0;
+    event.preventDefault();
+    event.stopPropagation();
+    concert.start();
+  }
+});
+if (mobileControls.enabled && ui.clock) {
+  ui.clock.title = 'Tap seven times quickly for a surprise';
+  ui.clock.setAttribute('aria-label', 'Shift clock; seven rapid taps reveal a secret');
+}
 
 // Procedural audio hooks (all gated behind the start-overlay click).
 player.onStep = () => audio.footstep(player.isJogging());
 punch.onSwing = () => audio.punch();
 
+const concertParam = new URLSearchParams(window.location.search).get('concert');
+let concertAutostartPending = concertParam === 'ye'
+  ? 'ye'
+  : (concertParam === '1' ? 'sicko' : null);
 ui.onStart(() => {
   audio.unlock();
   try {
@@ -127,18 +185,72 @@ ui.onStart(() => {
   } catch (err) {
     // Pointer lock unsupported; keyboard still works.
   }
+  if (concertAutostartPending) {
+    const showId = concertAutostartPending;
+    concertAutostartPending = false;
+    concert.start(showId);
+  }
 });
 
 // Debug/testing handle.
 window.__game = {
   player, missions, npcs, ui, zones, cart, punch, audio, minimap, missionLog,
   renderer, atmosphere, postfx, streetlights, collectibles, mobileControls,
-  stunts, stuntHud
+  stunts, stuntHud, concert, colliders, bounds,
+  flight: player.concertFlight,
+  getFlightState: () => player.concertFlight.debugState(player.position),
+  // A deterministic frame hook keeps the headless verifier useful on browser
+  // builds that suspend requestAnimationFrame in background/headless tabs.
+  stepFrame: (dt = 1 / 60) => runGameFrame(dt)
 };
 
 // Interaction: E talks/picks up/advances dialogue, or mounts/dismounts the
 // cart. F throws a punch (on foot only).
 let currentInteractable = null;
+
+// Secret concert triggers. Capture phase lets each completed sequence consume
+// its final key before ordinary debug/interact handlers see it (especially the
+// E that completes Y-E).
+const CONCERT_CODES = Object.freeze([
+  Object.freeze({ code: 'SICKO', showId: 'sicko' }),
+  Object.freeze({ code: 'YE', showId: 'ye' }),
+]);
+const concertCodeIndexes = new Map(CONCERT_CODES.map(({ code }) => [code, 0]));
+function resetConcertCodes() {
+  for (const { code } of CONCERT_CODES) concertCodeIndexes.set(code, 0);
+}
+window.addEventListener('keydown', (e) => {
+  const target = e.target;
+  const isTextEntry = target instanceof Element && Boolean(target.closest(
+    'input, textarea, select, [contenteditable]'
+  ));
+  if (ui.isDialogueOpen() || isTextEntry || e.ctrlKey || e.metaKey || e.altKey) {
+    resetConcertCodes();
+    return;
+  }
+
+  const rawKey = typeof e.key === 'string' && e.key.length === 1
+    ? e.key
+    : (e.code?.startsWith('Key') ? e.code.slice(3) : '');
+  const key = rawKey.toUpperCase();
+  for (const { code, showId } of CONCERT_CODES) {
+    let index = concertCodeIndexes.get(code) || 0;
+    if (key === code[index]) {
+      index += 1;
+      if (index === code.length) {
+        resetConcertCodes();
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        concert.start(showId);
+        return;
+      }
+    } else {
+      index = key === code[0] ? 1 : 0;
+    }
+    concertCodeIndexes.set(code, index);
+  }
+}, { capture: true });
+
 window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyF') {
     if (!ui.isDialogueOpen() && !cart.mounted) punch.tryPunch();
@@ -154,11 +266,13 @@ window.addEventListener('keydown', (e) => {
       // Clear any seat tilt copied from the cart's orientation.
       player.mesh.rotation.x = 0;
       player.mesh.rotation.z = 0;
+      syncConcertFlight();
     }
   } else if (currentInteractable) {
     currentInteractable.action();
   } else if (cart.canMount(player.position)) {
     cart.mount();
+    syncConcertFlight();
   }
 });
 
@@ -189,11 +303,16 @@ const SHADOW_SNAP = 30;
 
 startBootProbe();
 
-renderer.setAnimationLoop(() => {
-  const frameDelta = Math.min(clock.getDelta(), 0.25);
+function runGameFrame(forcedDelta) {
+  const manuallyStepped = Number.isFinite(forcedDelta);
+  const frameDelta = manuallyStepped
+    ? Math.min(Math.max(forcedDelta, 0), 0.25)
+    : Math.min(clock.getDelta(), 0.25);
+  if (manuallyStepped) clock.elapsedTime += frameDelta;
   const time = clock.elapsedTime;
   sampleFrame(frameDelta);
 
+  syncConcertFlight();
   player.movementLocked = ui.isDialogueOpen() || minimap.isExpanded() || cart.mounted;
 
   physicsAcc += frameDelta;
@@ -239,8 +358,12 @@ renderer.setAnimationLoop(() => {
   const shadowFollowX = Math.round(player.position.x / SHADOW_SNAP) * SHADOW_SNAP;
   const shadowFollowZ = Math.round(player.position.z / SHADOW_SNAP) * SHADOW_SNAP;
   atmosphere.update(frameDelta, shadowFollowX, shadowFollowZ);
+  concert.update(frameDelta, player.position);
+  // showEnd changes state during update; land before any other system observes
+  // an airborne player after the concert has torn down.
+  syncConcertFlight();
   streetlights.update(atmosphere.nightFactor, player.position);
-  postfx.setNight(atmosphere.nightFactor);
+  postfx.setNight(concert.isActive ? 1 : atmosphere.nightFactor);
   zones.update(frameDelta, player.position); // indoor/outdoor transitions
   audio.setIndoorBlend(zones.blend); // indoor hum fades with the lights
   ui.setClock(atmosphere.timeLabel);
@@ -306,4 +429,6 @@ renderer.setAnimationLoop(() => {
   );
 
   postfx.render();
-});
+}
+
+renderer.setAnimationLoop(() => runGameFrame());

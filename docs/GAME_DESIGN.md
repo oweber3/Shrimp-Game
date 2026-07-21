@@ -144,6 +144,25 @@ Future NPCs (indoor): interns at desks, a manager in a corner office, a coworker
 
 ---
 
+## Secret Features
+
+### Sicko Mode sky concert
+
+Typing `S-I-C-K-O` outside dialogue starts a hidden, non-blocking concert over
+the open ground west of Storey Street. Seven rapid taps on the HUD clock is the
+touch equivalent. Drake the Drake, The Travis Fish, Swae Eel, and Big
+(Sea)Hawk appear from a locked cue sheet while venue lights, sky palettes,
+shockwaves, and pooled fireworks react to each movement.
+
+The concert continues through indoor transitions, dialogue, mission play, the
+expanded minimap, and cart mount/dismount. Indoor blending muffles its audio;
+re-entering the code restarts it cleanly. The media at
+`public/concert/sickomode.mp4` is the project owner's own parody recording, not
+the original commercial track, and cue data contains section names rather than
+lyrics.
+
+---
+
 ## Controls Reference
 
 | Key | Action |
@@ -159,3 +178,5 @@ Future NPCs (indoor): interns at desks, a manager in a corner office, a coworker
 | M | Toggle minimap |
 | F | Punch (Phase 6) |
 | E (near vehicle) | Mount / dismount (Phase 6) |
+| S-I-C-K-O | Start / restart secret concert |
+| 7 rapid clock taps | Start / restart secret concert on touch devices |

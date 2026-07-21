@@ -2,6 +2,12 @@ import * as THREE from 'three';
 import { makeCollider } from '../collision.js';
 import { createDecalBatch } from '../utils/geometry.js';
 import { addCar, addTruck, addForklift } from './vehicles.js';
+import {
+  CARGO_PLACEMENTS,
+  PARKED_VEHICLES,
+  PARKING_LOTS,
+  parkedCarsForLot,
+} from './placementData.js';
 
 // Campus dressing: parked vehicles, parking lots, pallets, crates,
 // barrels, and bollards. Trees and the canal live in landscaping.js.
@@ -17,10 +23,11 @@ export function addProps(ctx) {
     colliders.push(makeCollider(x, z, 0.6, 0.6));
   };
 
-  // Guarding the LM north roll-up doors.
-  for (const bx of [21, 31, 39, 49]) bollard(bx, -41.2);
-  // Guarding the warehouse front roll-up doors.
-  for (const bx of [-119.5, -110.5, -89.5, -80.5]) bollard(bx, 71.3);
+  // Guarding the LM north roll-up doors from the clear side of the canonical
+  // Machinery envelope (its north edge is z=20).
+  for (const bx of [37, 47, 55, 65]) bollard(bx, 18.7);
+  // Guarding the warehouse roll-up doors on the Plantation Rd face.
+  for (const bx of [-95.5, -86.5, -65.5, -56.5]) bollard(bx, -119.5);
 
   // ---- Pallets, crates and barrels ----
   const palletStack = (x, z, layers) => {
@@ -36,44 +43,38 @@ export function addProps(ctx) {
     colliders.push(makeCollider(x, z, 1.4, 1.4));
   };
 
-  // Around the LM docks.
-  palletStack(21, -43.5, 3);
-  palletStack(24, -43.5, 2);
-  palletStack(88, -10, 4);
-  palletStack(88, -6.5, 2);
-  palletStack(91, -8, 3);
-  box(2, 2, 2, M.crate, 96, 1, -30, { collide: true });
-  box(1.6, 1.6, 1.6, M.crate, 99, 0.8, -27.5, { collide: true });
-  barrel(96, -33.2, M.barrelBlue);
-  barrel(97.4, -33.8, M.barrelOrange);
-
-  // Backlog at the warehouse west dock.
-  palletStack(-149, 84, 4);
-  palletStack(-149, 87.5, 2);
-  palletStack(-151, 96, 6);
-  box(2, 2, 2, M.crate, -152, 1, 100, { collide: true });
-  box(1.6, 1.6, 1.6, M.crate, -149.5, 0.8, 102.5, { collide: true });
-  barrel(-153, 79, M.barrelBlue);
+  // All cargo consumes the centralized, footprint-validated placement set.
+  // Collision behavior is unchanged: the lowest pallet, every crate, and
+  // every barrel still contributes a collider.
+  for (const item of CARGO_PLACEMENTS) {
+    if (item.type === 'pallet') {
+      palletStack(item.x, item.z, item.layers);
+    } else if (item.type === 'crate') {
+      box(item.sx, item.height, item.sz, M.crate, item.x, item.height / 2, item.z, { collide: true });
+    } else if (item.type === 'barrelBlue') {
+      barrel(item.x, item.z, M.barrelBlue);
+    } else if (item.type === 'barrelOrange') {
+      barrel(item.x, item.z, M.barrelOrange);
+    }
+  }
 
   // ---- Trucks and the forklift ----
-  // Backed up to the Intralox shipping dock.
-  addTruck(world, colliders, -48, -8, Math.PI / 2);
-  addTruck(world, colliders, -48, 8, Math.PI / 2, 0x3b6a9a);
-  // Box truck parallel-parked on the LM north service strip.
-  addTruck(world, colliders, 36, -46.5, Math.PI / 2, 0xdedede);
-  // Backed up to the LM east receiving dock.
-  addTruck(world, colliders, 84, -25, Math.PI / 2);
-  // At the warehouse west dock.
-  addTruck(world, colliders, -160, 70, 0, 0xc23b3b);
-  // Backed up to the 301B shipping door on Toler St.
-  addTruck(world, colliders, 52, -79.5, 0, 0x3b6a9a);
-  addForklift(world, colliders, 94, -2);
+  // The former east-court and LM north-strip vehicles now join the existing
+  // Distribution dock fleet. The 301-front truck remains in its legal verge.
+  for (const vehicle of PARKED_VEHICLES) {
+    if (vehicle.type === 'truck') {
+      addTruck(world, colliders, vehicle.x, vehicle.z, vehicle.rotY, vehicle.color);
+    } else if (vehicle.type === 'forklift') {
+      addForklift(world, colliders, vehicle.x, vehicle.z);
+    }
+  }
 
   // ---- Parking lots (paving, stripes, wheel stops, parked cars) ----
   // Phase 9 weathering: deterministic oil-drip spots in a subset of stalls,
   // batched into a single transparent mesh.
   const oil = createDecalBatch(world, 'oil');
-  const paintLot = (x, z, sx, sz, rows, cols, carChance) => {
+  const paintLot = (lot) => {
+    const { x, z, sx, sz, rows, cols } = lot;
     flat(sx, sz, M.asphalt, x, z, 0.04);
     const spotW = 3, spotD = 6;
     for (let r = 0; r < rows; r++) {
@@ -101,19 +102,18 @@ export function addProps(ctx) {
             stallJitter * Math.PI
           );
         }
-        if (Math.sin(px * 12.9 + pz * 7.7) * 0.5 + 0.5 < carChance && c % 2 === 0) {
-          addCar(world, colliders, px + spotW / 2, pz + spotD / 2, 0);
-        }
       }
     }
+    for (const car of parkedCarsForLot(lot)) {
+      addCar(world, colliders, car.x, car.z, car.rotY);
+    }
   };
-  paintLot(40, 40, 56, 28, 2, 14, 0.6); // LM front lot
-  paintLot(-33, 41, 50, 34, 2, 13, 0.5); // Intralox employee lot
-  paintLot(130, 12, 36, 20, 1, 9, 0.5); // Laitram office lot
-  paintLot(105, -68, 44, 14, 1, 12, 0.4); // Lapeyre Stair lot
+  // Lots keep a grass verge off the Laitram Ln roadbed (z 96.5..103.5) so the
+  // street reads as a street rather than one continuous paved apron.
+  for (const lot of PARKING_LOTS) paintLot(lot);
 
   // Forklift traffic stains at the two busiest docks.
-  oil.addGround(92, -4, 2.2, 2.6, 0.8);
-  oil.addGround(-148, 92, 2, 2.4, 2.1);
+  oil.addGround(60, 16.5, 2.2, 2.6, 0.8);
+  oil.addGround(-123, -97, 2, 2.4, 2.1);
   oil.commit();
 }

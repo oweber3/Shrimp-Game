@@ -236,10 +236,10 @@ export class Missions {
   applyState(state, silent = false) {
     this.state = state;
     const O = {
-      M1_TALK: 'Mission 1: Missing Wrench - Talk to Gus, the maintenance shrimp, at the Intralox SHIPPING dock.',
+      M1_TALK: 'Mission 1: Missing Wrench - Talk to Gus, the maintenance shrimp, at the 301B SHIPPING dock.',
       M1_FIND: 'Mission 1 (1/3): Find the missing 10 mm wrench near the warehouse WEST DOCK.',
       M1_RETURN: 'Mission 1 (2/3): Return the wrench to Gus at the SHIPPING dock.',
-      M2_TALK: 'Mission 2: Conveyor Part Delivery - Talk to Sal at the RECEIVING dock, east side of Laitram Machinery.',
+      M2_TALK: 'Mission 2: Conveyor Part Delivery - Talk to Sal at the north RECEIVING apron at Laitram Machinery.',
       M2_PICKUP: 'Mission 2 (1/3): Pick up the conveyor parts box at the RECEIVING dock.',
       M2_DELIVER: 'Mission 2 (2/3): Deliver the parts box to Dot at the WAREHOUSE.',
       M3_TALK: 'Mission 3: Coffee Run - Find Marge, the manager, inside LAITRAM MACHINERY. Enter through the front LOBBY.',
