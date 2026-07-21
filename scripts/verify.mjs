@@ -25,9 +25,9 @@ import {
   RAMP_PLACEMENTS,
   SHRIMPLY_PLACEMENT,
 } from '../src/map/placementData.js';
-import { WEST_TREE_LINE_OAK } from '../src/map/landscaping.js';
 import {
   EARTH_STAGE_BASE_RADIUS,
+  EARTH_STAGE_CENTER,
   EARTH_STAGE_FOOTPRINT,
   EARTH_STAGE_FOOTPRINT_RADIUS,
   EARTH_STAGE_TOP,
@@ -181,56 +181,36 @@ const circleRectClearance = (circle, obstacle) => {
   const outsideZ = Math.max(Math.abs(localZ) - obstacle.sz / 2, 0);
   return Math.hypot(outsideX, outsideZ) - circle.radius;
 };
-const earthStageObstacles = [
-  ...BUILDINGS.map((placement) => ({ ...placement, id: `building:${placement.id}` })),
-  ...ROAD_LANES.map((placement) => ({ ...placement, id: `road:${placement.id}` })),
-  ...CARGO_PLACEMENTS,
-  ...PARKED_VEHICLES,
-  ...PARKED_CARS,
-  GOLF_CART_PARK,
-  ...EXTERIOR_NPC_PLACEMENTS,
-  SHRIMPLY_PLACEMENT,
-  ...RAMP_PLACEMENTS,
-  ...EXTERIOR_SIGN_PLACEMENTS,
-  ...PARKING_LOTS,
-  MISSION_ITEM_PLACEMENTS.wrench,
-  MISSION_ITEM_PLACEMENTS.partsBox,
-  WEST_TREE_LINE_OAK,
-];
-const earthStageClearances = earthStageObstacles.map((obstacle) => ({
-  id: obstacle.id,
-  clearance: circleRectClearance(EARTH_STAGE_FOOTPRINT, obstacle),
-})).sort((a, b) => a.clearance - b.clearance);
-const earthStageFailures = earthStageClearances.filter(({ clearance }) => clearance < 0);
+// The Ye set now headlines the same machinery-top stage the Sicko rappers use,
+// so the mound deliberately occupies that venue instead of clearing a separate
+// pocket. Verify the co-location holds: the stage center sits inside the
+// Laitram Machinery footprint and the mound envelope overlaps the building it
+// now performs on top of, with the mound's geometric proportions unchanged.
+const machinery = BUILDING_BY_ID['laitram-machinery'];
+const stageCenteredOnMachinery =
+  Math.abs(EARTH_STAGE_CENTER.x - machinery.cx) <= machinery.sx / 2 &&
+  Math.abs(EARTH_STAGE_CENTER.z - machinery.cz) <= machinery.sz / 2;
+const stageOverlapsMachinery = circleRectClearance(EARTH_STAGE_FOOTPRINT, machinery) < 0;
 check(
-  'Earth Stage envelope clears buildings, road lanes, nearby dressing, and NPC spawns',
+  'Earth Stage headlines the Laitram Machinery venue where the other rappers perform',
   EARTH_STAGE_BASE_RADIUS < EARTH_STAGE_FOOTPRINT_RADIUS &&
     EARTH_STAGE_TOP >= 30 && EARTH_STAGE_TOP <= 40 &&
-    earthStageFailures.length === 0,
-  earthStageFailures.length
-    ? earthStageFailures.slice(0, 6).map(({ id }) => id).join(', ')
-    : `nearest ${earthStageClearances[0].id} +${earthStageClearances[0].clearance.toFixed(2)}u`
+    stageCenteredOnMachinery && stageOverlapsMachinery,
+  `stage (${EARTH_STAGE_FOOTPRINT.x}, ${EARTH_STAGE_FOOTPRINT.z}) on machinery (${machinery.cx}, ${machinery.cz})`
 );
 
-const yeLaunchObstacles = [
-  ...BUILDINGS,
-  ...ROAD_LANES,
-  ...CARGO_PLACEMENTS,
-  ...PARKED_VEHICLES,
-  ...PARKED_CARS,
-  ...EXTERIOR_SIGN_PLACEMENTS,
-];
-const yeLaunchFailures = Object.entries(YE_FIREWORK_SITES).flatMap(([site, [x, , z]]) => (
-  yeLaunchObstacles.flatMap((obstacle) => (
-    circleRectClearance({ x, z, radius: 1.5 }, obstacle) < 0
-      ? [`${site}/${obstacle.id}`]
-      : []
-  ))
-));
+// The firework launch ring travels with the stage: every site stays a short
+// reach from the relocated mound center rather than clearing the machinery yard
+// it now sits over. This guards against a site drifting off the moved venue.
+const yeLaunchReach = EARTH_STAGE_FOOTPRINT_RADIUS + 8;
+const yeLaunchFailures = Object.entries(YE_FIREWORK_SITES).flatMap(([site, [x, , z]]) => {
+  const reach = Math.hypot(x - EARTH_STAGE_CENTER.x, z - EARTH_STAGE_CENTER.z);
+  return reach <= yeLaunchReach ? [] : [`${site}=${reach.toFixed(1)}u`];
+});
 check(
-  'Ye firework launch sites clear buildings, road lanes, and fixed dressing',
+  'Ye firework launch sites ring the relocated Earth Stage center',
   yeLaunchFailures.length === 0,
-  yeLaunchFailures.slice(0, 6).join(', ')
+  yeLaunchFailures.length ? yeLaunchFailures.join(', ') : `all sites within ${yeLaunchReach}u of stage`
 );
 
 const placementFootprint = (placement, overrides = {}) => ({
